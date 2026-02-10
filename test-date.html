@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Date Test</title>
+</head>
+<body>
+    <h1>Current Date Test</h1>
+    <div id="dates"></div>
+    <script src="main.js"></script>
+    <script>
+        // Test getCurrentDateString function
+        const dateString = getCurrentDateString();
+        const systemDate = new Date().toISOString().split('T')[0];
+        
+        document.getElementById('dates').innerHTML = `
+            <p>getCurrentDateString(): ${dateString}</p>
+            <p>System Date: ${systemDate}</p>
+            <p>Match: ${dateString === systemDate ? '✅ Yes' : '❌ No'}</p>
+        `;
+    </script>
+</body>
+</html>

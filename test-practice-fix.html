@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Practice Mode Fix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        .info {
+            color: blue;
+        }
+    </style>
+</head>
+<body>
+    <h1>Practice Mode Canvas Restoration Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Instructions</h2>
+        <ol>
+            <li>Open the main game at <a href="http://localhost:8000" target="_blank">http://localhost:8000</a></li>
+            <li>Start the daily game and make a cut on a shape</li>
+            <li>Enter practice mode using the Practice button</li>
+            <li>Make some cuts in practice mode</li>
+            <li>Return to daily mode using the "Return to Daily" button</li>
+            <li>Check if the cut shading from step 2 is restored</li>
+        </ol>
+    </div>
+    
+    <div class="test-section">
+        <h2>Expected Behavior</h2>
+        <ul>
+            <li class="success">✓ Canvas should show the cut shading from the daily game</li>
+            <li class="success">✓ Percentage displays should be restored</li>
+            <li class="success">✓ Game state should be exactly as it was before entering practice mode</li>
+            <li class="success">✓ Daily mode restrictions (2 cuts per shape) should be re-enabled</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>What Was Fixed</h2>
+        <p>The following changes were made to fix the canvas restoration issue:</p>
+        <ul>
+            <li><strong>returnToDailyGame()</strong> - Now properly restores canvas cut shading</li>
+            <li><strong>returnToDailyShapes()</strong> - Added canvas restoration logic using restoreVisualState()</li>
+            <li>Both functions now properly:
+                <ul>
+                    <li>Set isDailyMode = true to re-enable daily mode restrictions</li>
+                    <li>Call restoreVisualState() to restore canvas with cut shading</li>
+                    <li>Call restoreCutResultDisplay() to restore percentage displays</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>Manual Verification</h2>
+        <button onclick="checkLocalStorage()">Check LocalStorage State</button>
+        <div id="storageStatus" class="status"></div>
+    </div>
+    
+    <script>
+        function checkLocalStorage() {
+            const today = new Date().toISOString().split('T')[0];
+            const savedState = localStorage.getItem(`simple_refresh_${today}`);
+            const statusDiv = document.getElementById('storageStatus');
+            
+            if (savedState) {
+                try {
+                    const state = JSON.parse(savedState);
+                    statusDiv.innerHTML = `
+                        <div class="info">Saved State Found:</div>
+                        <ul>
+                            <li>Date: ${state.date}</li>
+                            <li>Current Shape: ${state.currentShape}</li>
+                            <li>Current Attempt: ${state.currentAttempt}</li>
+                            <li>Game State: ${state.gameState}</li>
+                            <li>Total Cuts: ${state.totalCutsMade}</li>
+                            <li>Canvas Data: ${state.canvasData ? 'Present (' + state.canvasData.length + ' chars)' : 'Not saved'}</li>
+                            <li>Attempts: ${state.currentAttempts ? state.currentAttempts.length : 0}</li>
+                        </ul>
+                    `;
+                } catch (e) {
+                    statusDiv.innerHTML = '<div class="error">Error parsing saved state: ' + e.message + '</div>';
+                }
+            } else {
+                statusDiv.innerHTML = '<div class="info">No saved state found for today</div>';
+            }
+        }
+    </script>
+</body>
+</html>

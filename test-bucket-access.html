@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Bucket Access</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #000; color: #0f0; }
+        .output { background: #111; padding: 10px; margin: 10px 0; border-radius: 5px; white-space: pre-wrap; }
+        button { padding: 10px; margin: 5px; background: #333; color: #0f0; border: 1px solid #0f0; cursor: pointer; }
+        button:hover { background: #555; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Supabase Bucket Access Test</h1>
+    <p>Testing bucket access with enhanced debugging...</p>
+
+    <button onclick="runFullTest()">Run Full Test</button>
+    <button onclick="testAuthMethods()">Test Auth Methods</button>
+    <button onclick="testDirectAccess()">Test Direct File Access</button>
+    <button onclick="testRLSPolicies()">Test RLS Policies</button>
+
+    <div id="output" class="output">Ready to test...</div>
+
+    <script src="supabase-config.js"></script>
+    <script src="debug-supabase.js"></script>
+
+    <script>
+        function log(message) {
+            const output = document.getElementById('output');
+            output.textContent += new Date().toISOString() + ': ' + message + '\n';
+            output.scrollTop = output.scrollHeight;
+            console.log(message);
+        }
+
+        async function runFullTest() {
+            log('🩺 Starting full enhanced diagnosis...');
+
+            // Wait for scripts to load
+            if (!window.SupabaseDebug) {
+                log('❌ SupabaseDebug not found - waiting...');
+                setTimeout(runFullTest, 1000);
+                return;
+            }
+
+            try {
+                const results = await window.SupabaseDebug.runDiagnosis();
+                log('✅ Full diagnosis complete. Check console for detailed output.');
+            } catch (error) {
+                log('❌ Full diagnosis failed: ' + error.message);
+            }
+        }
+
+        async function testAuthMethods() {
+            log('🔐 Testing authentication methods...');
+            try {
+                if (window.SupabaseDebug) {
+                    await window.SupabaseDebug.testAuthMethods();
+                    log('✅ Auth methods test complete');
+                } else {
+                    log('❌ SupabaseDebug not available');
+                }
+            } catch (error) {
+                log('❌ Auth methods test failed: ' + error.message);
+            }
+        }
+
+        async function testDirectAccess() {
+            log('📁 Testing direct file access...');
+            try {
+                if (window.SupabaseDebug) {
+                    const result = await window.SupabaseDebug.testDirectFileAccess();
+                    if (result.found) {
+                        log('✅ Found file: ' + result.filename + ' (' + result.size + ' bytes)');
+                    } else {
+                        log('❌ No files found with direct access');
+                    }
+                } else {
+                    log('❌ SupabaseDebug not available');
+                }
+            } catch (error) {
+                log('❌ Direct access test failed: ' + error.message);
+            }
+        }
+
+        async function testRLSPolicies() {
+            log('🛡️ Testing RLS policies...');
+            try {
+                if (window.SupabaseDebug) {
+                    await window.SupabaseDebug.testRLSPolicies();
+                    log('✅ RLS policies test complete');
+                } else {
+                    log('❌ SupabaseDebug not available');
+                }
+            } catch (error) {
+                log('❌ RLS policies test failed: ' + error.message);
+            }
+        }
+
+        // Auto-run full test when page loads
+        window.addEventListener('load', () => {
+            setTimeout(runFullTest, 2000);
+        });
+    </script>
+</body>
+</html>

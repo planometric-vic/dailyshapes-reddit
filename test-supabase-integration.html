@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Storage Integration Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .shape-display {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 200px;
+        }
+
+        .cache-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            margin-top: 5px;
+        }
+
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Daily Shapes v4.0 - Supabase Storage Integration Test</h1>
+
+        <!-- Connection Status -->
+        <div class="test-section">
+            <h2>📡 Connection Status</h2>
+            <div id="connectionStatus" class="test-result info">Checking connection...</div>
+        </div>
+
+        <!-- Mode Selection -->
+        <div class="test-section">
+            <h2>🎯 Game Mode</h2>
+            <div class="mode-buttons">
+                <button id="dailyModeBtn" onclick="switchToDaily()">Daily Mode</button>
+                <button id="practiceModeBtn" onclick="switchToPractice()">Practice Mode</button>
+            </div>
+            <div id="modeStatus" class="test-result info">No mode selected</div>
+        </div>
+
+        <!-- Daily Mode Section -->
+        <div id="dailySection" class="test-section" style="display: none;">
+            <h2>☀️ Daily Mode</h2>
+            <div id="dailyInfo" class="test-result info"></div>
+            <button onclick="preloadDaily()">Preload Today's Shapes</button>
+            <div class="shape-display">
+                <h3>Current Shape</h3>
+                <pre id="dailyShapeDisplay">No shape loaded</pre>
+            </div>
+            <div class="navigation">
+                <div id="dailyProgress"></div>
+                <button onclick="nextDailyShape()">Next Shape →</button>
+            </div>
+        </div>
+
+        <!-- Practice Mode Section -->
+        <div id="practiceSection" class="test-section" style="display: none;">
+            <h2>🎯 Practice Mode</h2>
+            <div id="practiceInfo" class="test-result info"></div>
+            <div class="navigation">
+                <button onclick="prevPracticeShape()">← Previous</button>
+                <span id="practiceNav">Loading...</span>
+                <button onclick="nextPracticeShape()">Next →</button>
+            </div>
+            <div class="shape-display">
+                <h3>Current Shape</h3>
+                <pre id="practiceShapeDisplay">No shape loaded</pre>
+            </div>
+        </div>
+
+        <!-- Cache Statistics -->
+        <div class="test-section">
+            <h2>💾 Cache Statistics</h2>
+            <div class="cache-stats">
+                <div class="stat-card">
+                    <div class="stat-label">Cached Shapes</div>
+                    <div class="stat-value" id="cacheSize">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Memory Usage</div>
+                    <div class="stat-value" id="cacheMemory">0 KB</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Melbourne Time</div>
+                    <div class="stat-value" id="melbourneTime">--:--</div>
+                </div>
+            </div>
+            <button onclick="clearCache()">Clear Cache</button>
+            <button onclick="updateCacheStats()">Refresh Stats</button>
+        </div>
+
+        <!-- Test Results -->
+        <div class="test-section">
+            <h2>🧪 Test Results</h2>
+            <div id="testResults"></div>
+            <button onclick="runAllTests()">Run All Tests</button>
+        </div>
+    </div>
+
+    <!-- Load Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+    <!-- Load configuration -->
+    <script src="supabase-config.js"></script>
+
+    <!-- Load storage modules -->
+    <script src="shape-storage.js"></script>
+    <script src="daily-mode-manager.js"></script>
+    <script src="practice-mode-manager.js"></script>
+    <script src="game-mode-integration.js"></script>
+
+    <script>
+        let dailyManager = null;
+        let practiceManager = null;
+        let storage = null;
+        let currentMode = null;
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initialize();
+            updateMelbourneTime();
+            setInterval(updateMelbourneTime, 1000);
+        });
+
+        async function initialize() {
+            try {
+                // Check Supabase connection
+                updateStatus('connectionStatus', 'Connecting to Supabase...', 'info');
+
+                if (!window.supabaseClient) {
+                    throw new Error('Supabase client not initialized');
+                }
+
+                // Initialize storage
+                storage = new ShapeStorage();
+
+                updateStatus('connectionStatus', 'Connected to Supabase ✅', 'success');
+
+                // Update cache stats
+                updateCacheStats();
+
+            } catch (error) {
+                updateStatus('connectionStatus', `Connection failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function switchToDaily() {
+            try {
+                currentMode = 'daily';
+                updateStatus('modeStatus', 'Switching to Daily Mode...', 'info');
+
+                // Clean up practice mode
+                if (practiceManager) {
+                    practiceManager.cleanup();
+                }
+
+                // Initialize daily mode
+                dailyManager = new DailyModeManager();
+                const result = await dailyManager.initialize();
+
+                if (result.success) {
+                    document.getElementById('dailySection').style.display = 'block';
+                    document.getElementById('practiceSection').style.display = 'none';
+
+                    updateStatus('modeStatus', `Daily Mode Active - ${result.date}`, 'success');
+                    updateDailyInfo(result);
+
+                    // Display first shape
+                    displayDailyShape(0);
+                }
+
+            } catch (error) {
+                updateStatus('modeStatus', `Failed to start Daily Mode: ${error.message}`, 'error');
+            }
+        }
+
+        async function switchToPractice() {
+            try {
+                currentMode = 'practice';
+                updateStatus('modeStatus', 'Switching to Practice Mode...', 'info');
+
+                // Clean up daily mode
+                if (dailyManager) {
+                    dailyManager.cleanup();
+                }
+
+                // Initialize practice mode
+                practiceManager = new PracticeModeManager();
+                const result = await practiceManager.initialize();
+
+                if (result.success) {
+                    document.getElementById('practiceSection').style.display = 'block';
+                    document.getElementById('dailySection').style.display = 'none';
+
+                    updateStatus('modeStatus', 'Practice Mode Active', 'success');
+                    updatePracticeInfo();
+
+                    // Display current shape
+                    await displayPracticeShape();
+                }
+
+            } catch (error) {
+                updateStatus('modeStatus', `Failed to start Practice Mode: ${error.message}`, 'error');
+            }
+        }
+
+        async function preloadDaily() {
+            if (!dailyManager) return;
+
+            const shapes = dailyManager.shapes;
+            const loaded = shapes.filter(s => s).length;
+
+            updateStatus('dailyInfo', `Preloaded ${loaded}/3 shapes for today`, loaded === 3 ? 'success' : 'warning');
+        }
+
+        function displayDailyShape(index) {
+            if (!dailyManager) return;
+
+            const shape = dailyManager.getShape(index);
+            const display = document.getElementById('dailyShapeDisplay');
+
+            if (shape) {
+                display.textContent = JSON.stringify(shape, null, 2);
+
+                const progress = dailyManager.getProgress();
+                document.getElementById('dailyProgress').textContent =
+                    `Shape ${progress.current}/${progress.total}`;
+
+                if (progress.isSunday) {
+                    updateStatus('dailyInfo', '🔄 Sunday rotation enabled!', 'info');
+                }
+            } else {
+                display.textContent = 'Shape not available';
+            }
+        }
+
+        async function displayPracticeShape() {
+            if (!practiceManager) return;
+
+            const shape = practiceManager.getCurrentShape();
+            const display = document.getElementById('practiceShapeDisplay');
+
+            if (shape && !shape.error) {
+                display.textContent = JSON.stringify(shape, null, 2);
+            } else if (shape && shape.error) {
+                display.textContent = shape.message;
+            } else {
+                display.textContent = 'Shape not available';
+            }
+
+            updatePracticeNavigation();
+        }
+
+        async function nextDailyShape() {
+            if (!dailyManager) return;
+
+            const shape = dailyManager.nextShape();
+            if (shape) {
+                displayDailyShape(dailyManager.currentShapeIndex);
+            } else {
+                updateStatus('dailyInfo', 'All shapes completed! 🎉', 'success');
+            }
+        }
+
+        async function nextPracticeShape() {
+            if (!practiceManager) return;
+
+            await practiceManager.nextShape();
+            await displayPracticeShape();
+        }
+
+        async function prevPracticeShape() {
+            if (!practiceManager) return;
+
+            await practiceManager.previousShape();
+            await displayPracticeShape();
+        }
+
+        function updateDailyInfo(result) {
+            const info = document.getElementById('dailyInfo');
+            info.innerHTML = `
+                Date: ${result.date}<br>
+                Shapes Loaded: ${result.shapesLoaded}/3<br>
+                Sunday Mode: ${result.isSunday ? 'Yes (Rotation Enabled)' : 'No'}
+            `;
+        }
+
+        function updatePracticeInfo() {
+            if (!practiceManager) return;
+
+            const nav = practiceManager.getNavigationInfo();
+            const info = document.getElementById('practiceInfo');
+
+            info.innerHTML = `
+                Available Days: ${nav.totalDates}<br>
+                Current: ${nav.currentDate} - Shape ${nav.currentShape}<br>
+                Yesterday's Shape: ${nav.isYesterday ? 'Yes' : 'No'}
+            `;
+        }
+
+        function updatePracticeNavigation() {
+            if (!practiceManager) return;
+
+            const nav = practiceManager.getNavigationInfo();
+            const navDisplay = document.getElementById('practiceNav');
+
+            navDisplay.textContent = `${nav.currentDate} - Shape ${nav.currentShape}/3`;
+        }
+
+        function updateCacheStats() {
+            if (!storage) return;
+
+            const stats = storage.getCacheStats();
+            document.getElementById('cacheSize').textContent = stats.size;
+            document.getElementById('cacheMemory').textContent =
+                Math.round(stats.memoryUsage / 1024) + ' KB';
+        }
+
+        function clearCache() {
+            if (!storage) return;
+
+            storage.clearCache();
+            updateCacheStats();
+            updateStatus('testResults', 'Cache cleared successfully', 'success');
+        }
+
+        function updateMelbourneTime() {
+            const now = new Date();
+            const melbourne = new Date(now.toLocaleString("en-US", {timeZone: "Australia/Melbourne"}));
+            const timeStr = melbourne.toLocaleTimeString('en-AU', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            document.getElementById('melbourneTime').textContent = timeStr;
+        }
+
+        async function runAllTests() {
+            const results = document.getElementById('testResults');
+            results.innerHTML = '';
+
+            // Test 1: Supabase Connection
+            addTestResult('Supabase Connection', !!window.supabaseClient);
+
+            // Test 2: Storage Module
+            addTestResult('Storage Module', !!window.ShapeStorage);
+
+            // Test 3: Daily Mode Manager
+            addTestResult('Daily Mode Manager', !!window.DailyModeManager);
+
+            // Test 4: Practice Mode Manager
+            addTestResult('Practice Mode Manager', !!window.PracticeModeManager);
+
+            // Test 5: Melbourne Time
+            const melbourne = storage.getMelbourneDate();
+            addTestResult('Melbourne Timezone', melbourne instanceof Date);
+
+            // Test 6: Date Formatting
+            const formatted = storage.formatDateToYYMMDD(melbourne);
+            addTestResult('Date Format (YYMMDD)', /^\d{6}$/.test(formatted));
+
+            // Test 7: Sunday Detection
+            const testDate = new Date('2025-09-21'); // A Sunday
+            const isSunday = storage.isSunday(testDate);
+            addTestResult('Sunday Detection', isSunday === true);
+
+            // Test 8: Cache Persistence
+            const cacheKey = storage.persistentCacheKey;
+            addTestResult('Cache Key Defined', !!cacheKey);
+
+            // Test 9: Error Handler
+            addTestResult('Error Handler', !!window.ErrorHandler);
+
+            // Test 10: API Availability
+            addTestResult('Daily Shapes API', !!window.DailyShapesAPI);
+        }
+
+        function addTestResult(testName, passed) {
+            const results = document.getElementById('testResults');
+            const result = document.createElement('div');
+            result.className = `test-result ${passed ? 'success' : 'error'}`;
+            result.textContent = `${passed ? '✅' : '❌'} ${testName}`;
+            results.appendChild(result);
+        }
+
+        function updateStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.className = `test-result ${type}`;
+            element.textContent = message;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supabase Flag Timing Test</title>
+</head>
+<body>
+    <h1>Supabase Flag Timing Test</h1>
+    <div id="results"></div>
+
+    <!-- Load in exact same order as main index.html -->
+    <script src="main.js"></script>
+    <script src="supabase-config.js"></script>
+    <script src="supabase-shape-init.js"></script>
+
+    <script>
+        const results = document.getElementById('results');
+
+        function log(msg) {
+            const div = document.createElement('div');
+            div.innerHTML = msg;
+            results.appendChild(div);
+            console.log(msg);
+        }
+
+        // Check initial state
+        log('📍 Script load order test started');
+        log('📍 Initial window.supabaseIntegrationActive: ' + window.supabaseIntegrationActive);
+
+        // Check after short delay
+        setTimeout(() => {
+            log('📍 After 100ms: ' + window.supabaseIntegrationActive);
+        }, 100);
+
+        setTimeout(() => {
+            log('📍 After 500ms: ' + window.supabaseIntegrationActive);
+        }, 500);
+
+        setTimeout(() => {
+            log('📍 After 1000ms: ' + window.supabaseIntegrationActive);
+        }, 1000);
+
+        setTimeout(() => {
+            log('📍 After 2000ms: ' + window.supabaseIntegrationActive);
+
+            if (window.supabaseIntegrationActive) {
+                log('✅ SUCCESS: Supabase integration flag is set');
+            } else {
+                log('❌ FAIL: Supabase integration flag not set');
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

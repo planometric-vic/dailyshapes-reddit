@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hunter.io Email Verification Test - Daily Shapes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            border: 2px solid black;
+            box-shadow: 2px 4px 0px #000;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #6496FF;
+            color: white;
+            padding: 12px 24px;
+            border: 2px solid black;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: all 0.2s ease;
+        }
+        button:hover {
+            background: #5285ee;
+            transform: translateY(-1px);
+            box-shadow: 2px 4px 0px #000;
+        }
+        .test-btn {
+            background: #f0f0f0;
+            color: #333;
+            border-color: #ccc;
+        }
+        .test-btn:hover {
+            background: #e0e0e0;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            word-break: break-all;
+        }
+        .success {
+            background: #e8f5e8;
+            border: 1px solid #4CAF50;
+            color: #2e7d2e;
+        }
+        .error {
+            background: #ffe8e8;
+            border: 1px solid #f44336;
+            color: #d32f2f;
+        }
+        .warning {
+            background: #fff3e0;
+            border: 1px solid #ff9800;
+            color: #e65100;
+        }
+        .info {
+            background: #e3f2fd;
+            border: 1px solid #2196F3;
+            color: #1976d2;
+        }
+        .usage-stats {
+            background: #fff9e6;
+            border: 1px solid #ffd700;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #ff9800, #f44336);
+            transition: width 0.3s ease;
+        }
+        .email-tests {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .test-email {
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        .test-email:hover {
+            background: #eaeaea;
+        }
+        /* Include email validation styles */
+        .email-feedback {
+            font-size: 12px;
+            margin-top: 5px;
+            padding: 5px 0;
+            min-height: 16px;
+            transition: all 0.3s ease;
+        }
+        .email-feedback.valid { color: #4CAF50; }
+        .email-feedback.invalid { color: #f44336; }
+        .email-feedback.warning { color: #ff9800; }
+        .email-feedback.validating { color: #2196F3; font-style: italic; }
+        .suggestion-link {
+            color: #6496FF;
+            text-decoration: underline;
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        .suggestion-link:hover { color: #5285ee; }
+        input.valid-email { border-color: #4CAF50 !important; background-color: rgba(76, 175, 80, 0.05); }
+        input.warning-email { border-color: #ff9800 !important; background-color: rgba(255, 152, 0, 0.05); }
+        input.invalid-email { border-color: #f44336 !important; background-color: rgba(244, 67, 54, 0.05); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hunter.io Email Verification Test</h1>
+        <p>Test the integrated Hunter.io email verification system optimized for the free plan (100 verifications/month).</p>
+        
+        <!-- Usage Statistics -->
+        <div class="usage-stats">
+            <h3>API Usage Statistics</h3>
+            <div id="usageStats">Loading...</div>
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <button onclick="resetUsage()" class="test-btn">Reset Usage Counter</button>
+        </div>
+
+        <!-- Real-time Validation Test -->
+        <div class="test-section">
+            <h2>Real-time Email Validation</h2>
+            <p>Type an email address to see real-time validation with Hunter.io integration:</p>
+            
+            <div class="form-group">
+                <label for="emailTest">Email Address:</label>
+                <input type="email" id="emailTest" placeholder="Enter email to test validation...">
+                <div id="emailFeedback" class="email-feedback"></div>
+            </div>
+        </div>
+
+        <!-- Batch Testing -->
+        <div class="test-section">
+            <h2>Test Common Email Scenarios</h2>
+            <p>Click any email below to test it instantly:</p>
+            
+            <div class="email-tests">
+                <div class="test-email" onclick="testEmail('valid@gmail.com')">✅ valid@gmail.com</div>
+                <div class="test-email" onclick="testEmail('test@example.com')">❓ test@example.com</div>
+                <div class="test-email" onclick="testEmail('user@gmial.com')">🔧 user@gmial.com (typo)</div>
+                <div class="test-email" onclick="testEmail('fake@10minutemail.com')">🚫 fake@10minutemail.com (disposable)</div>
+                <div class="test-email" onclick="testEmail('invalid-email')">❌ invalid-email (format)</div>
+                <div class="test-email" onclick="testEmail('user@nonexistentdomain999.com')">📡 user@nonexistentdomain999.com (API)</div>
+                <div class="test-email" onclick="testEmail('test@protonmail.com')">✅ test@protonmail.com</div>
+                <div class="test-email" onclick="testEmail('user@outlook.com')">✅ user@outlook.com</div>
+            </div>
+        </div>
+
+        <!-- Manual Testing -->
+        <div class="test-section">
+            <h2>Manual Email Testing</h2>
+            <div class="form-group">
+                <label for="manualEmail">Test Specific Email:</label>
+                <input type="email" id="manualEmail" placeholder="Enter email to validate">
+                <button onclick="validateManualEmail()">Validate Email</button>
+            </div>
+            <div id="manualResult"></div>
+        </div>
+
+        <!-- API Direct Test -->
+        <div class="test-section">
+            <h2>Direct API Test</h2>
+            <p>Test Hunter.io API directly (uses 1 verification):</p>
+            <div class="form-group">
+                <input type="email" id="apiEmail" placeholder="Enter email for direct API test">
+                <button onclick="testDirectAPI()">Call Hunter.io API</button>
+            </div>
+            <div id="apiResult"></div>
+        </div>
+
+        <!-- Configuration Info -->
+        <div class="test-section">
+            <h2>Configuration Status</h2>
+            <div id="configStatus">Checking...</div>
+        </div>
+    </div>
+
+    <!-- Load required scripts -->
+    <script src="supabase-config.js"></script>
+
+    <script>
+        let results = {};
+
+        // Initialize page
+        window.addEventListener('load', function() {
+            updateUsageStats();
+            checkConfiguration();
+            setupRealtimeValidation();
+        });
+
+        function updateUsageStats() {
+            if (!window.HunterConfig) {
+                document.getElementById('usageStats').innerHTML = '❌ HunterConfig not loaded';
+                return;
+            }
+
+            const stats = window.HunterConfig.getUsageStats();
+            const progressFill = document.getElementById('progressFill');
+            
+            let statusClass = 'info';
+            if (stats.percentage > 80) statusClass = 'error';
+            else if (stats.percentage > 50) statusClass = 'warning';
+            else statusClass = 'success';
+
+            document.getElementById('usageStats').innerHTML = `
+                <div class="${statusClass}">
+                    <strong>Used:</strong> ${stats.used}/${stats.total} verifications<br>
+                    <strong>Remaining:</strong> ${stats.remaining} (${stats.percentage}% used)<br>
+                    <strong>Status:</strong> ${stats.canUse ? '✅ Available' : '🚫 Limit reached'}
+                </div>
+            `;
+
+            progressFill.style.width = stats.percentage + '%';
+        }
+
+        function checkConfiguration() {
+            const status = document.getElementById('configStatus');
+            
+            if (!window.HunterConfig) {
+                status.innerHTML = '❌ HunterConfig not loaded';
+                return;
+            }
+
+            const hasApiKey = window.HunterConfig.apiKey !== 'your-hunter-api-key-here';
+            const canMakeCall = window.HunterConfig.canMakeAPICall();
+            
+            status.innerHTML = `
+                <div class="info">
+                    <strong>API Key:</strong> ${hasApiKey ? '✅ Configured' : '❌ Not configured'}<br>
+                    <strong>Can make API calls:</strong> ${canMakeCall ? '✅ Yes' : '❌ No'}<br>
+                    <strong>Monthly limit:</strong> ${window.HunterConfig.monthlyLimit} verifications<br>
+                    <strong>Current month:</strong> ${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}
+                </div>
+            `;
+        }
+
+        function setupRealtimeValidation() {
+            const emailInput = document.getElementById('emailTest');
+            const feedbackElement = document.getElementById('emailFeedback');
+            
+            if (window.HunterConfig && window.HunterConfig.setupRealtimeValidation) {
+                window.HunterConfig.setupRealtimeValidation(emailInput, feedbackElement);
+            } else {
+                feedbackElement.textContent = 'Real-time validation not available';
+                feedbackElement.className = 'email-feedback error';
+            }
+        }
+
+        async function testEmail(email) {
+            document.getElementById('emailTest').value = email;
+            document.getElementById('emailTest').dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        async function validateManualEmail() {
+            const email = document.getElementById('manualEmail').value;
+            const resultDiv = document.getElementById('manualResult');
+            
+            if (!email) {
+                resultDiv.innerHTML = '<div class="error">Please enter an email address</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="info">Validating...</div>';
+
+            try {
+                const result = await window.HunterConfig.validateEmail(email);
+                
+                let resultClass = result.valid ? 
+                    (result.deliverable === true ? 'success' : 'warning') : 'error';
+                
+                resultDiv.innerHTML = `
+                    <div class="${resultClass}">
+                        <h4>Validation Result:</h4>
+                        <p><strong>Valid:</strong> ${result.valid ? '✅ Yes' : '❌ No'}</p>
+                        <p><strong>Deliverable:</strong> ${result.deliverable === true ? '✅ Yes' : result.deliverable === false ? '❌ No' : '❓ Unknown'}</p>
+                        <p><strong>Reason:</strong> ${result.reason}</p>
+                        <p><strong>Source:</strong> ${result.source || 'Unknown'}</p>
+                        ${result.suggestion ? `<p><strong>Suggestion:</strong> ${result.suggestion}</p>` : ''}
+                        ${result.hunterResult ? `<p><strong>Hunter Result:</strong> ${result.hunterResult}</p>` : ''}
+                        ${result.score !== undefined ? `<p><strong>Score:</strong> ${result.score}/100</p>` : ''}
+                        ${result.usage !== undefined ? `<p><strong>API Usage:</strong> ${result.usage}/${window.HunterConfig.monthlyLimit}</p>` : ''}
+                    </div>
+                `;
+
+                updateUsageStats();
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testDirectAPI() {
+            const email = document.getElementById('apiEmail').value;
+            const resultDiv = document.getElementById('apiResult');
+            
+            if (!email) {
+                resultDiv.innerHTML = '<div class="error">Please enter an email address</div>';
+                return;
+            }
+
+            if (!window.HunterConfig.canMakeAPICall()) {
+                resultDiv.innerHTML = '<div class="error">Cannot make API call: Either API limit reached or key not configured</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="info">Calling Hunter.io API...</div>';
+
+            try {
+                const result = await window.HunterConfig.callHunterAPI(email);
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <h4>Hunter.io API Response:</h4>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    </div>
+                `;
+
+                updateUsageStats();
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">API Error: ${error.message}</div>`;
+            }
+        }
+
+        function resetUsage() {
+            if (confirm('Reset the usage counter for this month? This is for testing only.')) {
+                localStorage.removeItem(window.HunterConfig.usageKey);
+                updateUsageStats();
+                alert('Usage counter reset!');
+            }
+        }
+    </script>
+</body>
+</html>

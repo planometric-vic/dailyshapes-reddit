@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Specific Date Shapes</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .control {
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            font-size: 16px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            overflow: auto;
+            max-height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Specific Date Shape Loading</h1>
+
+    <div class="control">
+        <label>Enter date (YYMMDD format):</label>
+        <input type="text" id="dateInput" placeholder="250923" value="250923">
+        <button onclick="testDate()">Load Shapes for Date</button>
+        <button onclick="listBucketFiles()">List Bucket Files</button>
+    </div>
+
+    <div id="results"></div>
+
+    <!-- Load Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Load modules -->
+    <script src="supabase-config.js"></script>
+    <script src="shape-storage.js"></script>
+
+    <script>
+        const results = document.getElementById('results');
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            results.appendChild(div);
+        }
+
+        async function testDate() {
+            const dateStr = document.getElementById('dateInput').value;
+            if (!/^\d{6}$/.test(dateStr)) {
+                log('Invalid date format. Use YYMMDD (e.g., 250923)', 'error');
+                return;
+            }
+
+            results.innerHTML = '';
+            log(`Testing shapes for date: ${dateStr}`);
+
+            const storage = new ShapeStorage();
+
+            // Test each shape individually
+            for (let i = 1; i <= 3; i++) {
+                const filename = `${dateStr}-${String(i).padStart(2, '0')}.geojson`;
+                log(`Testing ${filename}...`);
+
+                try {
+                    const shape = await storage.loadShape(filename, 1); // Only 1 retry for testing
+                    if (shape) {
+                        log(`✅ ${filename} loaded successfully`, 'success');
+
+                        // Show shape details
+                        const details = {
+                            type: shape.type,
+                            features: shape.features ? shape.features.length : 0,
+                            properties: shape.properties || {}
+                        };
+
+                        const pre = document.createElement('pre');
+                        pre.textContent = JSON.stringify(details, null, 2);
+                        results.appendChild(pre);
+                    }
+                } catch (error) {
+                    log(`❌ ${filename}: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        async function listBucketFiles() {
+            results.innerHTML = '';
+            log('Testing common date ranges (bucket listing not available with anon key)...');
+
+            const storage = new ShapeStorage();
+            const today = storage.getMelbourneDate();
+            const currentYear = today.getFullYear();
+            const currentMonth = today.getMonth() + 1;
+            const currentDay = today.getDate();
+
+            // Test dates around today
+            const testDates = [];
+            for (let i = -7; i <= 7; i++) {
+                const testDate = new Date(today);
+                testDate.setDate(testDate.getDate() + i);
+                const dateStr = storage.formatDateToYYMMDD(testDate);
+                testDates.push({
+                    dateStr,
+                    description: i === 0 ? 'TODAY' :
+                                i === -1 ? 'YESTERDAY' :
+                                i === 1 ? 'TOMORROW' :
+                                `${Math.abs(i)} days ${i < 0 ? 'ago' : 'future'}`
+                });
+            }
+
+            log('Testing date range around today:', 'info');
+
+            const foundDates = [];
+            for (const testDate of testDates) {
+                let hasShapes = false;
+                const shapes = [];
+
+                for (let i = 1; i <= 3; i++) {
+                    const filename = `${testDate.dateStr}-${String(i).padStart(2, '0')}.geojson`;
+                    try {
+                        await storage.loadShape(filename, 1); // Quick test, 1 retry
+                        shapes.push(i);
+                        hasShapes = true;
+                    } catch (e) {
+                        // Shape doesn't exist
+                    }
+                }
+
+                if (hasShapes) {
+                    foundDates.push({
+                        date: testDate.dateStr,
+                        description: testDate.description,
+                        shapes
+                    });
+                    log(`✅ ${testDate.dateStr} (${testDate.description}): shapes ${shapes.join(', ')}`, 'success');
+                }
+            }
+
+            if (foundDates.length === 0) {
+                log('No shapes found in the tested date range', 'info');
+                log('Try entering a specific date if you know shapes exist for other dates', 'info');
+            } else {
+                log(`Found shapes for ${foundDates.length} dates`, 'success');
+            }
+        }
+
+        // Auto-list files on load
+        window.addEventListener('load', () => {
+            setTimeout(listBucketFiles, 1000);
+        });
+    </script>
+</body>
+</html>

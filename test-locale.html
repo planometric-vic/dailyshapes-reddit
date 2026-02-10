@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Locale Detection Test</title>
+</head>
+<body>
+    <h1>Locale Detection Test</h1>
+    <div id="results"></div>
+
+    <script>
+        function isAmericanUser() {
+            // Check timezone first - look for any America/* timezone
+            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            if (timezone.startsWith('America/') || timezone.startsWith('US/') || timezone === 'Pacific/Honolulu') {
+                return true;
+            }
+
+            // Fallback: Check locale for US variants
+            const locale = navigator.language || navigator.userLanguage;
+            return locale === 'en-US' || locale.startsWith('en-US');
+        }
+
+        function formatDateForUser(dateString) {
+            const date = new Date(dateString);
+            if (isAmericanUser()) {
+                // US format: MM/DD/YYYY
+                return date.toLocaleDateString('en-US');
+            } else {
+                // International format: DD/MM/YYYY
+                return date.toLocaleDateString('en-GB');
+            }
+        }
+
+        // Test the detection
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const locale = navigator.language || navigator.userLanguage;
+        const isUS = isAmericanUser();
+
+        const testDate = new Date('2025-09-27');
+        const formattedDate = formatDateForUser(testDate.toISOString());
+
+        document.getElementById('results').innerHTML = `
+            <p><strong>Timezone:</strong> ${timezone}</p>
+            <p><strong>Locale:</strong> ${locale}</p>
+            <p><strong>Is American User:</strong> ${isUS}</p>
+            <p><strong>Test Date (2025-09-27):</strong> ${formattedDate}</p>
+            <p><strong>Expected for AU:</strong> DD/MM/YYYY (27/09/2025)</p>
+            <p><strong>Expected for US:</strong> MM/DD/YYYY (9/27/2025)</p>
+        `;
+    </script>
+</body>
+</html>

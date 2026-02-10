@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Shapes - Stress Test</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+            line-height: 1.4;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border: 2px solid #000;
+            border-radius: 8px;
+        }
+        .test-controls {
+            background: white;
+            border: 2px solid #000;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .test-button {
+            background: #6496FF;
+            color: white;
+            border: 2px solid #000;
+            padding: 12px 20px;
+            margin: 10px 5px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #4a7bd4;
+        }
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .results-area {
+            background: white;
+            border: 2px solid #000;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 400px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #6496FF;
+            background: #f9f9f9;
+        }
+        .log-entry.error {
+            border-left-color: #ff4444;
+            background: #fff5f5;
+        }
+        .log-entry.success {
+            border-left-color: #44ff44;
+            background: #f5fff5;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #eee;
+            border: 2px solid #000;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #6496FF;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        .config-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .config-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .config-item label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .config-item input {
+            padding: 8px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #f0f0f0;
+            border: 2px solid #000;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #6496FF;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 Daily Shapes Stress Testing Suite</h1>
+        <p>Test your application's performance under load</p>
+    </div>
+
+    <div class="test-controls">
+        <h3>Test Configuration</h3>
+        <div class="config-section">
+            <div class="config-item">
+                <label for="dbUsers">Database Users:</label>
+                <input type="number" id="dbUsers" value="25" min="1" max="100">
+            </div>
+            <div class="config-item">
+                <label for="authUsers">Auth Users:</label>
+                <input type="number" id="authUsers" value="10" min="1" max="50">
+            </div>
+            <div class="config-item">
+                <label for="compUsers">Competition Users:</label>
+                <input type="number" id="compUsers" value="20" min="1" max="100">
+            </div>
+            <div class="config-item">
+                <label for="rtConnections">Real-time Connections:</label>
+                <input type="number" id="rtConnections" value="15" min="1" max="50">
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="test-button" onclick="runSingleTest('database')">Database Test</button>
+            <button class="test-button" onclick="runSingleTest('auth')">Auth Test</button>
+            <button class="test-button" onclick="runSingleTest('competition')">Competition Test</button>
+            <button class="test-button" onclick="runSingleTest('realtime')">Real-time Test</button>
+            <button class="test-button" onclick="runSingleTest('memory')">Memory Test</button>
+            <button class="test-button" onclick="runAllTests()" style="background: #FF6B35;">Run All Tests</button>
+        </div>
+
+        <div class="progress-bar" id="progressBar" style="display: none;">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+
+    <div class="results-area">
+        <h3>Test Results</h3>
+        <div id="logArea">
+            <div class="log-entry">Ready to run stress tests. Click a test button to begin.</div>
+        </div>
+
+        <div class="stats-grid" id="statsGrid" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-value" id="totalTests">0</div>
+                <div class="stat-label">Tests Run</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="successRate">0%</div>
+                <div class="stat-label">Success Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avgResponse">0ms</div>
+                <div class="stat-label">Avg Response</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="throughput">0/s</div>
+                <div class="stat-label">Throughput</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="stress-test.js"></script>
+    <script>
+        let stressTester = null;
+        let currentTest = null;
+        let testResults = [];
+
+        // Initialize stress tester
+        async function initStressTester() {
+            if (!stressTester) {
+                stressTester = new DailyShapesStressTester();
+                await stressTester.initializeClient();
+                log('✅ Stress tester initialized', 'success');
+            }
+            return stressTester;
+        }
+
+        // Logging function
+        function log(message, type = 'info') {
+            const logArea = document.getElementById('logArea');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logArea.appendChild(entry);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        // Update progress bar
+        function updateProgress(percent) {
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            progressBar.style.display = 'block';
+            progressFill.style.width = `${percent}%`;
+        }
+
+        // Hide progress bar
+        function hideProgress() {
+            document.getElementById('progressBar').style.display = 'none';
+        }
+
+        // Update stats display
+        function updateStats() {
+            const statsGrid = document.getElementById('statsGrid');
+            if (testResults.length === 0) {
+                statsGrid.style.display = 'none';
+                return;
+            }
+
+            statsGrid.style.display = 'grid';
+
+            // Calculate aggregate stats
+            const totalTests = testResults.length;
+            const avgSuccessRate = testResults.reduce((sum, test) => sum + (test.successRate || 0), 0) / totalTests;
+            const avgResponseTime = testResults.reduce((sum, test) => sum + (test.averageResponseTime || test.duration || 0), 0) / totalTests;
+            const avgThroughput = testResults.reduce((sum, test) => sum + (test.throughput || 0), 0) / totalTests;
+
+            document.getElementById('totalTests').textContent = totalTests;
+            document.getElementById('successRate').textContent = `${avgSuccessRate.toFixed(1)}%`;
+            document.getElementById('avgResponse').textContent = `${avgResponseTime.toFixed(0)}ms`;
+            document.getElementById('throughput').textContent = `${avgThroughput.toFixed(1)}/s`;
+        }
+
+        // Disable all buttons
+        function disableButtons(disabled = true) {
+            const buttons = document.querySelectorAll('.test-button');
+            buttons.forEach(button => {
+                button.disabled = disabled;
+            });
+        }
+
+        // Run single test
+        async function runSingleTest(testType) {
+            try {
+                disableButtons(true);
+                await initStressTester();
+
+                const config = {
+                    database: parseInt(document.getElementById('dbUsers').value),
+                    auth: parseInt(document.getElementById('authUsers').value),
+                    competition: parseInt(document.getElementById('compUsers').value),
+                    realtime: parseInt(document.getElementById('rtConnections').value)
+                };
+
+                updateProgress(10);
+                log(`🚀 Starting ${testType} test...`);
+
+                let result;
+                updateProgress(30);
+
+                switch (testType) {
+                    case 'database':
+                        result = await stressTester.testDatabasePerformance(config.database);
+                        break;
+                    case 'auth':
+                        result = await stressTester.testAuthenticationLoad(config.auth);
+                        break;
+                    case 'competition':
+                        result = await stressTester.testCompetitionScalability(config.competition);
+                        break;
+                    case 'realtime':
+                        result = await stressTester.testRealTimePerformance(config.realtime);
+                        break;
+                    case 'memory':
+                        result = await stressTester.testMemoryUsage();
+                        break;
+                }
+
+                updateProgress(90);
+
+                if (result) {
+                    testResults.push(result);
+                    log(`✅ ${testType} test completed: ${result.successRate ? result.successRate.toFixed(1) + '% success' : 'completed'}`, 'success');
+                    updateStats();
+                }
+
+                updateProgress(100);
+                setTimeout(hideProgress, 1000);
+
+            } catch (error) {
+                log(`❌ ${testType} test failed: ${error.message}`, 'error');
+                hideProgress();
+            } finally {
+                disableButtons(false);
+            }
+        }
+
+        // Run all tests
+        async function runAllTests() {
+            try {
+                disableButtons(true);
+                log('🚀 Starting comprehensive stress test suite...');
+
+                await initStressTester();
+
+                const tests = ['database', 'auth', 'competition', 'realtime', 'memory'];
+                const totalTests = tests.length;
+
+                for (let i = 0; i < tests.length; i++) {
+                    const testType = tests[i];
+                    const progress = ((i + 1) / totalTests) * 100;
+
+                    updateProgress(progress);
+                    log(`📊 Running ${testType} test (${i + 1}/${totalTests})...`);
+
+                    try {
+                        await runSingleTest(testType);
+                        // Small delay between tests
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    } catch (error) {
+                        log(`⚠️ ${testType} test had issues: ${error.message}`, 'error');
+                    }
+                }
+
+                // Generate final report
+                log('📊 Generating comprehensive report...', 'success');
+                const report = stressTester.generateReport();
+
+                log('🎉 All stress tests completed! Check console for detailed report.', 'success');
+                updateProgress(100);
+                setTimeout(hideProgress, 2000);
+
+            } catch (error) {
+                log(`❌ Stress testing suite failed: ${error.message}`, 'error');
+                hideProgress();
+            } finally {
+                disableButtons(false);
+            }
+        }
+
+        // Auto-initialize when page loads
+        window.addEventListener('load', () => {
+            log('Daily Shapes Stress Testing Suite ready. Configure your test parameters and click a test button to begin.');
+        });
+    </script>
+</body>
+</html>

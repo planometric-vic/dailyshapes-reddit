@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Current Practice State Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; max-width: 800px; }
+        .log { margin: 5px 0; padding: 5px; border-radius: 3px; font-size: 14px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .warning { background: #fff3cd; color: #856404; }
+        button { margin: 5px; padding: 8px 16px; }
+    </style>
+</head>
+<body>
+    <h1>Current Practice Mode State Test</h1>
+    <div>
+        <button onclick="testPracticeState()">Test Practice State</button>
+        <button onclick="testNavigation()">Test Navigation</button>
+        <button onclick="testSpecificShape()">Test Specific Shape Load</button>
+    </div>
+    <div id="logs"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="shape-storage.js"></script>
+    <script src="practice-mode-manager.js"></script>
+    <script src="daily-mode-manager.js"></script>
+    <script src="game-mode-integration.js"></script>
+
+    <script>
+        const logs = document.getElementById('logs');
+        function log(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = new Date().toLocaleTimeString() + ' - ' + msg;
+            logs.appendChild(div);
+            console.log(msg);
+        }
+
+        async function testPracticeState() {
+            logs.innerHTML = '';
+            log('🧪 Testing current practice mode state...', 'info');
+
+            try {
+                // Check if GameModeIntegration exists
+                if (!window.GameModeIntegration) {
+                    log('❌ GameModeIntegration class not found', 'error');
+                    return;
+                }
+
+                // Create and initialize integration
+                const integration = new GameModeIntegration();
+                await integration.initialize();
+                log('✅ GameModeIntegration initialized', 'success');
+
+                // Check practice mode
+                if (!integration.practiceMode) {
+                    log('⚠️ Practice mode not initialized, initializing...', 'warning');
+                    await integration.initializePracticeMode();
+                }
+
+                if (integration.practiceMode) {
+                    log('✅ Practice mode available', 'success');
+
+                    // Check initialization
+                    if (!integration.practiceMode.isInitialized) {
+                        log('🔄 Initializing practice mode...', 'info');
+                        const initResult = await integration.practiceMode.initialize();
+                        log(`📋 Init result: ${JSON.stringify(initResult)}`, initResult.success ? 'success' : 'error');
+                    }
+
+                    // Get navigation info
+                    const navInfo = integration.practiceMode.getNavigationInfo();
+                    if (navInfo) {
+                        log(`📅 Current shape: ${navInfo.currentShapeName}`, 'success');
+                        log(`📊 Has previous: ${navInfo.hasPrevious}, Has next: ${navInfo.hasNext}`, 'info');
+                        log(`📍 Shape index: ${navInfo.shapeIndex}/${navInfo.totalShapes}`, 'info');
+                    } else {
+                        log('❌ No navigation info available', 'error');
+                    }
+
+                    // Check current shape
+                    const currentShape = integration.practiceMode.getCurrentShape();
+                    if (currentShape) {
+                        log('✅ Current shape data available', 'success');
+                        log(`📐 Features: ${currentShape.features ? currentShape.features.length : 'none'}`, 'info');
+                    } else {
+                        log('❌ No current shape data', 'error');
+                    }
+
+                    // Expose globally for navigation test
+                    window.testIntegration = integration;
+
+                } else {
+                    log('❌ Practice mode initialization failed', 'error');
+                }
+
+            } catch (error) {
+                log(`❌ Test failed: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        async function testNavigation() {
+            if (!window.testIntegration || !window.testIntegration.practiceMode) {
+                log('❌ Run "Test Practice State" first', 'error');
+                return;
+            }
+
+            log('🔄 Testing navigation...', 'info');
+            const practiceMode = window.testIntegration.practiceMode;
+
+            try {
+                // Test next
+                log('➡️ Testing next shape...', 'info');
+                const nextShape = await practiceMode.nextShape();
+                if (nextShape) {
+                    const navInfo = practiceMode.getNavigationInfo();
+                    log(`✅ Next shape: ${navInfo.currentShapeName}`, 'success');
+                } else {
+                    log('ℹ️ No next shape available', 'info');
+                }
+
+                // Test previous
+                log('⬅️ Testing previous shape...', 'info');
+                const prevShape = await practiceMode.previousShape();
+                if (prevShape) {
+                    const navInfo = practiceMode.getNavigationInfo();
+                    log(`✅ Previous shape: ${navInfo.currentShapeName}`, 'success');
+                } else {
+                    log('ℹ️ No previous shape available', 'info');
+                }
+
+                // Test random
+                log('🎲 Testing random shape...', 'info');
+                const randomShape = await practiceMode.randomShape();
+                if (randomShape) {
+                    const navInfo = practiceMode.getNavigationInfo();
+                    log(`✅ Random shape: ${navInfo.currentShapeName}`, 'success');
+                } else {
+                    log('ℹ️ No random shape available', 'info');
+                }
+
+            } catch (error) {
+                log(`❌ Navigation test failed: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        async function testSpecificShape() {
+            log('🧪 Testing specific shape loading...', 'info');
+
+            try {
+                const storage = new ShapeStorage();
+
+                // Test the first few shapes from our conservative list
+                const testShapes = ['250918-03', '250917-03', '250916-03'];
+
+                for (const shapeName of testShapes) {
+                    const dateStr = shapeName.substring(0, 6);
+                    const shapeNumber = parseInt(shapeName.substring(7, 9));
+
+                    try {
+                        // Parse date
+                        const year = parseInt('20' + dateStr.substring(0, 2));
+                        const month = parseInt(dateStr.substring(2, 4)) - 1;
+                        const day = parseInt(dateStr.substring(4, 6));
+                        const shapeDate = new Date(year, month, day);
+
+                        log(`🔍 Testing ${shapeName}...`, 'info');
+                        const shape = await storage.loadPracticeShape(shapeDate, shapeNumber);
+
+                        if (shape && shape.features) {
+                            log(`✅ ${shapeName}: OK (${shape.features.length} features)`, 'success');
+                        } else {
+                            log(`❌ ${shapeName}: Invalid data`, 'error');
+                        }
+
+                    } catch (error) {
+                        log(`❌ ${shapeName}: ${error.message}`, 'error');
+                    }
+
+                    // Small delay
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                }
+
+            } catch (error) {
+                log(`❌ Specific shape test failed: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        // Auto-run initial test
+        setTimeout(testPracticeState, 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Score Submission Diagnostic</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .result {
+            background: #f0f0f0;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 2px solid #000;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+        .info {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Score Submission Diagnostic</h1>
+
+    <div id="results"></div>
+
+    <button onclick="checkSubmission()">Check Score Submission</button>
+    <button onclick="manuallySubmit()">Manually Submit Score</button>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://zxrfhumifazjxgikltkz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp4cmZodW1pZmF6anhnaWtsdGt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MjMyMTAsImV4cCI6MjA2ODQ5OTIxMH0.GJGVi_So1OAklXM6oantOGd3ok1OVhgURmc7KhEwcwQ';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // USER ID TO INVESTIGATE - CHANGE THIS TO TEST DIFFERENT USERS
+        const USER_ID = 'b306be71-3ca5-464d-a76e-943dd326a569';  // User with score issue
+        const COMPETITION_ID = '6b68e958-f2ec-4bfd-842d-dd5169446fbe';
+        const TODAY = new Date().toISOString().split('T')[0];
+
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = message;
+            document.getElementById('results').appendChild(div);
+        }
+
+        async function checkSubmission() {
+            document.getElementById('results').innerHTML = '';
+            addResult('<h3>🔍 Checking Score Submission...</h3>');
+
+            try {
+                // Check if user is in competition
+                addResult('<strong>Step 1: Checking if user is in competition...</strong>');
+                const { data: participant, error: participantError } = await supabase
+                    .from('competition_participants')
+                    .select('*')
+                    .eq('user_id', USER_ID)
+                    .eq('competition_id', COMPETITION_ID)
+                    .single();
+
+                if (participantError) {
+                    addResult(`❌ Error: ${participantError.message}`, 'error');
+                } else if (participant) {
+                    addResult(`✅ User IS in competition<br><pre>${JSON.stringify(participant, null, 2)}</pre>`, 'success');
+                } else {
+                    addResult('❌ User is NOT in competition!', 'error');
+                }
+
+                // Check today's daily score
+                addResult('<strong>Step 2: Checking today\'s daily score...</strong>');
+                const { data: dailyScore, error: scoreError } = await supabase
+                    .from('daily_scores')
+                    .select('*')
+                    .eq('user_id', USER_ID)
+                    .eq('date', TODAY)
+                    .single();
+
+                if (scoreError && scoreError.code !== 'PGRST116') {
+                    addResult(`❌ Error: ${scoreError.message}`, 'error');
+                } else if (dailyScore) {
+                    addResult(`✅ Daily score exists for today<br><pre>${JSON.stringify(dailyScore, null, 2)}</pre>`, 'success');
+                } else {
+                    addResult('⚠️ No daily score found for today', 'error');
+                }
+
+                // Check user_daily_progress
+                addResult('<strong>Step 3: Checking user daily progress...</strong>');
+                const { data: progress, error: progressError } = await supabase
+                    .from('user_daily_progress')
+                    .select('*')
+                    .eq('user_id', USER_ID)
+                    .eq('date', TODAY)
+                    .single();
+
+                if (progressError && progressError.code !== 'PGRST116') {
+                    addResult(`❌ Error: ${progressError.message}`, 'error');
+                } else if (progress) {
+                    addResult(`✅ Progress record exists<br><pre>${JSON.stringify(progress, null, 2)}</pre>`, 'success');
+                } else {
+                    addResult('⚠️ No progress record for today', 'error');
+                }
+
+            } catch (error) {
+                addResult(`❌ Unexpected error: ${error.message}`, 'error');
+            }
+        }
+
+        async function manuallySubmit() {
+            document.getElementById('results').innerHTML = '';
+            addResult('<h3>🎯 Attempting Manual Score Submission...</h3>');
+
+            try {
+                // Get today's score
+                const { data: dailyScore, error: scoreError } = await supabase
+                    .from('daily_scores')
+                    .select('*')
+                    .eq('user_id', USER_ID)
+                    .eq('date', TODAY)
+                    .single();
+
+                if (scoreError) {
+                    addResult(`❌ Could not find today's score: ${scoreError.message}`, 'error');
+                    return;
+                }
+
+                // Calculate average from 6 attempts
+                const score = (
+                    dailyScore.shape1_attempt1 +
+                    dailyScore.shape1_attempt2 +
+                    dailyScore.shape2_attempt1 +
+                    dailyScore.shape2_attempt2 +
+                    dailyScore.shape3_attempt1 +
+                    dailyScore.shape3_attempt2
+                ) / 6;
+                addResult(`Calculated today's average score: ${score.toFixed(2)}`, 'info');
+
+                // Submit to competition
+                addResult('Calling submit_to_custom_competition function...', 'info');
+                const { data, error } = await supabase.rpc('submit_to_custom_competition', {
+                    p_competition_id: COMPETITION_ID,
+                    p_user_id: USER_ID,
+                    p_daily_score: score,
+                    p_date: TODAY
+                });
+
+                if (error) {
+                    addResult(`❌ Submission failed: ${error.message}`, 'error');
+                } else {
+                    addResult('✅ Score submitted successfully!', 'success');
+
+                    // Verify the update
+                    setTimeout(async () => {
+                        const { data: updated } = await supabase
+                            .from('competition_participants')
+                            .select('*')
+                            .eq('user_id', USER_ID)
+                            .eq('competition_id', COMPETITION_ID)
+                            .single();
+
+                        if (updated) {
+                            addResult(`✅ Final participant record:<br><pre>${JSON.stringify(updated, null, 2)}</pre>`, 'success');
+                        }
+                    }, 1000);
+                }
+
+            } catch (error) {
+                addResult(`❌ Unexpected error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-check on load
+        window.addEventListener('load', checkSubmission);
+    </script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Daily Shapes - TEST WITH OVERRIDE (Force 250923)</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        #test-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #ffeb3b;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 10000;
+            font-size: 12px;
+            max-width: 200px;
+        }
+        .log {
+            background: white;
+            padding: 5px;
+            margin: 2px 0;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        .error { background: #ffebee; }
+        .success { background: #e8f5e8; }
+    </style>
+</head>
+<body>
+    <div id="test-info">
+        <strong>🔧 TEST MODE</strong><br>
+        Date forced to: 250923<br>
+        <div id="test-logs"></div>
+    </div>
+
+    <h1>Daily Shapes - Testing with Known Date</h1>
+
+    <!-- Load the override first -->
+    <script src="test-force-known-date.js"></script>
+
+    <!-- Load Supabase and config -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+
+    <!-- Load all the shape loading modules -->
+    <script src="shape-storage.js"></script>
+    <script src="daily-mode-manager.js"></script>
+    <script src="practice-mode-manager.js"></script>
+    <script src="game-mode-integration.js"></script>
+
+    <!-- Load game core -->
+    <script src="daily-game-core.js"></script>
+
+    <!-- Add test monitoring -->
+    <script>
+        const testLogs = document.getElementById('test-logs');
+
+        function testLog(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = msg;
+            testLogs.appendChild(div);
+            console.log('TEST:', msg);
+
+            // Keep only last 10 logs
+            while (testLogs.children.length > 10) {
+                testLogs.removeChild(testLogs.firstChild);
+            }
+        }
+
+        // Monitor shape loading
+        window.addEventListener('load', async () => {
+            testLog('Starting integration test...');
+
+            setTimeout(async () => {
+                try {
+                    // Check what shapes are loaded
+                    if (window.DailyGameCore) {
+                        testLog('DailyGameCore found');
+
+                        const shape1 = window.DailyGameCore.getShapeData(1);
+                        if (shape1) {
+                            testLog('Shape 1 loaded!', 'success');
+
+                            // Check if it's from Supabase or demo
+                            const shapeStr = JSON.stringify(shape1);
+                            if (shapeStr.includes('v4-tests') || shapeStr.includes('demo')) {
+                                testLog('FAIL: Using demo shapes', 'error');
+                            } else {
+                                testLog('SUCCESS: Using Supabase!', 'success');
+                            }
+                        } else {
+                            testLog('No shapes loaded', 'error');
+                        }
+                    } else {
+                        testLog('DailyGameCore not found', 'error');
+                    }
+                } catch (error) {
+                    testLog('Error: ' + error.message, 'error');
+                }
+            }, 3000);
+        });
+
+        // Also monitor console for shape loading messages
+        const originalConsoleLog = console.log;
+        console.log = function(...args) {
+            const msg = args.join(' ');
+            if (msg.includes('demo') || msg.includes('v4-tests') || msg.includes('Supabase') || msg.includes('shapes')) {
+                if (msg.includes('demo') || msg.includes('v4-tests')) {
+                    testLog('Console: ' + msg.substring(0, 50), 'error');
+                } else if (msg.includes('Supabase')) {
+                    testLog('Console: ' + msg.substring(0, 50), 'success');
+                }
+            }
+            originalConsoleLog.apply(console, args);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Daily Mode Manager</title>
+</head>
+<body>
+    <h1>Debug Daily Mode Manager</h1>
+    <div id="output"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="shape-storage.js"></script>
+    <script src="daily-mode-manager.js"></script>
+
+    <script>
+        const output = document.getElementById('output');
+
+        function log(msg) {
+            output.innerHTML += msg + '<br>';
+            console.log(msg);
+        }
+
+        window.addEventListener('load', async () => {
+            try {
+                log('🔍 Debugging Daily Mode Manager...');
+
+                // Check prerequisites
+                if (!window.SupabaseConfig) {
+                    log('❌ SupabaseConfig not available');
+                    return;
+                }
+
+                if (!window.ShapeStorage) {
+                    log('❌ ShapeStorage not available');
+                    return;
+                }
+
+                if (!window.DailyModeManager) {
+                    log('❌ DailyModeManager not available');
+                    return;
+                }
+
+                log('✅ All modules available');
+
+                // Test ShapeStorage directly
+                log('📦 Testing ShapeStorage directly...');
+                const storage = new window.ShapeStorage();
+
+                // Get today's date in Melbourne timezone
+                const melbourneDate = storage.getMelbourneDate();
+                const dateStr = storage.formatDateToYYMMDD(melbourneDate);
+                log(`   Melbourne date: ${melbourneDate.toISOString()}`);
+                log(`   Formatted: ${dateStr}`);
+
+                // Try to load today's first shape directly
+                log(`📥 Testing direct shape load: ${dateStr}-01.geojson`);
+                try {
+                    const shape = await storage.loadShape(`${dateStr}-01.geojson`);
+                    if (shape) {
+                        log('✅ Direct shape load successful');
+                        log(`   Type: ${shape.type}`);
+                        log(`   Features: ${shape.features ? shape.features.length : 0}`);
+                    } else {
+                        log('❌ Direct shape load returned null');
+                    }
+                } catch (error) {
+                    log(`❌ Direct shape load failed: ${error.message}`);
+                }
+
+                // Test DailyModeManager
+                log('🎮 Testing DailyModeManager...');
+                const dailyManager = new window.DailyModeManager();
+
+                try {
+                    const result = await dailyManager.initialize();
+
+                    log(`   Initialization result: ${result.success ? 'success' : 'failed'}`);
+                    if (!result.success) {
+                        log(`   Error: ${result.error}`);
+                    }
+
+                    log(`   Shapes loaded: ${dailyManager.shapes.length}`);
+
+                    // Check each shape
+                    dailyManager.shapes.forEach((shape, index) => {
+                        if (shape) {
+                            log(`   Shape ${index + 1}: loaded`);
+                            log(`     Type: ${shape.type}`);
+                            log(`     Features: ${shape.features ? shape.features.length : 0}`);
+
+                            // Check if this looks like a Supabase shape or demo
+                            const shapeStr = JSON.stringify(shape);
+                            if (shapeStr.includes('v4-tests') || shapeStr.includes('demo')) {
+                                log(`     ⚠️ WARNING: Appears to be demo/local shape`);
+                            } else {
+                                log(`     ✅ Appears to be Supabase shape`);
+                            }
+                        } else {
+                            log(`   Shape ${index + 1}: null`);
+                        }
+                    });
+
+                } catch (error) {
+                    log(`❌ DailyModeManager error: ${error.message}`);
+                    log(`   Stack: ${error.stack}`);
+                }
+
+                log('🎯 Debug complete!');
+
+            } catch (error) {
+                log('❌ Test error: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

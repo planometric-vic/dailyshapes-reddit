@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Account Creation - Daily Shapes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            border: 2px solid black;
+            box-shadow: 2px 4px 0px #000;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        button {
+            background: #6496FF;
+            color: white;
+            padding: 12px 24px;
+            border: 2px solid black;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: all 0.2s ease;
+        }
+        button:hover {
+            background: #5285ee;
+            transform: translateY(-1px);
+            box-shadow: 2px 4px 0px #000;
+        }
+        .secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        .secondary:hover {
+            background: #e0e0e0;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .success {
+            background: #e8f5e8;
+            border: 1px solid #4CAF50;
+            color: #2e7d2e;
+        }
+        .error {
+            background: #ffe8e8;
+            border: 1px solid #f44336;
+            color: #d32f2f;
+        }
+        .info {
+            background: #e3f2fd;
+            border: 1px solid #2196F3;
+            color: #1976d2;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            background: #fff9e6;
+            border: 1px solid #ffd700;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Daily Shapes Account Creation Test</h1>
+        
+        <div class="status">
+            <h3>System Status</h3>
+            <div id="systemStatus">Checking systems...</div>
+        </div>
+
+        <h2>Create New Account</h2>
+        <form id="signupForm">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" required placeholder="your.email@example.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" required placeholder="coolplayer123" minlength="3" maxlength="20">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" required placeholder="Minimum 6 characters" minlength="6">
+            </div>
+            
+            <button type="submit">Create Account</button>
+            <button type="button" class="secondary" onclick="testLogin()">Test Login</button>
+        </form>
+
+        <h2>Test Existing Account</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="loginEmail">Email or Username:</label>
+                <input type="text" id="loginEmail" placeholder="your.email@example.com or username">
+            </div>
+            
+            <div class="form-group">
+                <label for="loginPassword">Password:</label>
+                <input type="password" id="loginPassword" placeholder="Your password">
+            </div>
+            
+            <button type="submit">Sign In</button>
+            <button type="button" class="secondary" onclick="logout()">Logout</button>
+        </form>
+
+        <h2>Account Management</h2>
+        <div>
+            <button onclick="checkProfile()">Load Profile</button>
+            <button onclick="testCompetition()" class="secondary">Test Competition Creation</button>
+            <button onclick="checkCompetitions()" class="secondary">Load Competitions</button>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <!-- Load required scripts -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth-service.js"></script>
+    <script src="user-account-manager.js"></script>
+
+    <script>
+        let result = document.getElementById('result');
+        let systemStatus = document.getElementById('systemStatus');
+
+        function showResult(message, type = 'info') {
+            result.innerHTML = `<div class="${type}">${message}</div>`;
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+
+        function showStatus(message) {
+            systemStatus.innerHTML = message;
+        }
+
+        // Check system status on load
+        async function checkSystemStatus() {
+            let status = [];
+
+            // Check Supabase
+            if (window.SupabaseConfig) {
+                if (window.SupabaseConfig.isReady()) {
+                    status.push('✅ Supabase: Connected');
+                    try {
+                        const session = await window.SupabaseConfig.initialize();
+                        if (session) {
+                            status.push(`✅ Auth: Logged in as ${session.user.email}`);
+                        } else {
+                            status.push('ℹ️ Auth: Not logged in');
+                        }
+                    } catch (error) {
+                        status.push(`⚠️ Auth: Error - ${error.message}`);
+                    }
+                } else {
+                    status.push('❌ Supabase: Not configured');
+                }
+            } else {
+                status.push('❌ Supabase: Not loaded');
+            }
+
+            // Check AuthService
+            if (window.AuthService) {
+                try {
+                    const user = await window.AuthService.initialize();
+                    if (user && !user.isGuest) {
+                        status.push(`✅ AuthService: User ${user.username || user.email}`);
+                    } else {
+                        status.push('ℹ️ AuthService: Guest mode');
+                    }
+                } catch (error) {
+                    status.push(`⚠️ AuthService: Error - ${error.message}`);
+                }
+            } else {
+                status.push('❌ AuthService: Not loaded');
+            }
+
+            // Check UserAccountManager
+            if (window.UserAccountManager) {
+                try {
+                    await window.UserAccountManager.initialize();
+                    if (window.UserAccountManager.isAuthenticated()) {
+                        status.push('✅ UserAccountManager: Authenticated');
+                    } else {
+                        status.push('ℹ️ UserAccountManager: Not authenticated');
+                    }
+                } catch (error) {
+                    status.push(`⚠️ UserAccountManager: Error - ${error.message}`);
+                }
+            } else {
+                status.push('❌ UserAccountManager: Not loaded');
+            }
+
+            showStatus(status.join('<br>'));
+        }
+
+        // Handle signup form
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            showResult('Creating account...', 'info');
+
+            try {
+                if (!window.AuthService) {
+                    throw new Error('AuthService not available');
+                }
+
+                const result = await window.AuthService.createUser(email, username, password);
+                
+                if (result.error) {
+                    showResult(`Account creation failed: ${result.error}`, 'error');
+                } else {
+                    showResult('Account created successfully! You can now sign in.', 'success');
+                    document.getElementById('signupForm').reset();
+                    
+                    // Refresh system status
+                    await checkSystemStatus();
+                }
+            } catch (error) {
+                showResult(`Error: ${error.message}`, 'error');
+            }
+        });
+
+        // Handle login form
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const emailOrUsername = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            showResult('Signing in...', 'info');
+
+            try {
+                if (!window.AuthService) {
+                    throw new Error('AuthService not available');
+                }
+
+                const result = await window.AuthService.loginUser(emailOrUsername, password);
+                
+                if (result.error) {
+                    showResult(`Sign in failed: ${result.error}`, 'error');
+                } else {
+                    showResult('Signed in successfully!', 'success');
+                    document.getElementById('loginForm').reset();
+                    
+                    // Refresh system status
+                    await checkSystemStatus();
+                }
+            } catch (error) {
+                showResult(`Error: ${error.message}`, 'error');
+            }
+        });
+
+        // Test functions
+        async function testLogin() {
+            showResult('Testing with demo credentials...', 'info');
+            
+            document.getElementById('loginEmail').value = 'test@example.com';
+            document.getElementById('loginPassword').value = 'password123';
+            
+            showResult('Demo credentials filled. Click "Sign In" to test.', 'info');
+        }
+
+        async function logout() {
+            try {
+                if (window.AuthService) {
+                    await window.AuthService.logoutUser();
+                    showResult('Logged out successfully', 'success');
+                    await checkSystemStatus();
+                }
+            } catch (error) {
+                showResult(`Logout error: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkProfile() {
+            try {
+                if (!window.UserAccountManager) {
+                    throw new Error('UserAccountManager not available');
+                }
+
+                await window.UserAccountManager.initialize();
+                const profile = window.UserAccountManager.getUserProfile();
+                const stats = window.UserAccountManager.getUserStats();
+                
+                if (profile) {
+                    showResult(`
+                        <h3>User Profile:</h3>
+                        <p><strong>Username:</strong> ${profile.username}</p>
+                        <p><strong>Email:</strong> ${profile.email}</p>
+                        <p><strong>Created:</strong> ${new Date(profile.created_at).toLocaleDateString()}</p>
+                        <h4>Stats:</h4>
+                        <p>Days played: ${stats.totalDaysPlayed}, Current streak: ${stats.currentStreak}</p>
+                        <p>Competitions: ${stats.competitionsCreated} created, ${stats.competitionsJoined} joined</p>
+                    `, 'success');
+                } else {
+                    showResult('No profile found. Please sign in first.', 'error');
+                }
+            } catch (error) {
+                showResult(`Profile check error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCompetition() {
+            try {
+                if (!window.UserAccountManager) {
+                    throw new Error('UserAccountManager not available');
+                }
+
+                if (!window.UserAccountManager.isAuthenticated()) {
+                    showResult('Please sign in first to create competitions', 'error');
+                    return;
+                }
+
+                const competitionData = {
+                    name: 'Test Competition ' + Date.now(),
+                    description: 'A test competition created from the test page',
+                    startDate: '2024-02-01',
+                    endDate: '2024-02-07',
+                    isPublic: true,
+                    maxParticipants: 50,
+                    tags: ['test', 'demo']
+                };
+
+                const result = await window.UserAccountManager.createCompetition(competitionData);
+                
+                if (result.success) {
+                    showResult(`Competition created successfully! ID: ${result.data.id}`, 'success');
+                } else {
+                    showResult(`Competition creation failed: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showResult(`Competition test error: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkCompetitions() {
+            try {
+                if (!window.UserAccountManager) {
+                    throw new Error('UserAccountManager not available');
+                }
+
+                await window.UserAccountManager.initialize();
+                const competitions = window.UserAccountManager.getUserCompetitions();
+                const publicComps = await window.UserAccountManager.getPublicCompetitions(5);
+                
+                let message = `<h3>Your Competitions: ${competitions.length}</h3>`;
+                competitions.slice(0, 3).forEach(comp => {
+                    message += `<p>• ${comp.name} (${comp.status})</p>`;
+                });
+                
+                if (publicComps.data) {
+                    message += `<h3>Public Competitions: ${publicComps.data.length}</h3>`;
+                    publicComps.data.slice(0, 3).forEach(comp => {
+                        message += `<p>• ${comp.name} (${comp.status})</p>`;
+                    });
+                }
+                
+                showResult(message, 'info');
+            } catch (error) {
+                showResult(`Competitions check error: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', checkSystemStatus);
+    </script>
+</body>
+</html>

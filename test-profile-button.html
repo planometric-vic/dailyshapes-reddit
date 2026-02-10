@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Button Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h2 {
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            border: 2px solid #000;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        button:hover {
+            background: #f0f0f0;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f5e8;
+            border-radius: 4px;
+        }
+        .error {
+            background: #fee2e2;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h2>Profile Button Test Page</h2>
+        
+        <div class="test-section">
+            <h3>Test Instructions:</h3>
+            <ol>
+                <li>Open the main application at <a href="http://localhost:9001" target="_blank">http://localhost:9001</a></li>
+                <li>Check that the profile button appears as a circular icon (person silhouette)</li>
+                <li>When not logged in: Click should open sign up/login popup</li>
+                <li>After logging in: Button should still look the same (circular icon)</li>
+                <li>When logged in: Click should open a popup with username, stats, password, and logout options</li>
+            </ol>
+        </div>
+        
+        <div class="test-section">
+            <h3>Expected Behavior:</h3>
+            <ul>
+                <li>✅ Profile button always appears as a small circular button with person icon</li>
+                <li>✅ Button does NOT expand to show username when logged in</li>
+                <li>✅ Button does NOT change color when logged in</li>
+                <li>✅ When not logged in: Opens signup/login modal</li>
+                <li>✅ When logged in: Opens user menu modal with:
+                    <ul>
+                        <li>Username as heading</li>
+                        <li>View Stats button</li>
+                        <li>Change Password button</li>
+                        <li>Log Out button</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <h3>Quick Actions:</h3>
+            <button onclick="window.open('http://localhost:9001', '_blank')">Open Main App</button>
+            <button onclick="clearLocalStorage()">Clear Local Storage</button>
+            <button onclick="checkAuthStatus()">Check Auth Status</button>
+            <div id="status" class="status" style="display:none;"></div>
+        </div>
+    </div>
+    
+    <script>
+        function clearLocalStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            showStatus('Local storage and cookies cleared. Refresh the main app to test.', false);
+        }
+        
+        function checkAuthStatus() {
+            const authToken = localStorage.getItem('userAuthToken');
+            const cookies = document.cookie;
+            let message = 'Auth Status:\n';
+            message += authToken ? '✅ Auth token found\n' : '❌ No auth token\n';
+            message += cookies.includes('ds_auth_token') ? '✅ Auth cookie found\n' : '❌ No auth cookie\n';
+            message += cookies.includes('ds_username') ? '✅ Username cookie found' : '❌ No username cookie';
+            showStatus(message, !authToken);
+        }
+        
+        function showStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.style.display = 'block';
+            status.className = isError ? 'status error' : 'status';
+        }
+    </script>
+</body>
+</html>

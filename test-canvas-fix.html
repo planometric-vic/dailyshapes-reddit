@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Canvas Fix</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .log { margin: 5px 0; padding: 5px; border-radius: 3px; font-size: 12px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        #geoCanvas { border: 2px solid #333; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Canvas ID Consistency Test</h1>
+    <button onclick="testCanvasAccess()">Test Canvas Access</button>
+    <div id="logs"></div>
+
+    <!-- Main canvas with correct ID -->
+    <canvas id="geoCanvas" width="380" height="380"></canvas>
+
+    <script>
+        const logs = document.getElementById('logs');
+
+        function log(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = new Date().toLocaleTimeString() + ' - ' + msg;
+            logs.appendChild(div);
+            console.log(msg);
+        }
+
+        function testCanvasAccess() {
+            logs.innerHTML = '';
+            log('🧪 Testing canvas access consistency...', 'info');
+
+            // Test getElementById access
+            const canvas1 = document.getElementById('geoCanvas');
+            log(`getElementById('geoCanvas'): ${canvas1 ? 'Found' : 'Not found'}`, canvas1 ? 'success' : 'error');
+
+            // Test querySelector access
+            const canvas2 = document.querySelector('#geoCanvas');
+            log(`querySelector('#geoCanvas'): ${canvas2 ? 'Found' : 'Not found'}`, canvas2 ? 'success' : 'error');
+
+            // Test if they're the same element
+            if (canvas1 && canvas2) {
+                log(`Same element: ${canvas1 === canvas2 ? 'Yes' : 'No'}`, canvas1 === canvas2 ? 'success' : 'error');
+
+                // Test drawing
+                const ctx = canvas1.getContext('2d');
+                ctx.clearRect(0, 0, canvas1.width, canvas1.height);
+
+                // Draw test rectangle
+                ctx.fillStyle = 'red';
+                ctx.fillRect(10, 10, 50, 50);
+                log('Drew test rectangle successfully', 'success');
+
+                // Draw test shape
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(100, 100);
+                ctx.lineTo(200, 150);
+                ctx.lineTo(150, 250);
+                ctx.closePath();
+                ctx.stroke();
+                log('Drew test triangle successfully', 'success');
+
+                // Test if content is visible
+                const imageData = ctx.getImageData(0, 0, canvas1.width, canvas1.height);
+                const pixels = imageData.data;
+                let nonTransparentPixels = 0;
+                for (let i = 3; i < pixels.length; i += 4) {
+                    if (pixels[i] > 0) nonTransparentPixels++;
+                }
+                log(`Non-transparent pixels: ${nonTransparentPixels}`, nonTransparentPixels > 0 ? 'success' : 'error');
+            }
+
+            // Test practice mode specific functions
+            if (window.drawGrid) {
+                log('drawGrid function available', 'success');
+            } else {
+                log('drawGrid function not available', 'error');
+            }
+
+            if (window.renderShapeForCutting) {
+                log('renderShapeForCutting function available', 'success');
+            } else {
+                log('renderShapeForCutting function not available', 'error');
+            }
+        }
+
+        // Auto-test when loaded
+        setTimeout(testCanvasAccess, 1000);
+    </script>
+</body>
+</html>

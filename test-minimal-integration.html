@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minimal Integration Test</title>
+</head>
+<body>
+    <h1>Minimal Integration Test</h1>
+    <div id="output"></div>
+
+    <!-- Load essential modules -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="shape-storage.js"></script>
+    <script src="daily-mode-manager.js"></script>
+    <script src="daily-game-core.js"></script>
+
+    <script>
+        const output = document.getElementById('output');
+
+        function log(msg) {
+            output.innerHTML += msg + '<br>';
+            console.log(msg);
+        }
+
+        window.addEventListener('load', async () => {
+            try {
+                log('🔍 Testing simplified integration...');
+
+                // Check what shape the DailyGameCore would load
+                if (window.DailyGameCore) {
+                    log('✅ DailyGameCore available');
+
+                    // Initialize and see what happens
+                    await window.DailyGameCore.initialize();
+
+                    // Check what shapes were loaded
+                    const shape1 = window.DailyGameCore.getShapeData(1);
+
+                    if (shape1) {
+                        log('✅ Shape 1 loaded');
+
+                        // Check if shape comes from Supabase or local
+                        const shapeStr = JSON.stringify(shape1, null, 2);
+                        if (shapeStr.includes('v4-tests') || shapeStr.includes('demo')) {
+                            log('⚠️ PROBLEM: Shape is from local/demo files');
+                            log('Shape source indicators found: ' + (shapeStr.includes('v4-tests') ? 'v4-tests' : 'demo'));
+                        } else {
+                            log('✅ SUCCESS: Shape appears to be from Supabase');
+                        }
+
+                        // Show first 200 chars of shape for inspection
+                        log('Shape preview: ' + shapeStr.substring(0, 200) + '...');
+
+                    } else {
+                        log('❌ No shape loaded');
+                    }
+
+                } else {
+                    log('❌ DailyGameCore not available');
+                }
+
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

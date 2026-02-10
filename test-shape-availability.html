@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Shape Availability</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .log { margin: 5px 0; padding: 5px; border-radius: 3px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>Shape Availability Test</h1>
+    <div id="logs"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="shape-storage.js"></script>
+
+    <script>
+        const logs = document.getElementById('logs');
+        function log(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = new Date().toLocaleTimeString() + ' - ' + msg;
+            logs.appendChild(div);
+            console.log(msg);
+        }
+
+        async function testShapeAvailability() {
+            try {
+                log('🧪 Testing availability of shapes in updated knownShapes array...', 'info');
+
+                // Same list from practice-mode-manager.js
+                const knownShapes = [
+                    '250920-03', '250920-02', '250920-01', // Today's shapes (should exist)
+                    '250919-03', '250919-02', '250919-01', // Yesterday's shapes
+                    '250918-03', '250918-02', '250918-01', // Known working shapes
+                    '250917-03', '250917-02', '250917-01',
+                    '250916-03', '250916-02', '250916-01',
+                    '250915-03', '250915-02', '250915-01'
+                ];
+
+                const storage = new ShapeStorage();
+                let availableShapes = [];
+                let unavailableShapes = [];
+
+                log(`📊 Testing ${knownShapes.length} shapes...`, 'info');
+
+                for (const shapeName of knownShapes) {
+                    const dateStr = shapeName.substring(0, 6);
+                    const shapeNumber = parseInt(shapeName.substring(7, 9));
+
+                    try {
+                        // Parse date from shape name
+                        const year = parseInt('20' + dateStr.substring(0, 2));
+                        const month = parseInt(dateStr.substring(2, 4)) - 1;
+                        const day = parseInt(dateStr.substring(4, 6));
+                        const shapeDate = new Date(year, month, day);
+
+                        // Test loading the shape
+                        const shape = await storage.loadPracticeShape(shapeDate, shapeNumber);
+
+                        if (shape) {
+                            log(`✅ Available: ${shapeName}`, 'success');
+                            availableShapes.push(shapeName);
+                        } else {
+                            log(`❌ Not available: ${shapeName}`, 'error');
+                            unavailableShapes.push(shapeName);
+                        }
+                    } catch (error) {
+                        log(`❌ Failed to load: ${shapeName} - ${error.message}`, 'error');
+                        unavailableShapes.push(shapeName);
+                    }
+
+                    // Small delay to avoid overwhelming the API
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+
+                log(`📈 Results: ${availableShapes.length} available, ${unavailableShapes.length} unavailable`, 'info');
+
+                if (availableShapes.length > 0) {
+                    log(`✅ Available shapes: ${availableShapes.join(', ')}`, 'success');
+                }
+
+                if (unavailableShapes.length > 0) {
+                    log(`❌ Unavailable shapes: ${unavailableShapes.join(', ')}`, 'error');
+                }
+
+                // Suggest a curated list based on available shapes
+                if (availableShapes.length > 0) {
+                    log(`💡 Suggested knownShapes array:`, 'info');
+                    log(`['${availableShapes.join("', '")}']`, 'info');
+                }
+
+            } catch (error) {
+                log(`❌ Test failed: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        // Wait for scripts to load
+        setTimeout(testShapeAvailability, 1000);
+    </script>
+</body>
+</html>

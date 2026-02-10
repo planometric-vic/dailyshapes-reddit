@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Daily Shapes - Responsive Welcome Test</title>
+    <link rel="stylesheet" href="style.css?v=LARGER_LIGHT_DATE_20250916">
+    <link rel="stylesheet" href="responsive.css?v=2025-09-16-v6">
+    <style>
+        /* Add visual indicators for testing */
+        .test-info {
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            font-size: 12px;
+            z-index: 1000;
+            font-family: monospace;
+        }
+
+        /* Highlight the welcome overlay */
+        .welcome-overlay {
+            outline: 2px dashed rgba(0, 255, 0, 0.8) !important;
+            outline-offset: 2px;
+        }
+
+        /* Show canvas boundaries */
+        #geoCanvas {
+            outline: 2px dashed rgba(255, 0, 0, 0.8) !important;
+            outline-offset: 2px;
+        }
+
+        /* Force show welcome overlay for testing */
+        .welcome-overlay {
+            visibility: visible !important;
+            display: block !important;
+        }
+
+        /* Simulate viewport sizes */
+        .viewport-simulator {
+            position: relative;
+            margin: 20px auto;
+            border: 2px solid #333;
+        }
+
+        .iphone-se {
+            width: 320px;
+            height: 568px;
+            background: #f0f0f0;
+        }
+
+        .iphone-6 {
+            width: 375px;
+            height: 667px;
+            background: #e0e0e0;
+        }
+
+        .test-container {
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-info" id="testInfo">
+        Viewport: <span id="viewportSize">Loading...</span>
+    </div>
+
+    <div class="test-container">
+        <h1>Daily Shapes Welcome Content Responsive Test</h1>
+
+        <!-- iPhone SE Simulation -->
+        <h2>iPhone SE (320x568px)</h2>
+        <div class="viewport-simulator iphone-se">
+            <div class="app-container">
+                <div class="canvas-container">
+                    <canvas id="geoCanvas" width="380" height="380"></canvas>
+
+                    <!-- Welcome overlay test -->
+                    <div class="welcome-overlay" id="welcomeOverlay">
+                        <div class="welcome-content">
+                            <h2 style="white-space: nowrap;">Welcome to Daily Shapes!</h2>
+                            <p>Cut three shapes as close to <strong>50/50</strong> as possible each day. You get two goes at each shape.</p>
+                            <p id="mechanicWelcomeText">Today you're using the<br><strong id="todaysMechanic" style="color: #3b82f6;">Horizontal Line Mechanic</strong>.<br>Follow the tips above the cutting canvas while you play.</p>
+                            <p>Create a free account to join and create competitions, <strong style="color: #FAB06A;">Practice</strong> with today's cutter on previous shapes, and track your stats.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- iPhone 6/7/8 Simulation -->
+        <h2>iPhone 6/7/8 (375x667px)</h2>
+        <div class="viewport-simulator iphone-6">
+            <div class="app-container">
+                <div class="canvas-container">
+                    <canvas id="geoCanvas2" width="380" height="380"></canvas>
+
+                    <!-- Welcome overlay test -->
+                    <div class="welcome-overlay">
+                        <div class="welcome-content">
+                            <h2 style="white-space: nowrap;">Welcome to Daily Shapes!</h2>
+                            <p>Cut three shapes as close to <strong>50/50</strong> as possible each day. You get two goes at each shape.</p>
+                            <p>Today you're using the<br><strong style="color: #3b82f6;">Horizontal Line Mechanic</strong>.<br>Follow the tips above the cutting canvas while you play.</p>
+                            <p>Create a free account to join and create competitions, <strong style="color: #FAB06A;">Practice</strong> with today's cutter on previous shapes, and track your stats.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin: 40px 0; padding: 20px; background: #f9f9f9; border: 2px solid #ddd;">
+            <h3>Test Results:</h3>
+            <ul>
+                <li><strong>Green dashed outline</strong> = Welcome overlay boundaries</li>
+                <li><strong>Red dashed outline</strong> = Canvas boundaries</li>
+                <li><strong>Text scaling</strong> = Should scale down proportionally on iPhone SE</li>
+                <li><strong>Overflow check</strong> = No text should extend beyond green boundaries</li>
+            </ul>
+
+            <h3>Expected iPhone SE optimizations:</h3>
+            <ul>
+                <li>Welcome overlay width: calc(100% - 20px), max-width: 300px</li>
+                <li>H2 font-size: clamp(14px, 4.5vw, 16px)</li>
+                <li>P font-size: clamp(12px, 3.8vw, 13px)</li>
+                <li>Canvas size: 280px x 280px</li>
+                <li>Padding: 12px</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Update viewport info
+        function updateViewportInfo() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            document.getElementById('testInfo').innerHTML = `Viewport: ${width}x${height}px`;
+        }
+
+        updateViewportInfo();
+        window.addEventListener('resize', updateViewportInfo);
+
+        // Draw simple shapes on canvas for visual reference
+        function drawTestShape(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#e0e0e0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw a simple test shape
+            ctx.fillStyle = '#4CAF50';
+            ctx.beginPath();
+            ctx.arc(190, 190, 80, 0, 2 * Math.PI);
+            ctx.fill();
+
+            ctx.fillStyle = '#2196F3';
+            ctx.fillRect(150, 150, 80, 80);
+
+            // Add text
+            ctx.fillStyle = '#333';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Test Canvas', 190, 320);
+        }
+
+        drawTestShape('geoCanvas');
+        drawTestShape('geoCanvas2');
+    </script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Integration Fix</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .log {
+            background: white;
+            padding: 10px;
+            margin: 5px 0;
+            border-left: 4px solid #007bff;
+            border-radius: 3px;
+        }
+        .success { border-color: #28a745; }
+        .error { border-color: #dc3545; }
+        .warning { border-color: #ffc107; }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Integration Fix</h1>
+
+    <button onclick="testIntegration()">Test Integration</button>
+    <button onclick="clearLogs()">Clear Logs</button>
+
+    <div id="logs"></div>
+
+    <!-- Load all required modules -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="shape-storage.js"></script>
+    <script src="daily-mode-manager.js"></script>
+    <script src="practice-mode-manager.js"></script>
+    <script src="game-mode-integration.js"></script>
+    <script src="daily-game-core.js"></script>
+
+    <script>
+        function log(message, type = 'log') {
+            const logsDiv = document.getElementById('logs');
+            const logDiv = document.createElement('div');
+            logDiv.className = `log ${type}`;
+            logDiv.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            logsDiv.appendChild(logDiv);
+            console.log(message);
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+
+        async function testIntegration() {
+            clearLogs();
+            log('🔍 Testing integration fix...');
+
+            try {
+                // 1. Test Supabase config
+                log('1. Testing Supabase config...');
+                if (window.SupabaseConfig && window.SupabaseConfig.client) {
+                    log('✅ Supabase client available', 'success');
+                } else {
+                    log('❌ Supabase client NOT available', 'error');
+                    return;
+                }
+
+                // 2. Test GameModeIntegration
+                log('2. Testing GameModeIntegration...');
+                if (window.GameModeIntegration) {
+                    const gameModeIntegration = new GameModeIntegration();
+                    const initResult = await gameModeIntegration.initialize();
+
+                    if (initResult) {
+                        log('✅ GameModeIntegration initialized successfully', 'success');
+                        log(`   Demo mode: ${window.isDemoMode || false}`);
+
+                        if (window.DailyGameCore) {
+                            log(`   DailyGameCore disabled: ${window.DailyGameCore.disabled || false}`);
+                        }
+                    } else {
+                        log('❌ GameModeIntegration failed to initialize', 'error');
+                    }
+                } else {
+                    log('❌ GameModeIntegration class not available', 'error');
+                    return;
+                }
+
+                // 3. Test DailyGameCore
+                log('3. Testing DailyGameCore...');
+                if (window.DailyGameCore) {
+                    try {
+                        await window.DailyGameCore.initialize();
+                        log('✅ DailyGameCore initialized', 'success');
+
+                        // Check shapes
+                        const shape1 = window.DailyGameCore.getShapeData(1);
+                        const shape2 = window.DailyGameCore.getShapeData(2);
+                        const shape3 = window.DailyGameCore.getShapeData(3);
+
+                        log(`   Shape 1: ${shape1 ? 'loaded' : 'not loaded'}`);
+                        log(`   Shape 2: ${shape2 ? 'loaded' : 'not loaded'}`);
+                        log(`   Shape 3: ${shape3 ? 'loaded' : 'not loaded'}`);
+
+                        if (shape1) {
+                            // Check if it's a Supabase shape or demo shape
+                            const isDemo = JSON.stringify(shape1).includes('demo') ||
+                                          JSON.stringify(shape1).includes('v4-tests');
+                            log(`   Source: ${isDemo ? 'Demo/Local' : 'Supabase'}`, isDemo ? 'warning' : 'success');
+                        }
+
+                    } catch (error) {
+                        log(`❌ DailyGameCore error: ${error.message}`, 'error');
+                    }
+                } else {
+                    log('❌ DailyGameCore not available', 'error');
+                }
+
+                // 4. Test DailyModeManager directly
+                log('4. Testing DailyModeManager directly...');
+                if (window.DailyModeManager) {
+                    try {
+                        const dailyManager = new window.DailyModeManager();
+                        const result = await dailyManager.initialize();
+
+                        if (result.success) {
+                            log('✅ DailyModeManager initialized successfully', 'success');
+                            log(`   Shapes preloaded: ${dailyManager.shapes.length}/3`);
+
+                            if (dailyManager.shapes.length > 0) {
+                                const firstShape = dailyManager.shapes[0];
+                                const isDemo = JSON.stringify(firstShape).includes('demo') ||
+                                              JSON.stringify(firstShape).includes('v4-tests');
+                                log(`   First shape source: ${isDemo ? 'Demo/Local' : 'Supabase'}`, isDemo ? 'warning' : 'success');
+                            }
+                        } else {
+                            log('❌ DailyModeManager failed to initialize', 'error');
+                            log(`   Error: ${result.error}`, 'error');
+                        }
+                    } catch (error) {
+                        log(`❌ DailyModeManager error: ${error.message}`, 'error');
+                    }
+                } else {
+                    log('❌ DailyModeManager not available', 'error');
+                }
+
+                log('🎯 Integration test complete!');
+
+            } catch (error) {
+                log(`❌ Test error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run test on load
+        window.addEventListener('load', () => {
+            setTimeout(testIntegration, 1000);
+        });
+    </script>
+</body>
+</html>

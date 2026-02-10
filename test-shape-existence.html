@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Shape Existence for Today</title>
+</head>
+<body>
+    <h1>Test Shape Existence for Today (250920)</h1>
+    <div id="output"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+
+    <script>
+        const output = document.getElementById('output');
+
+        function log(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.style.color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'black';
+            div.innerHTML = msg;
+            output.appendChild(div);
+            console.log(msg);
+        }
+
+        window.addEventListener('load', async () => {
+            try {
+                log('🔍 Testing shape existence for today (250920)...');
+
+                if (!window.SupabaseConfig || !window.SupabaseConfig.client) {
+                    log('❌ Supabase client not available', 'error');
+                    return;
+                }
+
+                const client = window.SupabaseConfig.client;
+                const dateStr = '250920'; // Today
+
+                log(`📅 Testing date: ${dateStr}`);
+
+                // Test each shape file
+                for (let i = 1; i <= 3; i++) {
+                    const filename = `${dateStr}-${String(i).padStart(2, '0')}.geojson`;
+
+                    try {
+                        const { data: urlData } = client.storage
+                            .from('shapes')
+                            .getPublicUrl(filename);
+
+                        if (urlData?.publicUrl) {
+                            log(`🔗 Testing URL: ${urlData.publicUrl}`);
+
+                            const response = await fetch(urlData.publicUrl);
+
+                            if (response.ok) {
+                                log(`✅ ${filename} EXISTS and is accessible`, 'success');
+
+                                const data = await response.json();
+                                log(`   Type: ${data.type || 'unknown'}`);
+                                log(`   Features: ${data.features ? data.features.length : 0}`);
+
+                            } else {
+                                log(`❌ ${filename} HTTP ${response.status}: ${response.statusText}`, 'error');
+                                if (response.status === 404) {
+                                    log(`   → Shape does not exist in Supabase bucket`, 'error');
+                                }
+                            }
+                        } else {
+                            log(`❌ Could not generate public URL for ${filename}`, 'error');
+                        }
+
+                    } catch (error) {
+                        log(`❌ Error testing ${filename}: ${error.message}`, 'error');
+                    }
+                }
+
+                // Also test a known file for comparison
+                log('<br>🔍 Testing known file for comparison...');
+                const knownFile = '250923-02.geojson'; // User mentioned this exists
+
+                try {
+                    const { data: urlData } = client.storage
+                        .from('shapes')
+                        .getPublicUrl(knownFile);
+
+                    if (urlData?.publicUrl) {
+                        const response = await fetch(urlData.publicUrl);
+
+                        if (response.ok) {
+                            log(`✅ ${knownFile} (known file) is accessible`, 'success');
+                        } else {
+                            log(`❌ ${knownFile} HTTP ${response.status}`, 'error');
+                        }
+                    }
+                } catch (error) {
+                    log(`❌ Error testing known file: ${error.message}`, 'error');
+                }
+
+                log('<br>🎯 Shape existence test complete!');
+
+            } catch (error) {
+                log('❌ Test error: ' + error.message, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

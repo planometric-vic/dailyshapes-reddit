@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Integration Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        #status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 400px;
+            z-index: 10000;
+        }
+        .log {
+            margin: 3px 0;
+            padding: 5px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .warning { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <div id="status">
+        <strong>🔧 Final Integration Test</strong>
+        <div id="logs"></div>
+    </div>
+
+    <h1>Final Integration Test</h1>
+    <p>This test verifies that the complete game loads with Supabase integration.</p>
+
+    <!-- Load Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Load all the scripts in the same order as index.html -->
+    <script src="simple-refresh.js"></script>
+    <script src="shape-types.js"></script>
+    <script src="mechanics/default-with-undo.js"></script>
+    <script src="mechanics/horizontal-only.js"></script>
+    <script src="mechanics/diagonal-ascending.js"></script>
+    <script src="mechanics/circle-cut.js"></script>
+    <script src="mechanics/rotating-square.js"></script>
+    <script src="mechanics/three-point-triangle.js"></script>
+    <script src="mechanics/rotating-shape-vector.js"></script>
+    <script src="global-error-notifications.js"></script>
+    <script src="competitions.js"></script>
+    <script src="competition-ui.js"></script>
+    <script src="practice-mode.js"></script>
+    <script src="main.js"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth-service.js"></script>
+    <script src="user-account-manager.js"></script>
+    <script src="auth-header.js"></script>
+    <script src="supabase-shape-init.js"></script>
+    <script src="shape-loader-adapter.js"></script>
+    <script src="collapsible-menu.js"></script>
+    <script src="scoring-system.js"></script>
+    <script src="daily-game-core.js"></script>
+    <script src="countdown.js"></script>
+    <script src="complete-view.js"></script>
+
+    <script>
+        const logs = document.getElementById('logs');
+
+        function testLog(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = new Date().toLocaleTimeString() + ' - ' + msg;
+            logs.appendChild(div);
+            console.log('TEST:', msg);
+
+            // Keep only last 12 logs
+            while (logs.children.length > 12) {
+                logs.removeChild(logs.firstChild);
+            }
+        }
+
+        // Monitor the initialization process
+        let supabaseDetected = false;
+        let gameStarted = false;
+        let shapesFromSupabase = false;
+
+        // Override console.log to monitor everything
+        const originalConsoleLog = console.log;
+        console.log = function(...args) {
+            const msg = args.join(' ');
+
+            // Monitor key events
+            if (msg.includes('Supabase integration is active')) {
+                supabaseDetected = true;
+                testLog('✅ Supabase integration detected', 'success');
+            }
+
+            if (msg.includes('Supabase integration not detected')) {
+                testLog('❌ Supabase integration NOT detected', 'error');
+            }
+
+            if (msg.includes('Starting Demo Game initialization')) {
+                testLog('⚠️ Demo game initialization started', 'warning');
+            }
+
+            if (msg.includes('Starting Supabase Game Mode initialization')) {
+                testLog('✅ Supabase game mode started', 'success');
+            }
+
+            if (msg.includes('demo') || msg.includes('v4-tests')) {
+                if (!msg.includes('skipping demo') && !msg.includes('without demo')) {
+                    testLog('❌ Demo shapes detected: ' + msg.substring(0, 50), 'error');
+                }
+            }
+
+            if (msg.includes('Shapes loaded from Supabase') || msg.includes('Supabase shapes ready')) {
+                shapesFromSupabase = true;
+                testLog('✅ Supabase shapes loaded', 'success');
+            }
+
+            if (msg.includes('Loading Supabase shapes for daily game')) {
+                testLog('✅ Game using Supabase shapes', 'success');
+            }
+
+            if (msg.includes('Loading demo shapes (Supabase not available)')) {
+                testLog('❌ Game falling back to demo shapes', 'error');
+            }
+
+            originalConsoleLog.apply(console, args);
+        };
+
+        // Wait for everything to load and then check final state
+        setTimeout(() => {
+            testLog('--- Final Integration Test Results ---', 'info');
+
+            if (supabaseDetected) {
+                testLog('✅ Supabase integration active', 'success');
+            } else {
+                testLog('❌ Supabase integration failed', 'error');
+            }
+
+            // Check DailyGameCore
+            if (window.DailyGameCore) {
+                testLog('✅ DailyGameCore loaded', 'success');
+
+                const shape1 = window.DailyGameCore.getShapeData(1);
+                if (shape1) {
+                    testLog('✅ Shape 1 available', 'success');
+
+                    // Check if it's from Supabase or demo
+                    const shapeStr = JSON.stringify(shape1);
+                    if (shapeStr.includes('v4-tests') || shapeStr.includes('demo')) {
+                        testLog('❌ FAIL: Using demo shapes', 'error');
+                    } else {
+                        testLog('✅ SUCCESS: Using Supabase shapes', 'success');
+                    }
+                } else {
+                    testLog('❌ Shape 1 not available', 'error');
+                }
+            } else {
+                testLog('❌ DailyGameCore not found', 'error');
+            }
+
+        }, 8000); // Wait 8 seconds for everything to initialize
+    </script>
+</body>
+</html>

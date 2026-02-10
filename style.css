@@ -1,0 +1,7963 @@
+/* Perfect Cut - Mobile-First Single Column Layout */
+
+/* Competition Modal Compact List */
+.competitions-list-compact {
+    scrollbar-width: thin;
+    scrollbar-color: #6496FF #f0f0f0;
+    border: 2px solid #000000;
+    border-radius: 4px;
+}
+
+.competitions-list-compact::-webkit-scrollbar {
+    width: 6px;
+}
+
+.competitions-list-compact::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 3px;
+}
+
+.competitions-list-compact::-webkit-scrollbar-thumb {
+    background: #6496FF;
+    border-radius: 3px;
+}
+
+.competitions-list-compact::-webkit-scrollbar-thumb:hover {
+    background: #4a7bd4;
+}
+
+/* Restoration State - Prevent UI jumping during restoration */
+body.restoring .initial-play-container,
+body.restoring .canvas-button-overlay,
+body.restoring .percentage-display,
+body.restoring .attempt-display {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: opacity 0.1s ease-in-out, visibility 0.1s ease-in-out;
+    /* Maintain layout space to prevent shifting */
+    position: relative !important;
+}
+
+/* Progress tracker stays visible during restoration to maintain consistent positioning */
+body.restoring .demo-progress-display,
+body.restoring #demoProgressDisplay {
+    /* Keep visible with normal styling to maintain consistent position */
+    opacity: 1 !important;
+    visibility: visible !important;
+    /* Maintain exact same margin as normal state to prevent flash */
+    margin: 0 !important;
+}
+
+/* Special handling for buttons-below-canvas to maintain consistent spacing during restoration */
+body.restoring .buttons-below-canvas {
+    /* Keep normal margin/height but hide contents */
+    opacity: 0 !important;
+    visibility: hidden !important;
+    /* NO MARGIN - testing to see if changes take effect */
+    margin: 0 !important;
+    min-height: 20px !important;
+}
+
+/* Special handling for dynamic results container during restoration */
+body.restoring .dynamic-results-container {
+    /* Keep space but hide contents during restoration */
+    opacity: 0 !important;
+    visibility: hidden !important;
+    /* Maintain same margin as normal state to prevent flash */
+    margin: 0 !important;
+    min-height: 20px !important;
+}
+
+/* Special handling for progression button containers to prevent margin-based layout shifts during restoration */
+body.restoring #demoProgressionButton,
+body.restoring .progression-button-container {
+    /* Keep stable positioning but make invisible during restoration */
+    opacity: 0 !important;
+    visibility: hidden !important;
+    /* Maintain same NEGATIVE margin as normal state to prevent flash */
+    margin: -20px 0 0 0 !important;
+    min-height: 50px !important;
+}
+
+body:not(.restoring) .initial-play-container,
+body:not(.restoring) .canvas-button-overlay,
+body:not(.restoring) .percentage-display,
+body:not(.restoring) .attempt-display {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.1s ease-in-out, visibility 0.1s ease-in-out;
+}
+
+/* Progress tracker - respect inline display styles */
+body:not(.restoring) .demo-progress-display,
+body:not(.restoring) #demoProgressDisplay {
+    /* Don't override display or visibility - let JavaScript control it */
+    /* No transition needed */
+}
+
+/* Restore normal styling for buttons-below-canvas after restoration */
+body:not(.restoring) .buttons-below-canvas {
+    /* Normal styles will be applied from the main .buttons-below-canvas rule */
+}
+
+/* Restore normal styling for dynamic containers after restoration */
+body:not(.restoring) .dynamic-results-container {
+    /* Normal styles will be applied from the main CSS rules */
+}
+
+/* Restore normal styling for progression button after restoration */
+body:not(.restoring) #demoProgressionButton,
+body:not(.restoring) .progression-button-container {
+    /* Normal styles will be applied from the main CSS rules */
+}
+
+/* Fixed positioning areas - now flowing with document layout */
+.fixed-percentage-area {
+    position: relative !important; /* Changed to relative for proper document flow */
+    width: 100%;
+    min-height: 60px; /* Reduced height for tighter layout */
+    margin: 2px 0 0 0 !important; /* Reduced space below navigation */
+    padding: 0 !important;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Start hidden, will be made visible by JavaScript when content is added */
+    visibility: hidden;
+    /* Never intercept clicks - allow clicks to pass through to buttons below */
+    pointer-events: none !important;
+}
+
+/* CRITICAL FIX: Override any hiding from restoring class for split display */
+.fixed-percentage-area,
+.fixed-percentage-area * {
+    /* Never hide split display regardless of restoring state */
+    visibility: inherit !important;
+    opacity: inherit !important;
+}
+
+.fixed-button-area {
+    /* FLOWING POSITIONING - buttons flow after percentage display */
+    position: relative !important;
+    width: 100%;
+    max-height: 70px !important;
+    min-height: 50px; /* Reduced height for tighter layout */
+    margin: 6px 0 0 0 !important; /* Minimal space below split display */
+    padding: 0 !important;
+    z-index: 1000 !important;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+/* Instruction Area - appears above canvas */
+.instruction-area {
+    width: 100%;
+    height: 30px;
+    min-height: 30px;
+    max-height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 2px;
+    padding: 2px 16px;
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+    /* Ensure space is always reserved */
+    visibility: visible;
+    box-sizing: border-box;
+    /* Keep instruction area below menu dropdown */
+    z-index: 1;
+    position: relative;
+}
+
+.instruction-text {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+    text-align: center;
+    line-height: 1.0;
+}
+
+/* Make emojis larger in commentary and instruction text */
+.commentary-text .emoji,
+.instruction-text .emoji,
+.commentary-text span:not([class]),
+.instruction-text span:not([class]) {
+    font-size: 1.8em !important;
+    line-height: 1 !important;
+    vertical-align: middle !important;
+    display: inline-block !important;
+}
+
+
+/* Header and Authentication Styles for v4.0 */
+
+/* Challenge Info Styling */
+.mechanic-info {
+    text-align: center;
+    margin: 0 0 2px 0; /* No top margin, 2px bottom to match instruction area */
+    height: 20px;
+    min-height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.mechanic-label,
+.mechanic-name {
+    font-size: 18px; /* Larger text size, same for both */
+    line-height: 1.3;
+}
+
+.mechanic-label {
+    font-weight: normal; /* Keep original bold/non-bold settings */
+    color: #000; /* Keep original colors */
+}
+
+.mechanic-name {
+    font-weight: bold; /* Keep original bold/non-bold settings */
+    color: #000; /* Keep original colors */
+}
+
+.header-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #fff;
+    /* Removed grey line above canvas */
+}
+
+.auth-button {
+    padding: 8px 16px;
+    background-color: #6496ff;
+    color: white;
+    border: 2px solid #000;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.auth-button:hover {
+    background-color: #5080e0;
+    transform: translateY(-1px);
+}
+
+.nav-button {
+    padding: 8px 16px;
+    background-color: #9EC1A3;
+    color: #000;
+    border: 2px solid #000;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-right: 8px;
+}
+
+.nav-button:hover {
+    background-color: #8eb193;
+    transform: translateY(-1px);
+}
+
+.account-dropdown {
+    position: fixed;
+    background-color: white;
+    border: 2px solid #000;
+    border-radius: 6px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 2001;
+    min-width: 150px;
+}
+
+.dropdown-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.dropdown-item:hover {
+    background-color: #f5f5f5;
+}
+
+/* Authentication Modal Styles */
+.auth-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-modal-content {
+    background-color: white;
+    border-radius: 12px;
+    border: 2px solid #000;
+    width: 90%;
+    max-width: 400px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.auth-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    border-bottom: none;
+    background: #C0D6DF !important;
+    color: black !important;
+    border-top-left-radius: 14px;
+    border-top-right-radius: 14px;
+}
+
+.auth-modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: white !important;
+    text-align: center;
+    flex: 1;
+}
+
+.auth-modal-close {
+    width: 28px !important;
+    height: 28px !important;
+    background: white;
+    border: 2px solid #000;
+    border-radius: 50% !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 2px 2px 0px #000;
+    color: #333;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    max-width: 28px !important;
+    max-height: 28px !important;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.auth-modal-close:hover {
+    transform: translateY(-2px);
+    box-shadow: 5px 5px 0px #000;
+}
+
+/* Override neobrutalist styles for user profile close button */
+#userStatsModal .auth-modal-close {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    max-width: 28px !important;
+    max-height: 28px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+    background: white !important;
+    border: 2px solid #000 !important;
+    color: #333 !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+}
+
+
+.auth-modal-body {
+    padding: 20px;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group {
+    margin-bottom: 8px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #6496ff;
+}
+
+/* Forgot Password Link */
+.forgot-password-link {
+    text-align: right;
+    margin-top: 8px;
+    margin-bottom: 12px;
+}
+
+.forgot-password-link a {
+    color: #6496ff;
+    font-size: 13px;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.forgot-password-link a:hover {
+    color: #4278e8;
+    text-decoration: underline;
+}
+
+button.auth-submit-button,
+#authSubmitButton {
+    padding: 12px;
+    background-color: #E0E0E0 !important;
+    color: black !important;
+    border: 2px solid #000;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 10px;
+}
+
+button.auth-submit-button:hover,
+#authSubmitButton:hover {
+    background-color: #d0d0d0;
+    transform: translateY(-1px);
+    color: black !important;
+}
+
+.auth-divider {
+    text-align: center;
+    margin: 20px 0;
+    position: relative;
+}
+
+.auth-divider span {
+    background-color: white;
+    padding: 0 10px;
+    color: #999;
+    font-size: 12px;
+}
+
+.auth-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: #ddd;
+    z-index: -1;
+}
+
+.social-auth-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.social-auth-button {
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    background-color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.social-auth-button:hover {
+    background-color: #f5f5f5;
+    border-color: #999;
+}
+
+.social-auth-button.google {
+    color: #4285f4;
+}
+
+.social-auth-button.facebook {
+    color: #1877f2;
+}
+
+.social-auth-button.apple {
+    color: #000;
+}
+
+.auth-switch {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #666;
+}
+
+.auth-switch a {
+    color: #6496ff;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.auth-switch a:hover {
+    text-decoration: underline;
+}
+
+/* Stats Modal Styles */
+.stats-content {
+    padding: 20px;
+}
+
+.stats-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.stats-loading .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #6496ff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+.stats-loading p {
+    color: #666;
+    font-size: 16px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+    border-color: #6496ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #6c757d;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stats-actions {
+    text-align: center;
+    border-top: 2px solid #e9ecef;
+    padding-top: 20px;
+}
+
+.stats-error {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+}
+
+.stats-error p {
+    margin-bottom: 16px;
+    font-size: 16px;
+}
+
+/* Profile Button Styles */
+.profile-button {
+    width: 28px !important;
+    height: 28px !important;
+    background: white;
+    border: 2px solid #000;
+    border-radius: 50% !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 2px 2px 0px #000;
+    color: #333;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 0 !important;
+    margin-left: 8px;
+    box-sizing: border-box !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    max-width: 28px !important;
+    max-height: 28px !important;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.profile-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 5px 5px 0px #000;
+}
+
+.profile-button svg {
+    width: 14px !important;
+    height: 14px !important;
+    fill: #333;
+}
+
+/* Remove logged-in styling to keep consistent appearance */
+.profile-button.logged-in {
+    /* Keep same appearance as default */
+    background: white;
+    border-color: #000;
+}
+
+.profile-button.logged-in svg {
+    fill: #333;
+}
+
+.profile-button.pulse {
+    animation: profilePulse 2s infinite;
+}
+
+@keyframes profilePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+#profileButtonText {
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+/* Account Dropdown Styles */
+.account-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 2px solid #000;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 180px;
+    z-index: 2001;
+    overflow: hidden;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.dropdown-item.logout-item {
+    background-color: #E0E0E0 !important;
+    color: black !important;
+}
+
+.dropdown-item.logout-item:hover {
+    background-color: #ffb3d6;
+    color: black;
+}
+
+.dropdown-item svg {
+    margin-right: 8px;
+    opacity: 0.7;
+}
+
+.dropdown-item.logout-item svg {
+    color: #dc3545;
+}
+
+/* Auth Button Enhancements */
+.auth-button {
+    padding: 12px 24px;
+    border: 2px solid #000;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.auth-button.primary {
+    background-color: #6496ff;
+    color: white;
+}
+
+.auth-button.primary:hover {
+    background-color: #5285ff;
+    transform: translateY(-1px);
+}
+
+.auth-button.secondary {
+    background-color: white;
+    color: #333;
+}
+
+.auth-button.secondary:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-1px);
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+/* Success and Error Message Styles */
+.auth-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    border-radius: 6px;
+    padding: 12px;
+    margin: 12px 0;
+    font-size: 14px;
+}
+
+.auth-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 6px;
+    padding: 12px;
+    margin: 12px 0;
+    font-size: 14px;
+}
+
+/* Loading Spinner Animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments for stats grid */
+@media (max-width: 380px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .auth-modal-content {
+        width: 95%;
+        max-width: none;
+    }
+}
+
+/* Auth Feedback Messages */
+.auth-feedback {
+    margin: 10px 0;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.auth-feedback.error {
+    background-color: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+}
+
+.auth-feedback.success {
+    background-color: #dcfce7;
+    color: #16a34a;
+    border: 1px solid #86efac;
+}
+
+/* End of Header and Authentication Styles */
+
+:root {
+    /* Fluid typography base values */
+    --min-screen: 320;
+    --max-screen: 500;
+    --min-font: 14;
+    --max-font: 18;
+    
+    /* Dynamic font size calculation */
+    --fluid-font: calc(var(--min-font) * 1px + (var(--max-font) - var(--min-font)) * ((100vw - var(--min-screen) * 1px) / (var(--max-screen) - var(--min-screen))));
+    
+    /* Layout spacing that adapts to screen size */
+    --dynamic-spacing: clamp(4px, 2vw, 8px);
+    --dynamic-padding: clamp(8px, 4vw, 20px);
+    --dynamic-margin: clamp(10px, 3vw, 16px);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Ensure HTML element uses full available height */
+html {
+    height: 100%;
+    height: -webkit-fill-available;
+}
+
+body {
+    font-family: system-ui, -apple-system, 'Inter', 'Segoe UI', sans-serif;
+    background-color: #ffffff;
+    color: #000000;
+    line-height: 1.4;
+    /* Use dynamic viewport height that accounts for browser UI */
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height for newer browsers */
+    height: -webkit-fill-available; /* Fallback for older Safari */
+    padding: var(--dynamic-padding);
+    font-size: var(--fluid-font);
+    
+    /* Prevent zoom and scroll */
+    overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+/* Main App Container - Single Column, Vertical Stack with Stable Layout */
+.app-container {
+    max-width: clamp(320px, 95vw, 500px); /* Increased max-width for larger screens */
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Minimal consistent gap for tight element coupling */
+    gap: 4px;
+    padding-bottom: calc(var(--dynamic-padding) + env(safe-area-inset-bottom, 0px));
+    /* Use dynamic viewport height with safe area for mobile browsers */
+    min-height: calc(100vh - var(--dynamic-padding) * 2);
+    min-height: calc(100dvh - var(--dynamic-padding) * 2);
+}
+
+/* Header Row - Title and Help Button */
+.header-row {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+}
+
+.app-title {
+    font-size: clamp(1.8rem, 5vw, 2.2rem);
+    font-weight: 900;
+    color: #000000;
+    letter-spacing: -0.5px;
+    font-family: system-ui, -apple-system, 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* Enhanced header title styling */
+#dateTitle {
+    font-size: clamp(1.8rem, 6vw, 3.2rem) !important;
+    font-family: 'Helvetica Neue', 'Arial', 'Roboto', sans-serif !important;
+    font-weight: 300 !important; /* Light weight for date portion */
+    letter-spacing: -1px !important;
+    color: #606060 !important; /* Lighter color for the date part */
+}
+
+/* Stronger contrast between bold and light text in date title */
+#dateTitle strong {
+    font-weight: 900 !important;
+    color: #000000 !important;
+}
+
+/* Header Buttons Container */
+.header-buttons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.help-button {
+    width: 36px;
+    height: 36px;
+    border: 2px solid #000000;
+    background-color: #6B7B82;
+    border-radius: 50%;
+    font-size: 18px;
+    font-weight: bold;
+    color: #ffffff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 2px 2px 0px #000000;
+    position: relative;
+    z-index: 100;
+}
+
+.share-button-header {
+    width: 36px;
+    height: 36px;
+    border: 2px solid #000000;
+    background-color: #4CAF50;
+    border-radius: 50%;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 2px 2px 0px #000000;
+    color: white;
+    visibility: hidden; /* Hidden by default until game is completed */
+    opacity: 0;
+    position: relative;
+    z-index: 100;
+}
+
+.help-button:hover {
+    background-color: #5A686F;
+    transform: translateY(-1px);
+    box-shadow: 3px 3px 0px #000000;
+}
+
+.help-button:active {
+    transform: translateY(0px);
+    box-shadow: 1px 1px 0px #000000;
+}
+
+.share-button-header:hover {
+    background-color: #45a049;
+    transform: translateY(-1px);
+    box-shadow: 3px 3px 0px #000000;
+}
+
+.share-button-header:active {
+    transform: translateY(0px);
+    box-shadow: 1px 1px 0px #000000;
+}
+
+/* Trophy button - soft yellow color matching other buttons */
+.trophy-button {
+    width: 36px;
+    height: 36px;
+    border: 2px solid #000000;
+    background-color: #FFED9A; /* Bolder yellow - between original colors */
+    border-radius: 50%;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 2px 2px 0px #000000;
+    color: #000000;
+    position: relative;
+    z-index: 100;
+}
+
+.trophy-button:hover {
+    background-color: #FFE47A;
+    transform: translateY(-1px);
+    box-shadow: 3px 3px 0px #000000;
+}
+
+.trophy-button:active {
+    transform: translateY(0px);
+    box-shadow: 1px 1px 0px #000000;
+}
+
+
+/* Canvas Container */
+.canvas-container {
+    width: min(calc(100vw - 40px), calc(100vh - 280px), 450px) !important;
+    height: min(calc(100vw - 40px), calc(100vh - 280px), 450px) !important;
+    max-width: 450px !important;
+    max-height: 450px !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    margin: 0 auto;
+    margin-bottom: 0;
+}
+
+.canvas-container > * {
+    flex-shrink: 0;
+}
+
+/* Ensure absolutely positioned children don't expand container */
+.canvas-container > *[style*="position: absolute"],
+.canvas-container > #completion-html-overlay {
+    position: absolute !important;
+}
+
+#geoCanvas {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: calc(100vw - var(--dynamic-padding) * 2);
+    max-height: calc(100vh - 300px); /* Leave space for UI elements */
+    border: 3px solid #000000;
+    background-color: #ffffff;
+    box-shadow: 4px 4px 0px #000000;
+    touch-action: none;
+    aspect-ratio: 1;
+    position: relative;
+    z-index: 10;
+}
+
+/* Welcome Overlay (centered on canvas) */
+.welcome-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: transparent;
+    padding: 16px;
+    border-radius: 0;
+    text-align: center;
+    box-shadow: none;
+    z-index: 20;
+    width: calc(100% - 32px);
+    max-width: 348px; /* Canvas width (380px) minus padding (32px) */
+    backdrop-filter: none;
+    border: none;
+    display: block; /* Initially visible */
+    box-sizing: border-box;
+}
+
+.welcome-content h2 {
+    margin: 0 0 12px 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #2c3e50;
+    text-align: center;
+    width: 100%;
+    white-space: nowrap;
+}
+
+.welcome-content p {
+    margin: 8px 0;
+    font-size: 15px;
+    line-height: 1.4;
+    color: #34495e;
+    text-align: center;
+    word-wrap: break-word;
+}
+
+/* Commentary Overlay (positioned lower in the playing field) */
+.commentary-overlay {
+    position: absolute;
+    bottom: 10px; /* Positioned slightly lower in the playing field */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(255, 255, 255, 0.95);
+    border: 1px solid #000000;
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-align: center;
+    max-width: 320px;
+    z-index: 10;
+}
+
+.commentary-text {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333333;
+    line-height: 0.9;
+    margin: 0;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 290px;
+}
+
+/* Canvas Button Overlay - Fixed position */
+.canvas-button-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 50;
+    transition: opacity 0.2s ease;
+    opacity: 0; /* Hide by default to prevent flash */
+    pointer-events: none; /* Disable interaction when hidden */
+}
+
+.canvas-button-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Canvas Buttons Group - Contains both Play and Practise buttons */
+.canvas-buttons-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Canvas Play Button - Centered in canvas */
+.canvas-play-button {
+    border: 2px solid #000000;
+    border-radius: 16px;
+    padding: clamp(10px, 3vw, 12px) clamp(20px, 6vw, 24px);
+    font-size: clamp(16px, 4vw, 20px);
+    font-weight: 600;
+    color: #000000;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 2px 2px 0px #000000;
+    font-family: inherit;
+    display: block;
+    margin: 0 auto;
+    text-transform: none !important;
+}
+
+/* Progression Button - Override uppercase */
+.progression-button {
+    text-transform: none !important;
+}
+
+/* Play button - blue color to match cut render */
+#playBtn {
+    background-color: rgb(100, 150, 255);
+    text-transform: none !important;
+}
+#playBtn:hover {
+    background-color: rgb(80, 130, 235);
+}
+
+/* Practise button - green color */
+#practiseBtn {
+    background-color: #CFE0C3;
+}
+#practiseBtn:hover {
+    background-color: #B8D1AB;
+}
+
+.canvas-play-button:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0px #000000;
+}
+
+.canvas-play-button:active {
+    transform: translateY(0px);
+    box-shadow: 2px 2px 0px #000000;
+}
+
+/* Canvas Play Button States - removed "again" styles to prevent vestige buttons */
+
+.canvas-play-button.disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.canvas-play-button.disabled:hover {
+    background-color: #cccccc;
+    box-shadow: 4px 4px 0px #000000;
+}
+
+/* Old buttons-below-canvas rule removed - see updated rule below results container */
+
+/* Practice instructions styling */
+.practice-instructions {
+    font-size: 14px;
+    font-weight: 400;
+    color: #333333;
+    text-align: center;
+    margin: 12px auto;
+    line-height: 1.4;
+    max-width: 320px;
+    padding: 0 20px;
+    display: none;
+}
+
+/* Practice phase specific styling */
+.practice-phase-1 {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.practice-phase-2 {
+    font-size: 18px;
+    margin-top: 8px;
+}
+
+.practice-phase-final {
+    font-size: 18px;
+    margin-top: 12px;
+}
+
+/* Practice split display styling */
+.practice-split {
+    margin: 16px 0;
+}
+
+.split-display-container {
+    text-align: center;
+    margin: 16px auto;
+}
+
+/* Practice mode navigation buttons */
+.practice-navigation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 56px;
+    margin: 8px 0 5px 0;
+    position: relative;
+    z-index: 100;
+}
+
+.practice-navigation button {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    max-width: 32px !important;
+    max-height: 32px !important;
+    border-radius: 50% !important;
+    border: 2px solid #333 !important;
+    background: white !important;
+    cursor: pointer;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    transition: all 0.2s ease;
+    user-select: none;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    line-height: 1 !important;
+}
+
+.practice-navigation button:hover {
+    background-color: #f0f0f0;
+    transform: scale(1.1);
+}
+
+.practice-navigation button:active {
+    transform: scale(0.95);
+}
+
+/* Responsive adjustments for practice navigation */
+@media (max-width: 480px) {
+    .practice-navigation {
+        gap: 40px;
+        margin: 6px 0 3px 0;
+    }
+
+    .practice-navigation button {
+        width: 30px;
+        height: 30px;
+        font-size: 15px;
+    }
+}
+
+/* Play button positioned below goal for practice mode */
+.play-below-goal {
+    display: none;
+    margin: 20px auto;
+    text-align: center;
+    width: fit-content;
+}
+
+/* Compact Button Container - Only for auxiliary controls */
+
+/* Main Button (Play, Next, etc.) */
+.main-button {
+    background-color: transparent;
+    border: 3px solid #000000;
+    border-radius: 30px;
+    padding: 16px 40px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #000000;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 4px 4px 0px #000000;
+    font-family: inherit;
+    width: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.2;
+    /* White background for text readability over colored shapes */
+    position: relative;
+}
+
+.main-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: rgba(255, 255, 255, 0.80);
+    border-radius: 30px;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+}
+
+.main-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 0px #000000;
+}
+
+.main-button:active {
+    transform: translateY(0px);
+    box-shadow: 2px 2px 0px #000000;
+}
+
+/* Removed "again" button styles to prevent vestige buttons during replay */
+
+/* Disabled Button State */
+.main-button.disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.main-button.disabled:hover {
+    background-color: #cccccc;
+    transform: none;
+    box-shadow: 4px 4px 0px #000000;
+}
+
+
+/* Fixed content area below canvas - stable positioning */
+.canvas-container {
+    position: relative;
+    /* Reduced margin below canvas for tighter layout */
+    margin-bottom: 8px;
+}
+
+/* Buttons positioned below playing field - fixed minimal spacing */
+.buttons-below-canvas {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    /* NO MARGIN - testing to see if changes take effect */
+    margin: 0 !important;
+    width: fit-content;
+    /* Collapse when empty to let play buttons move up */
+    min-height: 0px;
+}
+
+/* Results Table - stable positioning with reserved space */
+.results-container {
+    width: 100%;
+    max-width: clamp(280px, 90vw, 380px);
+    /* NO TOP MARGIN - testing to see if changes take effect */
+    margin-top: 0 !important;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+    /* COLLAPSE when empty during initial load to let buttons move up */
+    min-height: 0px !important; /* Collapse completely when empty */
+    max-height: none !important; /* Allow expansion when content is added */
+}
+
+/* Stable positioning for progress tracker */
+.demo-progress-display, #demoProgressDisplay {
+    /* NO PADDING - testing to see if changes take effect */
+    margin: 0 !important;
+    text-align: center;
+    position: relative;
+    /* Min-height to ensure it displays when shown */
+    min-height: 44px;
+    box-sizing: border-box;
+    /* Ensure consistent width regardless of text content */
+    width: 100%;
+    /* Style properties */
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    padding: 8px;
+    /* Grey box removed - clean text display */
+    background-color: transparent;
+    border: none;
+}
+
+/* Let JavaScript control the display property */
+
+/* Stable positioning for percentage display */
+.percentage-display, #percentageDisplay {
+    /* Shift up slightly for better positioning */
+    margin: -8px 0 0 0 !important;
+    padding: 0 !important;
+    position: relative;
+    /* ALWAYS reserve space to prevent layout shifts */
+    display: block !important;
+    min-height: 20px !important;  /* Further reduced for minimal spacing */
+}
+
+/* When JavaScript tries to hide it with display:none, override to maintain space */
+#percentageDisplay[style*="display: none"] {
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Stable positioning for attempt display */
+.attempt-display {
+    /* NO margin for tightest possible spacing */
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: center;
+    position: relative;
+    /* Reserve minimum height when hidden to prevent layout shifts */
+    min-height: 20px;
+}
+
+/* Stable positioning for dynamic results container */
+.dynamic-results-container {
+    /* No margin for tighter spacing */
+    margin: 0 !important;
+    padding: 0 !important;
+    /* No minimum height - let it collapse when empty */
+    min-height: 0 !important;
+    position: relative;
+}
+
+/* Make dynamic results container visible after initial load */
+#dynamicResultsContainer {
+    visibility: visible !important;
+}
+
+/* FORCE button positioning with maximum specificity */
+#progressionButtonContainer #demoProgressionButton,
+#progressionButtonContainer .demo-progression-button-container,
+div#progressionButtonContainer div#demoProgressionButton,
+body #progressionButtonContainer #demoProgressionButton {
+    /* FORCE negative margin to pull button closer */
+    margin: -20px 0 0 0 !important;
+    margin-top: -20px !important;
+    padding: 0 !important;
+    text-align: center !important;
+    position: relative !important;
+    min-height: 40px !important;
+    display: block !important;
+}
+
+/* Backup rule for any progression button */
+.progression-button-container, #demoProgressionButton {
+    margin: -20px 0 0 0 !important;
+    margin-top: -20px !important;
+}
+
+/* Make progression button container visible after initial load */
+#progressionButtonContainer {
+    visibility: visible !important;
+}
+
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    border: 2px solid #000000;
+    font-size: clamp(14px, 4vw, 18px);
+    margin-bottom: var(--dynamic-margin);
+    table-layout: fixed;
+}
+
+.results-table th:nth-child(1),
+.results-table td:nth-child(1) {
+    width: 22%;
+    text-align: center;
+    outline: none;
+}
+
+.demo-section * {
+    border-right: none !important;
+    outline: none !important;
+}
+
+.results-table th:nth-child(2),
+.results-table td:nth-child(2) {
+    width: 48%;
+}
+
+.results-table th:nth-child(3),
+.results-table td:nth-child(3) {
+    width: 30%;
+}
+
+.results-table th {
+    background-color: #f5f5f5;
+    padding: 4px 8px;
+    text-align: center;
+    font-weight: 800;
+    border-bottom: 2px solid #000000;
+    font-size: 17px;
+}
+
+.results-table th:not(:last-child) {
+    border-right: none;
+}
+
+.results-table td {
+    padding: 4px 8px;
+    text-align: center;
+    font-weight: 700;
+    border-bottom: 2px solid #000000;
+    font-size: 17px;
+    white-space: nowrap;
+}
+
+.results-table td:not(:last-child) {
+    border-right: none;
+}
+
+.results-table tr:last-child td {
+    border-bottom: 2px solid #000000;
+}
+
+/* Totals row styling */
+.results-table tr.totals-row {
+    background-color: #ffffff;
+    font-weight: 700;
+}
+
+.results-table tr.totals-row td {
+    padding: 6px 8px;
+    border-bottom: 2px solid #000000;
+    border-top: 2px solid #000000;
+}
+
+/* Goal Display Overlay on Playing Field */
+.goal-display {
+    width: clamp(280px, 85vw, 360px);
+    max-width: 85vw;
+    background-color: transparent; /* No background */
+    border: none; /* No border */
+    border-radius: 0;
+    padding: clamp(20px, 6vw, 30px) var(--dynamic-padding);
+    text-align: center;
+    margin: 0; /* No margin needed for overlay */
+    box-shadow: none; /* No shadow */
+    transition: opacity 0.3s ease-out;
+    font-size: clamp(14px, 4vw, 18px);
+    line-height: 1.4; /* Comfortable line spacing */
+}
+
+/* Goal display as overlay on canvas */
+.goal-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    margin: 0; /* Remove margin for overlay positioning */
+}
+
+/* Green text for "Practise" in welcome message */
+.practise-text {
+    color: #7FB069;
+    font-weight: 600;
+}
+
+/* Blue text for "Play" in welcome message */
+.play-text {
+    color: rgb(100, 150, 255);
+    font-weight: 600;
+}
+
+.goal-display.animate-in {
+    animation: popGoalBox 1s ease-out forwards;
+}
+
+@keyframes popGoalBox {
+    0% {
+        opacity: 0;
+        transform: scale(0);
+    }
+    60% {
+        transform: scale(1.05);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Goal title removed per request */
+
+.goal-text {
+    font-size: 18px;
+    font-weight: 400;
+    color: #333333;
+    margin: 0;
+    line-height: 1.4;
+    opacity: 0; /* Start invisible for animation */
+}
+
+/* CUT Popup - centered in playing field */
+.cut-popup {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid #000000;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #000000;
+    z-index: 20;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.cut-popup.show {
+    opacity: 1;
+}
+
+
+/* Medal Stats Table */
+.medal-stats-table {
+    width: 300px;
+    max-width: 300px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.stats-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2px 0;
+    margin: 0;
+    gap: 20px;
+}
+
+.medal {
+    font-size: 24px;
+    width: auto;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.attempt-split {
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+    min-width: 140px;
+}
+
+.average-label {
+    font-size: 18px;
+    font-weight: 600;
+    color: #666;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.average-split {
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    min-width: 140px;
+}
+
+.stats-divider {
+    width: 50%;
+    margin: 4px auto;
+    border-bottom: 1px solid #ddd;
+    height: 1px;
+}
+
+.attempt-text {
+    font-size: 32px;
+    font-weight: 700;
+    color: #333333;
+    margin: 0;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.goal-text.fade-in {
+    animation: fadeInGoalText 0.4s ease-out forwards;
+    animation-delay: 0.8s; /* Start after box animation is mostly complete */
+}
+
+@keyframes fadeInGoalText {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.goal-description {
+    font-size: 18px; /* 2 points smaller than the base 20px */
+}
+
+/* Swipe instruction text styling */
+.swipe-instruction {
+    width: 100%;
+    text-align: center;
+    margin-top: 8px;
+}
+
+.swipe-text {
+    font-size: 16px;
+    font-weight: 500;
+    color: #666666;
+    margin: 0;
+    line-height: 1.3;
+}
+
+/* Split percentage uniform styling */
+.results-table td {
+    font-size: 16px !important;
+}
+
+.results-table td:nth-child(2),
+.results-table td:nth-child(3) {
+    font-size: 18px !important;
+    font-weight: 600 !important;
+}
+
+.split-multi-line {
+    line-height: 1.3;
+    white-space: pre-line;
+}
+
+/* Split color coding */
+.split-left {
+    color: #FAB06A;
+    font-weight: bold;
+}
+
+.split-right {
+    color: #FF6464;
+    font-weight: bold;
+}
+
+.split-q1 { color: #FF6464; font-weight: bold; }
+.split-q2 { color: #FAB06A; font-weight: bold; }
+.split-q3 { color: #64C864; font-weight: bold; }
+.split-q4 { color: #FFC864; font-weight: bold; }
+
+/* Currently viewed shape highlight */
+.results-table tr.current-shape {
+    background-color: #fff3cd !important;
+    border: 2px solid #000000;
+    box-shadow: 0 0 0 1px #000000;
+}
+
+/* Visual Swipe Indicators - Replay Navigation Arrows */
+.swipe-indicators {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 15;
+}
+
+.swipe-arrow {
+    position: absolute;
+    top: 50%; /* Horizontal center line of playing field */
+    transform: translateY(-50%);
+    pointer-events: none;
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+    width: 24px;
+    height: 24px;
+}
+
+.swipe-arrow-left {
+    left: 10px; /* Slightly inset from left edge */
+}
+
+.swipe-arrow-right {
+    right: 10px; /* Slightly inset from right edge */
+}
+
+.swipe-arrow svg {
+    width: 24px;
+    height: 24px;
+    fill: rgba(255, 255, 255, 0.85); /* Semi-transparent white fill */
+    stroke: #000000; /* Solid black stroke */
+    stroke-width: 2;
+    filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 1)); /* Sharp drop shadow like playing field */
+}
+
+/* Footer Info - Contact and Copyright */
+.footer-info {
+    position: fixed;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 400px; /* Match app container width */
+    padding: 10px 20px;
+    z-index: 999;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer-copyright {
+    color: #888;
+}
+
+.footer-contact {
+    color: #888;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footer-contact:hover {
+    color: #666;
+}
+
+
+/* v3.0 - Attempt Result Display */
+.attempt-result {
+    width: 100%;
+    margin: 0 !important;  /* FORCE zero margin */
+    padding: 0 !important;  /* FORCE zero padding */
+    text-align: center;
+    animation: fadeIn 0.3s ease;
+}
+
+
+.attempt-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0 !important;  /* Remove gap for tighter spacing */
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* v3.0 - Post lock-in elements (share button and thanks message) */
+.post-lockin-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.4s ease-out;
+}
+
+.post-lockin-container.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.post-lockin-share-btn {
+    background-color: #CFE0C3;
+    color: #000000;
+    border: 2px solid #000000;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 2px 2px 0px #000000;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    width: 120px;
+    text-align: center;
+}
+
+.post-lockin-share-btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0px #000000;
+    background-color: #B8D1AB;
+}
+
+.post-lockin-share-btn:active {
+    transform: translateY(0px);
+    box-shadow: 2px 2px 0px #000000;
+}
+
+
+.thanks-message {
+    font-size: 18px;
+    color: #333;
+    font-weight: 600;
+    text-align: center;
+    outline: none;
+}
+
+.demo-section * {
+    border-right: none !important;
+    outline: none !important;
+}
+
+.countdown-message {
+    font-size: 18px;
+    color: #333;
+    font-weight: 500;
+    text-align: center;
+    margin: 0;
+}
+
+/* Countdown Timer Overlay */
+.countdown-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 50;
+    pointer-events: none;
+}
+
+.countdown-box {
+    background-color: rgba(255, 255, 255, 0.75);
+    border: 2px solid rgba(0, 0, 0, 1);
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.split-display {
+    font-size: 24px;
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.split-display-large {
+    font-size: 51px;  /* Original size */
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: -8px 0 0 0 !important;
+    padding: 0 !important;
+    gap: 12px;
+    min-height: auto;  /* Let it take natural height */
+    line-height: 1;
+    position: relative;
+}
+
+.split-divider {
+    color: #666;
+}
+
+.score-display {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* v3.0 - Attempt Buttons */
+.attempt-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 16px;
+    animation: slideUp 0.3s ease;
+}
+
+.attempt-button {
+    padding: 12px 28px;
+    font-size: 24px;
+    font-weight: 700;
+    border: 2px solid #000;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 2px 2px 0px #000;
+    width: 160px;
+    text-align: center;
+    background-color: #FFC8E2; /* Light pink color for daily mode Next Shape/Next Attempt buttons */
+    color: #000; /* Black text for contrast */
+    line-height: 1.3;
+}
+
+.attempt-button:hover {
+    background-color: #FF77B7; /* Darker pink on hover */
+    transform: translate(-3px, -3px);
+    box-shadow: 5px 5px 0px #000;
+}
+
+/* Removed em styles since we're not using bracketed text anymore */
+
+.try-again-button {
+    background-color: #9EC1A3;
+    color: #000;
+}
+
+.try-again-button:hover:not(.disabled) {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0px #000;
+}
+
+.try-again-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.lock-in-button {
+    background-color: #FCAF58;
+    color: #000000;
+}
+
+.lock-in-button:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0px #000;
+    background-color: #f0f0f0;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* v3.0 - Final Score Display */
+.final-score-display {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.final-score-display h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.final-score {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+/* Progress Circles - positioned under percentage splits */
+.progress-circles {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    position: fixed;
+    top: 580px; /* Moved up to sit under percentage splits */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+}
+
+.progress-circle {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #000;
+    background-color: white;
+    transition: background-color 0.3s ease;
+}
+
+.progress-circle.filled {
+    background-color: rgb(100, 150, 255);
+}
+
+.share-feedback {
+    text-align: center;
+    color: #4CAF50;
+    font-size: 14px;
+    margin-top: 10px;
+    font-weight: 600;
+}
+
+
+/* New Welcome Popup for First-Time Visitors */
+.welcome-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    max-width: 500px;
+    width: 90%;
+}
+
+/* On mobile, ensure proper centering */
+@media (max-height: 700px) {
+    .welcome-popup {
+        max-width: 400px;
+    }
+}
+
+/* Desktop sizing */
+@media (min-width: 768px) {
+    .welcome-popup {
+        max-width: 500px;
+    }
+}
+
+.welcome-content {
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+    width: 100%;
+    box-shadow: none;
+    transition: max-height 300ms ease-out;
+    max-height: none;
+    overflow: visible;
+    padding: 20px;
+    text-align: center;
+}
+
+/* Specific styling for welcome back popup content */
+.welcome-popup .welcome-content {
+    background-color: white !important;
+    border: 2px solid black !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.welcome-content.expanded {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.welcome-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 20px;
+    border-bottom: 2px solid #000000;
+    background-color: #6B7B82;
+}
+
+.welcome-header h3 {
+    font-size: 18px;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0;
+}
+
+.welcome-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.welcome-message {
+    text-align: center;
+    outline: none;
+    width: 100%;
+}
+
+.demo-section * {
+    border-right: none !important;
+    outline: none !important;
+}
+
+.welcome-message p {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: #333333;
+}
+
+.how-to-play-button {
+    background-color: #fff3cd;
+    border: 3px solid #000000;
+    border-radius: 25px;
+    padding: 16px 32px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #000000;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 4px 4px 0px #000000;
+    font-family: inherit;
+    min-width: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    margin: 12px auto 0 auto; /* Move button down */
+}
+
+.how-to-play-button:hover {
+    background-color: #ffeaa7;
+    transform: translateY(-1px);
+    box-shadow: 6px 6px 0px #000000;
+}
+
+/* Continue Button for Welcome Back Popup */
+.continue-button {
+    background-color: #E0E0E0;
+    border: 3px solid #000000;
+    border-radius: 25px;
+    padding: 16px 32px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #000000;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 4px 4px 0px #000000;
+    font-family: inherit;
+    min-width: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    margin: 12px auto 0 auto;
+    text-transform: none !important;
+}
+
+.continue-button:hover {
+    background-color: #ffb3d6;
+    transform: translateY(-1px);
+    box-shadow: 6px 6px 0px #000000;
+}
+
+.continue-button:active {
+    transform: translateY(2px);
+    box-shadow: 2px 2px 0px #000000;
+}
+
+.how-to-play-button:active {
+    transform: translateY(0px);
+    box-shadow: 2px 2px 0px #000000;
+}
+
+.welcome-instructions {
+    margin-top: 16px;
+}
+
+/* Copy relevant instruction styles for welcome popup */
+.welcome-instructions .demo-instructions {
+    width: 100%;
+    margin: 0 auto 16px auto;
+}
+
+.welcome-instructions .demo-instructions p {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 6px;
+}
+
+.welcome-instructions .demo-section {
+    margin: 12px 0;
+    padding: 0;
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+    text-align: center;
+    outline: none;
+}
+
+.demo-section * {
+    border-right: none !important;
+    outline: none !important;
+}
+
+.welcome-instructions .demo-results {
+    margin-bottom: 12px;
+}
+
+.welcome-instructions .demo-results-table {
+    width: 280px;
+    border-collapse: collapse;
+    border: 2px solid #000000;
+    background-color: #ffffff;
+    font-size: 17px;
+    margin: 0 auto 12px auto;
+    table-layout: fixed;
+}
+
+.welcome-instructions .demo-results-table th {
+    background-color: #f5f5f5;
+    padding: 2px 8px;
+    text-align: center;
+    font-weight: 800;
+    border-bottom: 2px solid #000000;
+    font-size: 16px;
+}
+
+.welcome-instructions .demo-results-table th:not(:last-child) {
+    border-right: none;
+}
+
+.welcome-instructions .demo-results-table td {
+    padding: 2px 8px;
+    text-align: center;
+    font-weight: 700;
+    border-bottom: 2px solid #000000;
+    font-size: 17px;
+    white-space: nowrap;
+}
+
+.welcome-instructions .demo-results-table td:not(:last-child) {
+    border-right: none;
+}
+
+.welcome-instructions .demo-results-table th:nth-child(1),
+.welcome-instructions .demo-results-table td:nth-child(1) {
+    width: 65%;
+    text-align: center;
+    outline: none;
+}
+
+.demo-section * {
+    border-right: none !important;
+    outline: none !important;
+}
+
+.welcome-instructions .demo-results-table th:nth-child(2),
+.welcome-instructions .demo-results-table td:nth-child(2) {
+    width: 35%;
+    text-align: center;
+    outline: none;
+}
+
+.demo-section * {
+    border-right: none !important;
+    outline: none !important;
+}
+
+.welcome-instructions .demo-goal-display {
+    width: 280px;
+    background-color: #f5f5f5;
+    border: 2px solid #000000;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 4px auto 0 auto;
+    text-align: center;
+    box-shadow: 2px 2px 0px #000000;
+    transition: opacity 0.3s ease-out;
+}
+
+.welcome-instructions .demo-goal-text {
+    font-size: 1rem;
+    font-weight: 400;
+    color: #333333;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.welcome-instructions #demoCanvas {
+    border: 2px solid #000000;
+    border-radius: 4px;
+    background-color: #ffffff;
+    cursor: crosshair;
+    margin-bottom: 8px;
+    box-shadow: 2px 2px 0px #000000;
+    max-width: 100%;
+    height: auto;
+    outline: none;
+}
+
+/* Mobile adjustments for welcome back popup - ensure button visibility */
+@media (max-width: 700px) {
+    /* Ensure welcome back popup has adequate height for continue button */
+    #welcomeBackPopup.welcome-popup {
+        max-height: 90vh !important;
+        height: auto !important;
+    }
+
+    #welcomeBackPopup .welcome-content {
+        max-height: 85vh !important;
+        height: auto !important;
+        overflow-y: auto !important;
+        padding: 16px !important;
+    }
+
+    #welcomeBackPopup .welcome-body {
+        padding: 12px !important;
+        gap: 12px !important;
+    }
+
+    #welcomeBackPopup .welcome-message {
+        padding: 0 !important;
+    }
+
+    #welcomeBackPopup .welcome-message p {
+        margin-bottom: 12px !important;
+    }
+
+    #welcomeBackPopup .continue-button {
+        margin: 12px auto 0 auto !important;
+        padding: 14px 28px !important;
+    }
+}
+
+/* Responsive adjustments for welcome popup */
+@media (max-width: 400px) {
+    .welcome-content {
+        max-width: 95vw;
+        border-radius: 0 0 8px 8px;
+    }
+
+    .welcome-body {
+        padding: 12px 16px;
+    }
+
+    .welcome-instructions #demoCanvas {
+        width: 250px;
+        height: 250px;
+        max-width: calc(100vw - 80px);
+    }
+
+    /* Ensure welcome back popup has adequate height for continue button */
+    #welcomeBackPopup.welcome-popup {
+        max-height: 90vh !important;
+        height: auto !important;
+    }
+
+    #welcomeBackPopup .welcome-content {
+        max-height: 85vh !important;
+        height: auto !important;
+        overflow-y: auto !important;
+        padding: 14px !important;
+    }
+
+    #welcomeBackPopup .welcome-body {
+        padding: 10px !important;
+        gap: 10px !important;
+    }
+
+    #welcomeBackPopup .continue-button {
+        margin: 10px auto 0 auto !important;
+        padding: 12px 24px !important;
+        font-size: 16px !important;
+    }
+}
+
+/* Help Popup */
+.help-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    z-index: 1000;
+    padding: 62px 20px 30px 20px;
+}
+
+.help-content {
+    background-color: #ffffff;
+    opacity: 1;
+    border: 3px solid #000000;
+    border-radius: 12px;
+    max-width: 90vw;
+    width: 100%;
+    max-width: min(400px, 90vw);
+    box-shadow: 6px 6px 0px #000000;
+    height: 620px;
+    max-height: 95vh;
+    overflow-y: hidden;
+    transition: transform 300ms ease-out, opacity 300ms ease-out;
+}
+
+/* Removed global border-right: none rule that was affecting button text boxes */
+
+/* Animation states for first-visit popup */
+.help-popup.animated-entry {
+    opacity: 0;
+}
+
+.help-popup.animated-entry .help-content {
+    transform: scale(0.3);
+    opacity: 0;
+    transform-origin: top right;
+}
+
+.help-popup.animated-entry.show-animated .help-content {
+    transform: scale(1);
+    opacity: 1;
+}
+
+.help-popup.animated-entry.show-animated {
+    opacity: 1;
+}
+
+.help-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 20px;
+    border-bottom: 2px solid #000000;
+    background-color: #6B7B82;
+}
+
+.help-header h3 {
+    font-size: 18px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #ffffff;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+
+.close-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.help-body {
+    padding: 16px 16px 8px 16px;
+}
+
+.help-body p {
+    margin-bottom: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.help-body ol {
+    margin-left: 20px;
+    margin-bottom: 12px;
+}
+
+.help-body li {
+    margin-bottom: 8px;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+/* Blue highlight box for GOAL words */
+.goal-highlight {
+    background-color: #e3f2fd;
+    border: 2px solid #000000;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    color: #000000;
+    margin: 0 2px;
+    display: inline-block;
+    box-shadow: 2px 2px 0px #000000;
+}
+
+/* Demo section styles */
+.demo-section {
+    margin: 12px 0;
+    padding: 0;
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+    text-align: center;
+    outline: none;
+}
+
+.demo-section * {
+    border-right: none !important;
+    outline: none !important;
+}
+
+.demo-instructions {
+    width: 300px;
+    margin: 0 auto 8px auto;
+}
+
+.demo-instructions p {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 6px;
+}
+
+#demoCanvas {
+    border: 2px solid #000000;
+    border-radius: 4px;
+    background-color: #ffffff;
+    cursor: crosshair;
+    margin-bottom: 8px;
+    box-shadow: 2px 2px 0px #000000;
+    max-width: 100%;
+    height: auto;
+    outline: none;
+}
+
+/* Mobile responsive adjustments for demo */
+@media (max-width: 400px) {
+    .demo-section {
+        margin: 15px 0;
+        padding: 12px;
+    }
+    
+    #demoCanvas {
+        width: 280px;
+        height: 280px;
+        max-width: calc(100vw - 80px);
+    }
+    
+    .help-content {
+        max-width: 95vw;
+    }
+    
+    .help-body {
+        padding: 16px;
+    }
+    
+    /* Adjust animation origin for mobile */
+    .help-popup.animated-entry .help-content {
+        transform-origin: top right;
+    }
+}
+
+.demo-practice-text {
+    font-size: 24px;
+    font-weight: 500;
+    text-align: center;
+    width: 300px;
+    margin: 0px auto;
+    color: rgb(100, 150, 255);
+    transition: opacity 0.3s ease;
+    position: relative;
+    z-index: 1;
+}
+
+.demo-practice-text.faded {
+    opacity: 0;
+}
+
+.demo-percentage-text {
+    font-size: 32.5px;
+    font-weight: 600;
+    text-align: center;
+    width: 300px;
+    margin: 0px auto;
+    color: #000000;
+    transition: opacity 0.3s ease;
+    position: relative;
+    z-index: 1;
+    margin-top: -35px; /* Moved closer to demo canvas */
+}
+
+.demo-results {
+    margin-bottom: 12px;
+    width: 300px;
+    text-align: left;
+    border: none;
+    outline: none;
+}
+
+.demo-results * {
+    border-right: none !important;
+    outline: none !important;
+}
+
+.demo-percentage {
+    font-size: 32px;
+    font-weight: bold;
+    margin-top: -32px;
+    text-align: center;
+    width: 400px;
+    position: relative;
+    z-index: 2;
+    border: none;
+    outline: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.demo-percentage span {
+    border: none;
+    outline: none;
+}
+
+.demo-results-table {
+    width: 300px;
+    border-collapse: collapse;
+    border: 2px solid #000000;
+    background-color: #ffffff;
+    font-size: 17px;
+    margin: 0 auto 12px auto;
+    table-layout: fixed;
+}
+
+.demo-results-table th {
+    background-color: #f5f5f5;
+    padding: 2px 8px;
+    text-align: center;
+    font-weight: 800;
+    border-bottom: 2px solid #000000;
+    font-size: 16px;
+}
+
+.demo-results-table th:not(:last-child) {
+    border-right: none;
+}
+
+.demo-results-table td {
+    padding: 2px 8px;
+    text-align: center;
+    font-weight: 700;
+    border-bottom: 2px solid #000000;
+    font-size: 17px;
+    white-space: nowrap;
+}
+
+.demo-results-table td:not(:last-child) {
+    border-right: none;
+}
+
+/* Demo table column widths */
+.demo-results-table th:nth-child(1),
+.demo-results-table td:nth-child(1) {
+    width: 65%;
+    text-align: center;
+    outline: none;
+}
+
+.demo-section * {
+    border-right: none !important;
+    outline: none !important;
+}
+
+.demo-results-table th:nth-child(2),
+.demo-results-table td:nth-child(2) {
+    width: 35%;
+    text-align: center;
+    outline: none;
+}
+
+.demo-section * {
+    border-right: none !important;
+    outline: none !important;
+}
+
+.demo-goal-display {
+    width: 300px;
+    background-color: #f5f5f5;
+    border: 2px solid #000000;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 4px auto 0 auto;
+    text-align: center;
+    box-shadow: 2px 2px 0px #000000;
+    transition: opacity 0.3s ease-out;
+}
+
+/* Demo goal title removed per request */
+
+.demo-goal-text {
+    font-size: 1rem;
+    font-weight: 400;
+    color: #333333;
+    margin: 0;
+    line-height: 1.3;
+}
+
+/* Stats popup specific styles - positioned below playing field */
+
+/* Reset button styles */
+.reset-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.reset-button {
+    background-color: #ff6b6b;
+    color: white;
+    border: 2px solid #000000;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 3px 3px 0px #000000;
+}
+
+.reset-button:hover {
+    background-color: #ff5252;
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0px #000000;
+}
+
+/* Trophy Popup */
+.trophy-popup {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    background-color: #FFED9A; /* Bolder yellow - between #FFD700 and #FFF3CD */
+    border: 2px solid #000000;
+    border-radius: 8px;
+    padding: 24px 32px;
+    box-shadow: 4px 4px 0px #000000;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+    min-width: 280px;
+}
+
+.trophy-popup.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    pointer-events: auto;
+}
+
+.trophy-popup-content {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.trophy-popup-icon {
+    width: 32px;
+    height: 32px;
+    color: #000000;
+}
+
+.trophy-popup-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #333333;
+    transition: transform 0.2s ease;
+}
+
+.trophy-popup-close:hover {
+    transform: scale(1.1);
+}
+
+/* Orientation Lock */
+.orientation-message {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+.orientation-text {
+    font-size: 24px;
+    font-weight: 800;
+    color: #000000;
+    text-align: center;
+    line-height: 1.3;
+    margin-bottom: 20px;
+}
+
+.orientation-emoji {
+    font-size: 48px;
+    text-align: center;
+    outline: none;
+}
+
+.demo-section * {
+    border-right: none !important;
+    outline: none !important;
+}
+
+/* Score Colors */
+.score-perfect {
+    color: #2e7d32;
+    font-weight: 800;
+}
+
+.score-excellent {
+    color: #388e3c;
+    font-weight: 800;
+}
+
+.score-good {
+    color: #689f38;
+    font-weight: 700;
+}
+
+.score-okay {
+    color: #ffa000;
+    font-weight: 700;
+}
+
+.score-poor {
+    color: #f57c00;
+    font-weight: 700;
+}
+
+.score-bad {
+    color: #d32f2f;
+    font-weight: 700;
+}
+
+/* Enhanced Mobile Responsive Design */
+
+/* Intermediate screen sizes */
+@media (max-width: 450px) {
+    :root {
+        --dynamic-spacing: clamp(2px, 1vw, 6px);
+        --dynamic-padding: clamp(6px, 3vw, 15px);
+    }
+    
+    .app-container {
+        gap: 4px; /* Fixed small gap for stable positioning */
+    }
+    
+    .header-row {
+        padding: 0 clamp(5px, 2vw, 10px);
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 400px) {
+    body {
+        padding: var(--dynamic-padding);
+    }
+    
+    .app-container {
+        gap: 4px; /* Fixed small gap for stable positioning */
+        padding-bottom: calc(var(--dynamic-padding) * 5 + env(safe-area-inset-bottom, 0px));
+    }
+    
+    .app-title {
+        font-size: 1.8rem;
+    }
+    
+    .help-button,
+    .share-button-header {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+    
+    #geoCanvas {
+        width: 350px;
+        height: 350px;
+    }
+    
+    .canvas-play-button {
+        padding: 12px 24px;
+        font-size: 18px; /* Increased from 16px */
+        min-width: 100px;
+    }
+    
+    .results-table {
+        font-size: 14px;
+    }
+    
+    .results-table th,
+    .results-table td {
+        padding: 4px 6px;
+    }
+    
+    .results-table td:nth-child(2),
+    .results-table td:nth-child(3) {
+        font-size: 16px !important;
+    }
+}
+
+/* Very small screens - iPhone SE and similar */
+@media (max-width: 320px), (max-height: 600px) {
+    body {
+        padding: 2px 4px 4px 4px;
+        font-size: 14px;
+    }
+    
+    .app-container {
+        gap: 2px; /* Minimal gap even on very small screens for stable positioning */
+        padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+        min-height: calc(100vh - 10px);
+        min-height: calc(100dvh - 10px);
+    }
+    
+    .app-title {
+        font-size: 1.4rem;
+        margin: 2px 0;
+    }
+    
+    .header-row {
+        padding: 2px 3px;
+        margin-bottom: 2px;
+    }
+    
+    .help-button,
+    .share-button-header {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+    }
+    
+    #geoCanvas {
+        width: 280px;
+        height: 280px;
+    }
+    
+    .canvas-play-button {
+        padding: 8px 14px;
+        font-size: 15px; /* Increased from 13px */
+        width: 90px;
+    }
+    
+    .attempt-button {
+        padding: 8px 14px;
+        font-size: 16px;
+        font-weight: 700;
+        width: 90px;
+    }
+    
+    .post-lockin-share-btn {
+        padding: 8px 14px;
+        font-size: 14px;
+        width: 90px;
+    }
+    
+    .goal-display {
+        width: calc(100vw - 20px);
+        max-width: 280px;
+        padding: 6px 8px;
+        font-size: 12px;
+        margin: 4px auto 0 auto;
+        box-sizing: border-box;
+    }
+    
+    .attempt-display {
+        width: 100%;
+        margin: 20px auto;
+    }
+    
+    .attempt-text {
+        font-size: 28px;
+    }
+    
+    .progress-circles {
+        top: 550px; /* Moved up for mobile to sit under percentage splits */
+    }
+    
+    
+    .split-display-large {
+        font-size: 34px;
+        gap: 8px;
+        margin: -8px 0 0 0 !important;
+    }
+    
+    .attempt-result {
+        margin: 0 !important;  /* FORCE zero margin on mobile too */
+    }
+    
+    .attempt-buttons {
+        gap: 8px;
+        margin-top: 6px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .post-lockin-container {
+        gap: 6px;
+        margin-top: 8px;
+        padding-bottom: 10px;
+    }
+    
+    .thanks-message,
+    .countdown-message {
+        font-size: 16px;
+    }
+    
+    .countdown-box {
+        padding: 12px 20px;
+    }
+    
+    .help-popup .help-content {
+        width: calc(100vw - 10px);
+        max-width: 310px;
+        height: auto;
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+    
+    .demo-section canvas {
+        width: 200px;
+        height: 200px;
+    }
+    
+    .demo-practice-text {
+        font-size: 14px;
+        width: 200px;
+    }
+    
+    .demo-percentage-text {
+        font-size: 10px;
+        width: 200px;
+    }
+    
+    .help-body {
+        padding: 10px 10px 5px 10px;
+    }
+    
+    .demo-instructions p {
+        font-size: 13px;
+        margin: 4px 0;
+        line-height: 1.3;
+    }
+    
+    .demo-instructions {
+        margin-bottom: 8px;
+    }
+    
+    .demo-section {
+        margin: 8px 0;
+        padding: 8px;
+    }
+}
+
+/* Additional small screen optimizations */
+@media (max-height: 650px) {
+    .app-container {
+        gap: 2px; /* Minimal gap for stable positioning even on small height screens */
+        padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+    }
+    
+    .attempt-buttons {
+        margin-top: 4px;
+    }
+    
+    .post-lockin-container {
+        margin-top: 6px;
+        gap: 4px;
+    }
+    
+    .goal-display {
+        margin: 2px auto 0 auto;
+        padding: 4px 6px;
+    }
+    
+    .split-display-large {
+        font-size: 42px;
+        margin: -8px 0 0 0 !important;
+    }
+}
+
+/* Ultra-compact for very constrained screens */
+@media (max-width: 300px) {
+    #geoCanvas {
+        width: 260px;
+        height: 260px;
+    }
+    
+    .goal-display {
+        width: calc(100vw - 15px);
+        font-size: 11px;
+        padding: 4px 6px;
+    }
+    
+    .attempt-button,
+    .post-lockin-share-btn,
+    .canvas-play-button {
+        width: 80px;
+        padding: 6px 10px;
+        font-size: 14px; /* Increased from 12px */
+    }
+    
+    .split-display-large {
+        font-size: 29px;
+    }
+    
+    .app-title {
+        font-size: 1.2rem;
+    }
+}
+
+/* Button-like text styling in instruction popup */
+.button-text {
+    display: inline-block;
+    padding: 8px 12px;
+    border: 3px solid #000000;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 1.2;
+    text-align: center;
+    vertical-align: top;
+}
+
+.retry-button-text {
+    background-color: #9EC1A3;
+    color: #000000;
+    padding: 8px 12px;
+    border: 2px solid #000000;
+    font-weight: bold;
+    display: inline-block;
+    text-align: center;
+    line-height: 1.2;
+    min-width: 80px;
+}
+
+.commit-button-text {
+    background-color: #FCAF58;
+    color: #000000;
+    padding: 8px 12px;
+    border: 2px solid #000000;
+    font-weight: bold;
+    display: inline-block;
+    text-align: center;
+    line-height: 1.2;
+    min-width: 80px;
+}
+
+/* Styling for italic text within buttons */
+.button-text em,
+.retry-button-text em,
+.commit-button-text em {
+    font-size: 12px;
+    font-weight: normal;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+/* Indent text to align with bullet point text content */
+.indent-text {
+    margin-left: 1.2em;
+    margin-top: -0.5em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.indent-text span:not(.button-text) {
+    vertical-align: middle;
+    position: relative;
+    top: 0;
+}
+
+/* Committed results styling */
+.committed-results {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    max-width: 280px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.results-columns {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.percentages-column {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+    white-space: nowrap;
+    margin-right: 15px;
+}
+
+.labels-column {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+    white-space: nowrap;
+    margin-left: 15px;
+}
+
+.split-text {
+    color: #777777;
+    text-align: left;
+    font-size: 18px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.average-text {
+    color: #000000;
+    text-align: left;
+    font-size: 18px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+
+.split-label,
+.average-label {
+    color: #000000;
+    font-size: 18px;
+    font-weight: 400;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.average-label {
+    color: #000000;
+}
+
+/* Responsive adjustments for committed results */
+@media (max-width: 320px) {
+    .committed-results {
+        font-size: 16px;
+        gap: 6px;
+        max-width: 260px;
+        padding: 0 15px;
+    }
+    
+    .split-text,
+    .average-text {
+        font-size: 16px;
+    }
+    
+    .split-label,
+    .average-label {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 380px) {
+    .committed-results {
+        font-size: 17px;
+        max-width: 270px;
+        padding: 0 18px;
+    }
+    
+    .split-text,
+    .average-text {
+        font-size: 17px;
+    }
+    
+    .split-label,
+    .average-label {
+        font-size: 17px;
+    }
+}
+
+/* Percentage animation support */
+@media (prefers-reduced-motion: reduce) {
+    .split-display-large * {
+        transition: none !important;
+        animation: none !important;
+    }
+    
+    .committed-results {
+        transition: none !important;
+    }
+}
+
+/* Enhanced responsiveness for percentage animations */
+.split-display-large {
+    box-sizing: border-box;
+}
+
+/* Responsive canvas sizing and play button positioning */
+@media (min-width: 768px) {
+    #geoCanvas {
+        width: clamp(350px, 50vw, 450px) !important;
+        height: clamp(350px, 50vw, 450px) !important;
+    }
+    .app-container {
+        gap: 4px; /* Consistent minimal gap for all devices */
+    }
+    .initial-play-container {
+        margin: 5px 0 8px 0; /* Slightly more space on larger screens */
+    }
+}
+
+@media (max-width: 767px) and (min-width: 415px) {
+    #geoCanvas {
+        width: clamp(320px, 80vw, 400px) !important;
+        height: clamp(320px, 80vw, 400px) !important;
+    }
+    .app-container {
+        gap: 4px; /* Consistent minimal gap for all devices */
+    }
+    .initial-play-container {
+        margin: 3px 0 6px 0; /* Medium spacing for medium screens */
+    }
+}
+
+@media (max-width: 414px) {
+    .initial-play-container {
+        margin: 2px 0 4px 0; /* Minimal spacing for small screens */
+    }
+}
+
+@media (max-width: 320px) {
+    .split-display-large {
+        font-size: 34px;
+        min-height: 1.1em;
+    }
+}
+
+/* Extra small screens optimization */
+@media (max-height: 568px) {
+    .app-container {
+        gap: 2px; /* Consistent minimal gap for stable positioning */
+        padding-bottom: calc(105px + env(safe-area-inset-bottom, 0px));
+    }
+    
+    .canvas-play-button {
+        padding: 10px 20px;
+        font-size: 17px; /* Increased from 15px */
+        min-width: 90px;
+    }
+    
+    .replay-arrow {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+    }
+    
+    .results-table {
+        font-size: 12px;
+    }
+    
+    .results-table th,
+    .results-table td {
+        padding: 4px 6px;
+    }
+    
+    .results-table td:nth-child(2),
+    .results-table td:nth-child(3) {
+        font-size: 14px !important;
+    }
+}
+
+
+/* Enhanced Landscape orientation handling */
+/* DISABLED: CSS-based orientation detection causes issues with soft keyboard on mobile
+   Orientation checking is now handled entirely by JavaScript for better control */
+@media (orientation: landscape) and (max-height: 500px) and (min-width: 600px) {
+    /* Only apply if screen is wide enough to be true landscape, not just keyboard-induced */
+    .app-container {
+        display: none;
+    }
+
+    .orientation-message {
+        display: flex !important;
+        font-size: clamp(16px, 3vh, 20px);
+        padding: clamp(10px, 2vh, 20px);
+    }
+}
+
+/* Dynamic viewport height adjustments */
+@media (max-height: 700px) {
+    :root {
+        --dynamic-spacing: clamp(2px, 0.5vh, 6px);
+        --dynamic-padding: clamp(5px, 2vh, 15px);
+    }
+    
+    .app-container {
+        min-height: calc(100vh - var(--dynamic-padding));
+        min-height: calc(100dvh - var(--dynamic-padding));
+    }
+}
+
+/* Improved touch target sizes for accessibility */
+@media (pointer: coarse) {
+    .canvas-play-button {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    .help-button,
+    .share-button-header {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+/* Prevent text selection and zoom */
+* {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Disable double-tap zoom */
+input, button, textarea, select {
+    font-size: 16px;
+}
+
+/* Loading Splash Screen */
+.loading-splash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.loading-splash.visible {
+    opacity: 1;
+}
+
+.loading-content {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.loading-title {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #000000;
+    letter-spacing: -0.5px;
+    margin: 0;
+}
+
+.loading-message {
+    font-size: 18px;
+    font-weight: 600;
+    color: #666666;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+/* Loading Hexagon Animation */
+.loading-hexagon {
+    display: block;
+    margin: 8px auto 0;
+    stroke-dasharray: 400;
+    stroke-dashoffset: 400;
+    animation: drawEraseHexagon 1s linear infinite;
+}
+
+@keyframes drawEraseHexagon {
+    0% { 
+        stroke-dashoffset: 400; 
+    }
+    50% { 
+        stroke-dashoffset: 0; 
+    }
+    100% { 
+        stroke-dashoffset: -400; 
+    }
+}
+
+/* Loading splash responsive adjustments */
+@media (max-width: 480px) {
+    .loading-title {
+        font-size: 1.8rem;
+    }
+    
+    .loading-message {
+        font-size: 16px;
+    }
+}
+
+/* Updated Header with Tagline */
+.title-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+
+/* Play Section - Goal beside Play Button */
+.play-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 380px;
+}
+
+.play-section .shape-goal {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333333;
+    flex-shrink: 0;
+    text-align: left;
+}
+
+
+/* Compact Loading Popup */
+.loading-popup {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.loading-popup.visible {
+    opacity: 1;
+}
+
+.loading-popup-content {
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    text-align: center;
+    box-shadow: none;
+    min-width: auto;
+}
+
+.loading-popup-content .loading-message {
+    font-size: 18px;
+    font-weight: 700;
+    color: #000000;
+    text-align: center;
+    white-space: nowrap;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+    margin-bottom: 0;
+}
+
+/* Day Selector Container */
+.day-selector-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    padding: 10px;
+}
+
+.day-selector-container label {
+    font-weight: 600;
+    color: #333;
+    font-size: 16px;
+}
+
+.day-dropdown {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+    background-color: white;
+    min-width: 120px;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.day-dropdown:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.day-selector-container .stats-button {
+    margin-left: 10px;
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #6c5ce7;
+}
+
+/* Test Lab Controls */
+.test-lab-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.control-row {
+    display: flex;
+    gap: 12px;
+    align-items: end;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.shape-selector, .mechanic-selector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.shape-selector label, .mechanic-selector label {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.shape-dropdown, .mechanic-dropdown {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: white;
+    min-width: 140px;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.shape-dropdown:focus, .mechanic-dropdown:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.button-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.load-shape-button, .load-mechanic-button, .reset-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 90px;
+}
+
+.load-shape-button {
+    background-color: #007bff;
+    color: white;
+}
+
+.load-shape-button:hover {
+    background-color: #0056b3;
+    transform: translateY(-1px);
+}
+
+.load-shape-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.load-mechanic-button {
+    background-color: #28a745;
+    color: white;
+}
+
+.load-mechanic-button:hover {
+    background-color: #1e7e34;
+    transform: translateY(-1px);
+}
+
+.load-mechanic-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.reset-button {
+    background-color: #6c757d;
+    color: white;
+}
+
+.reset-button:hover {
+    background-color: #545b62;
+    transform: translateY(-1px);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 480px) {
+    .play-section {
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+    }
+    
+    .play-section .shape-goal {
+        font-size: 15px;
+        text-align: center;
+    }
+
+    .test-lab-controls {
+        margin: 15px 0;
+        padding: 15px;
+        gap: 12px;
+    }
+
+    .shape-dropdown {
+        min-width: 180px;
+        font-size: 14px;
+    }
+
+    .load-shape-button, .reset-button {
+        font-size: 14px;
+        padding: 10px 20px;
+        min-width: 100px;
+    }
+}
+
+/* Stats Window Styles */
+.stats-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.stats-window {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    max-width: 90vw;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    min-width: 320px;
+}
+
+.stats-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 12px 12px 0 0;
+    position: relative;
+    text-align: center;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.stats-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 20px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.stats-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.stats-content {
+    padding: 20px;
+}
+
+.day-summary {
+    margin-bottom: 25px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.day-summary h3 {
+    color: #007bff;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.total-score {
+    font-size: 24px;
+    font-weight: bold;
+    color: #28a745;
+    margin-bottom: 10px;
+}
+
+.shapes-summary {
+    display: grid;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.shape-result {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.shape-header {
+    font-weight: bold;
+    font-size: 15px;
+    margin-bottom: 10px;
+    color: #495057;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 5px;
+}
+
+.attempts-list {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.attempt-score {
+    background: #e3f2fd;
+    border: 1px solid #90caf9;
+    border-radius: 6px;
+    padding: 8px 12px;
+    text-align: center;
+    min-width: 80px;
+    font-size: 13px;
+}
+
+.attempt-score.best {
+    background: #e8f5e8;
+    border-color: #4caf50;
+    color: #2e7d32;
+    font-weight: bold;
+}
+
+.split-percentages {
+    font-size: 11px;
+    color: #666;
+    font-weight: normal;
+    margin-top: 2px;
+    display: block;
+}
+
+.no-attempts {
+    color: #6c757d;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+.stats-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-top: 10px;
+    display: inline-block;
+}
+
+.stats-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.stats-button:active {
+    transform: translateY(0);
+}
+
+/* Initial Play Button Container */
+.initial-play-container {
+    margin: 2px 0 5px 0; /* Reduced bottom margin for closer positioning to canvas */
+    text-align: center;
+    width: clamp(280px, 90vw, 380px); /* Match canvas width */
+    margin-left: auto;
+    margin-right: auto;
+    height: auto; /* Let container height match button content */
+    min-height: 0; /* Remove any minimum height constraints */
+    line-height: 1; /* Reduce line height to minimize container height */
+    font-size: 0; /* Remove whitespace between inline-block elements */
+    transform: translateX(-8px); /* Shift button group slightly to the left */
+    position: relative !important; /* Ensure it flows in document order */
+    display: block !important; /* Ensure it displays in the flow */
+    /* visibility and opacity controlled by JavaScript */
+    /* NUCLEAR OPTION: Override any positioning */
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    transform: translateX(-8px) !important; /* Only allow the horizontal centering */
+}
+
+/* Ensure both Play and Practice buttons have the same width */
+.initial-play-container .canvas-play-button {
+    width: 120px; /* Fixed width for both buttons */
+    min-width: 120px;
+    height: auto; /* Let buttons determine their own height */
+    display: inline-block; /* Override the block display to allow side-by-side */
+    margin: 0 7.5px; /* 15px total gap: 7.5px on each side */
+    vertical-align: top; /* Align to same top line */
+    box-sizing: border-box; /* Ensure padding doesn't affect alignment */
+    font-size: clamp(16px, 4vw, 20px) !important; /* Reset font size since container is 0 */
+    padding: clamp(10px, 3vw, 12px) clamp(20px, 6vw, 24px) !important; /* Ensure same padding */
+    /* NUCLEAR OPTION: Override any button positioning */
+    position: static !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    transform: none !important;
+    float: none !important;
+}
+
+/* Center the button pair by adjusting margins */
+.initial-play-container .canvas-play-button:first-child {
+    margin-left: 0 !important; /* Remove left margin from first button */
+    margin-right: 15px !important; /* Add gap to the right of Play button */
+    margin-bottom: 0 !important; /* No additional spacing needed with horizontal layout */
+}
+
+/* Practice button specific styling */
+.canvas-play-button.practice-button {
+    background-color: #E0E0E0;
+}
+
+.canvas-play-button.practice-button:hover {
+    background-color: #D0D0D0;
+}
+
+/* Force Practice button alignment with maximum specificity - target all possible selectors */
+.initial-play-container .canvas-play-button.practice-button,
+.initial-play-container #practiceBtn,
+.initial-play-container button#practiceBtn,
+.initial-play-container .canvas-play-button[id="practiceBtn"],
+#practiceBtn.canvas-play-button.practice-button {
+    vertical-align: top !important;
+    display: inline-block !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important; /* Last button gets no right margin */
+    margin-bottom: 0 !important;
+    padding: clamp(10px, 3vw, 12px) clamp(20px, 6vw, 24px) !important;
+    line-height: normal !important;
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+    font-size: clamp(16px, 4vw, 20px) !important;
+    font-weight: 600 !important; /* Match Play button font weight */
+    width: 120px !important; /* Ensure exact same width */
+    min-width: 120px !important;
+    box-sizing: border-box !important;
+    text-align: center !important; /* Center the text within the button */
+    text-indent: -5px !important; /* Shift text further to the left within button */
+    float: none !important;
+    clear: none !important;
+}
+
+/* Nuclear option - override ALL canvas-play-button positioning when inside container */
+.initial-play-container * {
+    position: static !important;
+    float: none !important;
+    display: inline-block !important;
+    vertical-align: top !important;
+}
+
+/* When play button container is hidden, don't take up any space */
+.initial-play-container[style*="display: none"],
+.initial-play-container[style*="visibility: hidden"] {
+    margin: 0 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+    /* Completely collapse when hidden */
+    display: none !important;
+}
+
+/* Animated Menu System */
+.main-header {
+    width: clamp(280px, 90vw, 380px);
+    margin: 0 auto 2px auto !important;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 5px 20px !important;
+    background: white;
+    border-bottom: 2px solid #000;
+}
+
+.app-title {
+    font-size: 24px;
+    font-weight: 900;
+    color: #333;
+    margin: 0;
+}
+
+.animated-menu-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Animated Main Button */
+.animated-menu-button {
+    width: 28px !important;
+    height: 28px !important;
+    background: white;
+    border: 2px solid #000;
+    border-radius: 50% !important;
+    cursor: pointer;
+    pointer-events: auto !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 2px 2px 0px #000;
+    color: #333;
+    position: relative;
+    z-index: 2001;
+    flex-shrink: 0;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    max-width: 28px !important;
+    max-height: 28px !important;
+    padding: 0 !important;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.animated-menu-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 5px 5px 0px #000;
+}
+
+.animated-menu-button:active {
+    transform: translateY(0);
+    box-shadow: 2px 2px 0px #000;
+}
+
+/* Menu icons */
+.menu-icon {
+    transition: opacity 0.3s ease;
+}
+
+/* Hamburger icon - perfectly centered */
+.animated-menu-button .hamburger-icon {
+    width: 16px !important;
+    height: 16px !important;
+    display: block !important;
+    margin: 0 auto !important;
+}
+
+.animated-menu-button.expanded {
+    background: white;
+}
+
+/* Menu Options Container - 3 buttons slide out to the left */
+/* Dropdown Menu */
+.menu-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 2px solid #000;
+    border-radius: 8px;
+    box-shadow: 4px 4px 0px #000;
+    min-width: 150px;
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.menu-dropdown.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+}
+
+/* Menu Items */
+.menu-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.menu-item:last-child {
+    border-bottom: none;
+}
+
+.menu-item:hover {
+    background-color: #f5f5f5;
+}
+
+.menu-item:first-child {
+    border-radius: 6px 6px 0 0;
+}
+
+.menu-item:last-child {
+    border-radius: 0 0 6px 6px;
+}
+
+/* Individual Menu Option Buttons - Updated v2 */
+.menu-option {
+    width: 30px !important;
+    height: 30px !important;
+    background: white !important;
+    border: 2px solid #000;
+    border-radius: 50% !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 2px 2px 0px #000;
+    color: #333 !important;
+    padding: 0 !important;
+    margin: 0;
+    opacity: 0;
+    transform: scale(0.8);
+    flex-shrink: 0;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    max-width: 30px !important;
+    max-height: 30px !important;
+    box-sizing: border-box;
+}
+
+.menu-option:hover {
+    transform: translateY(-1px);
+    box-shadow: 3px 3px 0px #000;
+}
+
+.menu-option svg {
+    width: 18px !important;
+    height: 18px !important;
+    fill: #333 !important;
+    color: #333 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+}
+
+.animated-menu-button svg {
+    width: 14px !important;
+    height: 14px !important;
+    fill: #333 !important;
+    color: #333 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+}
+
+/* Hamburger icon styling */
+.hamburger-icon {
+    width: 14px !important;
+    height: 14px !important;
+    fill: none !important;
+    stroke: #333 !important;
+}
+
+.option-label {
+    display: none;
+}
+
+/* Color variations for different options */
+.daily-option:hover { background: #e3f2fd !important; }
+.option1-option:hover { background: #e8f5e8 !important; }
+.option2-option:hover { background: #fff3e0 !important; }
+.option3-option:hover { background: #f3e5f5 !important; }
+.profile-option:hover { background: #fff3e0 !important; }
+
+/* Selected Option Display */
+.selected-option {
+    display: flex;
+    align-items: center;
+}
+
+.selected-button {
+    width: 44px;
+    height: 44px;
+    background: #6496ff;
+    border: 2px solid #000;
+    border-radius: 50% !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 2px 2px 0px #000;
+    color: white;
+    padding: 0;
+}
+
+.selected-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 3px 3px 0px #000;
+}
+
+.selected-button svg {
+    width: 20px;
+    height: 20px;
+}
+
+.selected-label {
+    display: none;
+}
+
+/* Keep main button visible when menu is expanded */
+.animated-menu-button.hidden {
+    /* Button stays visible and becomes profile icon */
+}
+
+/* Staggered animation for menu buttons */
+.menu-options.expanded .menu-option:nth-child(1) { transition-delay: 0.05s; }
+.menu-options.expanded .menu-option:nth-child(2) { transition-delay: 0.1s; }
+.menu-options.expanded .menu-option:nth-child(3) { transition-delay: 0.15s; }
+.menu-options.expanded .menu-option:nth-child(4) { transition-delay: 0.2s; }
+
+.menu-options:not(.expanded) .menu-option {
+    transition-delay: 0s;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .animated-menu-container {
+        gap: 6px;
+    }
+    
+    .menu-options {
+        right: 38px;
+        gap: 10px;
+    }
+    
+    .animated-menu-button,
+    .selected-button,
+    .menu-option {
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 50% !important;
+        min-width: 28px !important;
+        min-height: 28px !important;
+        max-width: 28px !important;
+        max-height: 28px !important;
+    }
+    
+    .menu-option svg,
+    .animated-menu-button svg {
+        width: 16px !important;
+        height: 16px !important;
+    }
+    
+    .menu-options {
+        gap: 8px;
+        right: 44px;
+    }
+    
+    .app-title {
+        font-size: 20px;
+    }
+}
+
+/* Navigation Button States */
+.menu-option.greyed-out {
+    background-color: #cccccc !important;
+    color: #666666 !important;
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
+}
+
+/* Completion View Styles */
+#post-canvas-actions {
+    margin-top: 16px;
+    text-align: center;
+    position: relative !important;
+    z-index: 100 !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Desktop/fullscreen layout - move buttons down by 65px total */
+@media screen and (min-width: 768px) {
+    #post-canvas-actions {
+        margin-top: 81px !important; /* 16px + 25px + 40px = 81px */
+    }
+
+    /* Move next attempt/shape progression button down 20px for desktop full screen */
+    .fixed-button-area .progression-button {
+        margin-top: 20px !important;
+        transform: translateY(20px) !important;
+    }
+
+    #fixedButtonArea .progression-button {
+        margin-top: 20px !important;
+        transform: translateY(20px) !important;
+    }
+
+    /* Move split display in daily mode down 4px for desktop full screen */
+    body:not(.practice-mode-active) #fixedPercentageArea,
+    body:not(.practice-mode-active) .split-display-large {
+        transform: translateY(4px) !important;
+    }
+
+    /* Reduce success modal height to fit content only for desktop full screen */
+    #successConfirmationModal .success-modal-content {
+        max-height: 140px !important;
+        min-height: auto !important;
+        height: auto !important;
+    }
+
+    #successConfirmationModal .success-modal-header {
+        padding: 8px 16px !important;
+        min-height: auto !important;
+    }
+
+    #successConfirmationModal .success-modal-body {
+        padding: 8px 16px 12px 16px !important;
+        min-height: auto !important;
+    }
+}
+
+.action-buttons {
+    display: flex !important;
+    gap: 15px; /* Match initial play button gap */
+    justify-content: center;
+    margin-bottom: 12px;
+    width: clamp(280px, 90vw, 380px); /* Match canvas width */
+    margin-left: auto;
+    margin-right: auto;
+    transform: translateX(-8px); /* Match initial play button positioning */
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.action-button {
+    width: 140px; /* Wider to fit "Competitions" text */
+    min-width: 140px;
+    padding: clamp(10px, 3vw, 12px) clamp(20px, 6vw, 24px); /* Match initial play button padding */
+    background: white;
+    border: 2px solid #000;
+    border-radius: 8px;
+    font-size: clamp(16px, 4vw, 20px); /* Match initial play button font size */
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 2px 2px 0px #000;
+    text-align: center;
+    box-sizing: border-box;
+    text-transform: none !important; /* Preserve case sensitivity */
+}
+
+/* Adjust positioning to extend outward from inner edges */
+#btn-competitions {
+    background: #6496ff; /* Match Play button blue */
+    color: white;
+    margin-right: 0; /* Keep right edge at current position */
+    text-align: center !important; /* Center the text */
+    text-indent: -8px !important; /* Shift text further to the left within button */
+}
+
+#btn-archives {
+    background: #FAB06A; /* Match Practice button orange */
+    color: black;
+    margin-left: 0; /* Keep left edge at current position */
+}
+
+.action-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 3px 3px 0px #000;
+}
+
+.action-button:active {
+    transform: translateY(0);
+    box-shadow: 1px 1px 0px #000;
+}
+
+/* Button color styling already defined above */
+
+#btn-archives:hover {
+    background: #f9a050;
+}
+
+/* Competitions button styling */
+#btn-competitions {
+    background: #C0D6DF;
+    color: black;
+}
+
+#btn-competitions:hover {
+    background: #A0C6CF;
+}
+
+/* Circular icon buttons for completion state */
+.action-button-circle {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+    max-width: 48px !important;
+    max-height: 48px !important;
+    padding: 0 !important;
+    border: 2px solid #000;
+    border-radius: 50%;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 3px 3px 0px #000; /* Neobrutalist drop shadow */
+    position: relative;
+}
+
+/* Individual button colors for circular buttons */
+#btn-competitions.action-button-circle {
+    background: #6496FF; /* Blue for competitions */
+    color: #000;
+}
+
+#btn-archives.action-button-circle {
+    background: #FAB06A; /* Orange for practice */
+    color: #000;
+}
+
+#btn-share.action-button-circle {
+    background: #7BC67E; /* Soft green for share */
+    color: #000;
+}
+
+/* Hover effects for circular buttons */
+.action-button-circle:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0px #000;
+}
+
+.action-button-circle:active {
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0px #000;
+}
+
+/* SVG icon styling */
+.action-button-circle svg {
+    pointer-events: none; /* Ensure clicks go to button, not SVG */
+}
+
+/* Ensure consistent button sizing across all desktop viewports */
+@media screen and (min-width: 701px) {
+    .action-button-circle,
+    #btn-competitions.action-button-circle,
+    #btn-share.action-button-circle,
+    #btn-archives.action-button-circle {
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+        min-height: 48px !important;
+        max-width: 48px !important;
+        max-height: 48px !important;
+        font-size: 20px !important;
+    }
+
+    .action-button-circle svg {
+        width: 24px !important;
+        height: 24px !important;
+    }
+
+    /* Lock text button sizes */
+    #btn-competitions.action-button-text,
+    #btn-share.action-button-text {
+        width: 159px !important;
+        height: 48px !important;
+        min-width: 159px !important;
+        min-height: 48px !important;
+        max-width: 159px !important;
+        max-height: 48px !important;
+        border-radius: 16px !important;
+    }
+}
+
+/* Force filleted corners on all buttons */
+.canvas-play-button,
+#playBtn,
+#practiceBtn,
+#btn-competitions,
+#btn-share,
+.progression-button,
+#nextShapeBtn,
+#nextAttemptBtn {
+    border-radius: 16px !important;
+}
+
+/* Competition info box default styling */
+.competition-info-box {
+    margin-top: 20px;
+    padding: 15px;
+    background: white;
+    border: 2px solid #000;
+    border-radius: 8px;
+    text-align: left;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #000;
+    box-shadow: 2px 2px 0px #000;
+}
+
+.competition-info-box strong {
+    color: #000;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.competition-info-box ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #333;
+}
+
+.competition-info-box li {
+    margin-bottom: 6px;
+}
+
+.countdown-text {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+}
+
+.menu-option.greyed-out svg {
+    fill: #666666 !important;
+    color: #666666 !important;
+}
+
+.menu-option.active {
+    background-color: #6496FF !important;
+    color: white !important;
+}
+
+.menu-option.active svg {
+    fill: white !important;
+    color: white !important;
+}
+
+.animated-menu-button.active {
+    background-color: #6496FF !important;
+}
+
+.animated-menu-button.active svg {
+    fill: white !important;
+    color: white !important;
+}
+
+/* Authentication Required Popup */
+.auth-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.auth-popup-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    border: 2px solid black;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    position: relative;
+}
+
+.auth-popup-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 28px !important;
+    height: 28px !important;
+    background: white;
+    border: 2px solid #000;
+    border-radius: 50% !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 2px 2px 0px #000;
+    color: #333;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    max-width: 28px !important;
+    max-height: 28px !important;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.auth-popup-close:hover {
+    transform: translateY(-2px);
+    box-shadow: 5px 5px 0px #000;
+}
+
+/* User Profile Popup */
+.profile-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.profile-popup-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    border: 2px solid black;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    max-width: 450px;
+    width: 90%;
+    position: relative;
+}
+
+.profile-popup-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 28px !important;
+    height: 28px !important;
+    background: white;
+    border: 2px solid #000;
+    border-radius: 50% !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 2px 2px 0px #000;
+    color: #333;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    max-width: 28px !important;
+    max-height: 28px !important;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.profile-popup-close:hover {
+    transform: translateY(-2px);
+    box-shadow: 5px 5px 0px #000;
+}
+
+.profile-popup-content h3 {
+    margin: 0 0 5px 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+}
+
+.profile-email {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 25px;
+}
+
+.profile-stats {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+    border: 1px solid #e0e0e0;
+}
+
+.profile-stats h4 {
+    margin: 0 0 15px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #333;
+}
+
+.profile-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.profile-popup-btn {
+    padding: 12px 24px;
+    border: 2px solid black;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.profile-popup-btn.primary {
+    background: #FF6B6B;
+    color: white;
+}
+
+.profile-popup-btn.primary:hover {
+    background: #FF5252;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.profile-popup-btn.secondary {
+    background: white;
+    color: #333;
+    border-color: #666;
+}
+
+.profile-popup-btn.secondary:hover {
+    background: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.auth-popup-content h3 {
+    margin: 0 0 15px 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #333;
+}
+
+.auth-popup-content p {
+    margin: 0 0 25px 0;
+    font-size: 16px;
+    color: #666;
+}
+
+.auth-popup-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.auth-popup-btn {
+    padding: 12px 24px;
+    border: 2px solid black;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.auth-popup-btn.primary {
+    background: #E0E0E0 !important;
+    color: black;
+}
+
+.auth-popup-btn.primary:hover {
+    background: #ffb3d6 !important;
+    transform: translateY(-1px);
+    box-shadow: 2px 4px 0px #000;
+}
+
+.auth-popup-btn.secondary {
+    background: white !important;
+    color: #333;
+}
+
+.auth-popup-btn.secondary:hover {
+    background: #f5f5f5 !important;
+    transform: translateY(-1px);
+    box-shadow: 2px 4px 0px #000;
+}
+
+.auth-popup-btn.tertiary {
+    background: transparent;
+    border: none;
+    color: #666;
+    text-decoration: underline;
+    font-size: 14px;
+}
+
+.auth-popup-btn.tertiary:hover {
+    color: #333;
+    background: none;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Section Content Styling */
+.section-content {
+    max-width: clamp(280px, 90vw, 600px);
+    margin: 20px auto;
+    padding: 0 15px;
+}
+
+.section-placeholder {
+    background: white;
+    border: 2px solid black;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 2px 4px 0px #000;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #333;
+}
+
+.back-to-daily-btn {
+    padding: 8px 16px;
+    background: #f0f0f0;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #666;
+}
+
+.back-to-daily-btn:hover {
+    background: #e0e0e0;
+    transform: translateY(-1px);
+    box-shadow: 1px 2px 0px #ccc;
+}
+
+/* Archive Section Styles */
+.placeholder-calendar {
+    margin-bottom: 30px;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+    gap: 8px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    position: relative;
+}
+
+.calendar-day.solved {
+    background: #e8f5e8;
+    border-color: #4CAF50;
+    color: #2e7d2e;
+}
+
+.solved-indicator {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 10px;
+    color: #4CAF50;
+}
+
+.placeholder-stats {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.placeholder-stats h3 {
+    margin: 0 0 15px 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 15px;
+    max-width: 350px;
+    margin: 0 auto;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.stat-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+}
+
+/* Competition Section Styles */
+.competition-tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 25px;
+    background: #f0f0f0;
+    border-radius: 8px;
+    padding: 5px;
+}
+
+.comp-tab {
+    flex: 1;
+    padding: 10px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #666;
+}
+
+.comp-tab.active {
+    background: white;
+    color: #333;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.placeholder-leaderboard h3 {
+    margin: 0 0 15px 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.leaderboard-list {
+    background: #f9f9f9;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 25px;
+}
+
+.leaderboard-item {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    padding: 12px 15px;
+    gap: 15px;
+    font-size: 14px;
+}
+
+.leaderboard-item.header {
+    background: #e0e0e0;
+    font-weight: 700;
+    color: #333;
+}
+
+.leaderboard-item:not(.header) {
+    border-bottom: 1px solid #eee;
+    color: #666;
+}
+
+.leaderboard-item:last-child:not(.header) {
+    border-bottom: none;
+}
+
+/* Profile Section Styles */
+.profile-info {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 15px auto;
+    background: #f0f0f0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #ddd;
+}
+
+.profile-info h3 {
+    margin: 0 0 5px 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #333;
+}
+
+.profile-status {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+}
+
+.profile-email {
+    margin: 5px 0 0 0;
+    font-size: 12px;
+    color: #888;
+}
+
+.profile-sections {
+    display: grid;
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.profile-section h4 {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+}
+
+.settings-list {
+    background: #f9f9f9;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.setting-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    color: #666;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.setting-item:hover {
+    background: #f0f0f0;
+}
+
+.setting-item:last-child {
+    border-bottom: none;
+}
+
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+}
+
+.achievement-item {
+    text-align: center;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.achievement-item.locked {
+    opacity: 0.6;
+}
+
+.achievement-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.achievement-name {
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+}
+
+/* Enhanced Profile Styles */
+.profile-stats {
+    margin-bottom: 25px;
+}
+
+.profile-stats h4 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+}
+
+.profile-competitions {
+    margin-bottom: 25px;
+}
+
+.profile-competitions h4 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+}
+
+.competitions-list {
+    background: #f9f9f9;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.competition-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.competition-item:last-child {
+    border-bottom: none;
+}
+
+.competition-item.more {
+    font-style: italic;
+    color: #888;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.comp-name {
+    font-weight: 600;
+    color: #333;
+}
+
+.comp-status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.comp-status.status-active {
+    background: #e8f5e8;
+    color: #4CAF50;
+}
+
+.comp-status.status-upcoming {
+    background: #fff3e0;
+    color: #ff9800;
+}
+
+.comp-status.status-completed {
+    background: #e3f2fd;
+    color: #2196F3;
+}
+
+.competition-stats {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.competition-stats p {
+    margin: 8px 0;
+    color: #555;
+}
+
+.no-data {
+    color: #888;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin: 25px 0;
+    flex-wrap: wrap;
+}
+
+.primary-btn {
+    background: #E0E0E0 !important;
+    color: black;
+    padding: 12px 24px;
+    border: 2px solid black;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.primary-btn:hover {
+    background: #ffb3d6;
+    transform: translateY(-1px);
+    box-shadow: 2px 4px 0px #000;
+}
+
+.secondary-btn {
+    background: #E0E0E0 !important;
+    color: black;
+    padding: 12px 24px;
+    border: 2px solid black;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.secondary-btn:hover {
+    background: #ffb3d6;
+    transform: translateY(-1px);
+    box-shadow: 2px 4px 0px #000;
+}
+
+.danger-btn {
+    background: #ff6b6b;
+    color: white;
+    padding: 12px 24px;
+    border: 2px solid #d63031;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.danger-btn:hover {
+    background: #e55656;
+    transform: translateY(-1px);
+    box-shadow: 2px 4px 0px #d63031;
+}
+
+.setting-item.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    color: #999;
+}
+
+.loading-content {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-size: 16px;
+}
+
+/* Email Validation Styles */
+.email-feedback {
+    font-size: 12px;
+    margin-top: 5px;
+    padding: 5px 0;
+    min-height: 16px;
+    transition: all 0.3s ease;
+}
+
+.email-feedback.valid {
+    color: #4CAF50;
+}
+
+.email-feedback.invalid {
+    color: #f44336;
+}
+
+.email-feedback.warning {
+    color: #ff9800;
+}
+
+.email-feedback.validating {
+    color: #2196F3;
+    font-style: italic;
+}
+
+.suggestion-link {
+    color: #6496FF;
+    text-decoration: underline;
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+.suggestion-link:hover {
+    color: #5285ee;
+}
+
+/* Email Input States */
+input.valid-email {
+    border-color: #4CAF50 !important;
+    background-color: rgba(76, 175, 80, 0.05);
+}
+
+input.warning-email {
+    border-color: #ff9800 !important;
+    background-color: rgba(255, 152, 0, 0.05);
+}
+
+input.invalid-email {
+    border-color: #f44336 !important;
+    background-color: rgba(244, 67, 54, 0.05);
+}
+
+/* Hunter.io Usage Statistics */
+.hunter-stats {
+    font-size: 11px;
+    color: #888;
+    margin-top: 3px;
+    font-style: italic;
+}
+
+.hunter-stats.low-usage {
+    color: #4CAF50;
+}
+
+.hunter-stats.medium-usage {
+    color: #ff9800;
+}
+
+.hunter-stats.high-usage {
+    color: #f44336;
+}
+
+/* Success Confirmation Modal */
+.success-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+    animation: fadeIn 0.3s ease;
+}
+
+.success-modal-content {
+    background: white;
+    border-radius: 16px;
+    border: 3px solid #1B998B;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    max-width: 550px;
+    width: 95%;
+    height: 90vh;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideInUp 0.4s ease;
+    position: relative;
+    overflow: hidden !important;
+    touch-action: none;
+}
+
+/* Specific override for success confirmation modal */
+#successConfirmationModal .success-modal-content {
+    max-width: 320px !important;
+    max-height: 185px !important;
+    height: auto !important;
+    min-height: auto !important;
+}
+
+#successConfirmationModal .success-modal-header {
+    padding: 12px 16px !important;
+    height: auto !important;
+    min-height: auto !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+#successConfirmationModal .success-modal-body {
+    padding: 8px 16px 16px 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+}
+
+/* Competition Prompt Modal - centered on all devices */
+#competitionPromptModal {
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+#competitionPromptModal .success-modal-content {
+    max-width: 400px !important;
+    width: 400px !important;
+    height: auto !important;
+    max-height: fit-content !important;
+    min-height: auto !important;
+}
+
+#competitionPromptModal .success-modal-header {
+    padding: 16px 20px !important;
+}
+
+#competitionPromptModal .success-modal-body {
+    padding: 20px !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: auto !important;
+}
+
+/* Ensure centering on mobile devices */
+@media screen and (max-width: 768px) {
+    #competitionPromptModal {
+        align-items: center !important;
+        padding: 20px !important;
+    }
+
+    #competitionPromptModal .success-modal-content {
+        width: 95% !important;
+        max-width: 400px !important;
+        height: auto !important;
+        max-height: fit-content !important;
+        min-height: auto !important;
+    }
+
+    #competitionPromptModal .success-modal-header {
+        padding: 16px 20px !important;
+    }
+
+    #competitionPromptModal .success-modal-body {
+        padding: 20px !important;
+    }
+}
+
+/* Ensure consistent size on all desktop screens (half-screen and fullscreen) */
+@media screen and (min-width: 769px) {
+    #competitionPromptModal .success-modal-content {
+        width: 400px !important;
+        max-width: 400px !important;
+        height: auto !important;
+        max-height: none !important;
+        min-height: auto !important;
+    }
+
+    #competitionPromptModal .success-modal-body {
+        padding: 25px !important;
+        height: auto !important;
+        max-height: none !important;
+        min-height: auto !important;
+    }
+}
+
+.success-modal-header {
+    background: #C0D6DF;
+    color: black;
+    padding: 20px 25px;
+    border-radius: 18px 18px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
+    height: 84px; /* Force exact consistent height */
+    box-sizing: border-box;
+}
+
+.success-modal-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+    flex: 1;
+}
+
+.success-modal-close {
+    width: 28px !important;
+    height: 28px !important;
+    background: white;
+    border: 2px solid #000;
+    border-radius: 50% !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 2px 2px 0px #000;
+    color: #333;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    max-width: 28px !important;
+    max-height: 28px !important;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.success-modal-close:hover {
+    transform: translateY(-2px);
+    box-shadow: 5px 5px 0px #000;
+}
+
+.back-arrow {
+    width: 28px !important;
+    height: 28px !important;
+    background: white;
+    border: 2px solid #000;
+    border-radius: 50% !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 2px 2px 0px #000;
+    color: #333;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 0 !important;
+    margin-right: 10px;
+    box-sizing: border-box !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    max-width: 28px !important;
+    max-height: 28px !important;
+    flex-shrink: 0;
+    line-height: 1;
+    position: relative;
+}
+
+.back-arrow::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent;
+    border-right: 12px solid #333;
+    background: none;
+    margin-right: 2px;
+}
+
+.back-arrow:hover {
+    transform: translateY(-2px);
+    box-shadow: 5px 5px 0px #000;
+}
+
+.competitions-list, .create-competition-form {
+    padding: 20px;
+    min-height: 200px;
+    text-align: center;
+}
+
+.competitions-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.competition-card {
+    background: #e8e8e8;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    width: calc(100% - 20px);
+    margin: 0 10px;
+    text-align: center;
+    transition: transform 0.2s ease;
+    box-sizing: border-box;
+}
+
+.competition-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.competition-card h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 18px;
+}
+
+.competition-card p {
+    margin: 0 0 15px 0;
+    color: #666;
+}
+
+.competition-form {
+    max-width: 400px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.competition-form .form-group {
+    margin-bottom: 20px;
+}
+
+.competition-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #333;
+}
+
+.competition-form input,
+.competition-form select {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.competition-form button {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.success-modal-body {
+    padding: 20px 25px;
+    overflow: hidden !important;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.success-message {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.welcome-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.success-message h3 {
+    margin: 0 0 10px 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: #333;
+}
+
+.success-message p {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: #666;
+}
+
+.feature-list {
+    text-align: left;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 8px 0;
+}
+
+.feature-icon {
+    font-size: 20px;
+    margin-right: 12px;
+    width: 24px;
+    text-align: center;
+}
+
+.feature-text {
+    font-size: 14px;
+    color: #555;
+    font-weight: 500;
+}
+
+.success-navigation {
+    text-align: center;
+    margin-top: 25px;
+}
+
+.success-navigation h4 {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.success-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.success-nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border: 2px solid;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.success-nav-btn.primary {
+    background: #E0E0E0;
+    color: black;
+    border-color: #E0E0E0;
+    grid-column: span 2;
+}
+
+.success-nav-btn.primary:hover {
+    background: #D0D0D0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.success-nav-btn.secondary {
+    background: #E0E0E0;
+    color: black;
+    border-color: #E0E0E0;
+}
+
+.success-nav-btn.secondary:hover {
+    background: #D0D0D0;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.success-nav-btn.tertiary {
+    background: transparent;
+    color: #666;
+    border-color: transparent;
+    grid-column: span 2;
+    font-size: 14px;
+}
+
+.success-nav-btn.tertiary:hover {
+    color: #333;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.btn-icon {
+    font-size: 16px;
+}
+
+/* User Profile Menu (Dropdown) */
+.user-profile-menu {
+    position: fixed;
+    background: white;
+    border: 2px solid black;
+    border-radius: 8px;
+    box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 2000;
+    min-width: 180px;
+    display: none;
+    animation: slideDown 0.2s ease;
+}
+
+.profile-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.profile-menu-item:last-child {
+    border-bottom: none;
+}
+
+.profile-menu-item:hover {
+    background: #f5f5f5;
+}
+
+.profile-menu-item.logout {
+    color: #f44336;
+}
+
+.profile-menu-item.logout:hover {
+    background: #fff5f5;
+}
+
+.menu-icon {
+    font-size: 16px;
+    margin-right: 10px;
+    width: 18px;
+    text-align: center;
+}
+
+.menu-text {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.profile-menu-divider {
+    height: 1px;
+    background: #e0e0e0;
+    margin: 5px 0;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile Responsive Updates */
+@media (max-width: 480px) {
+    .success-modal-content {
+        width: 100%;
+        max-height: 490px;
+        border-radius: 0;
+        border: none;
+    }
+    
+    .success-modal-header {
+        border-radius: 0;
+        padding: 15px 20px;
+        height: 74px; /* Force exact consistent mobile height */
+    }
+    
+    .success-modal-header h2 {
+        font-size: 20px;
+    }
+    
+    .success-modal-body {
+        padding: 25px 20px;
+    }
+    
+    .success-buttons {
+        grid-template-columns: 1fr;
+    }
+    
+    .success-nav-btn.primary {
+        grid-column: span 1;
+    }
+    
+    .success-nav-btn.tertiary {
+        grid-column: span 1;
+    }
+    
+    .user-profile-menu {
+        min-width: 160px;
+        right: 10px !important;
+    }
+}
+
+/* Coming Soon Messages */
+.coming-soon {
+    text-align: center;
+    margin-top: 30px;
+    padding: 20px;
+    background: #fff9e6;
+    border: 1px solid #ffd700;
+    border-radius: 8px;
+}
+
+.coming-soon p {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #cc9900;
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 480px) {
+    .section-placeholder {
+        padding: 20px 15px;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .section-header h2 {
+        font-size: 20px;
+    }
+    
+    .back-to-daily-btn {
+        align-self: flex-end;
+    }
+    
+    .auth-popup-content {
+        padding: 25px 20px;
+    }
+    
+    .calendar-grid {
+        grid-template-columns: repeat(7, 1fr);
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .competition-tabs {
+        flex-direction: column;
+    }
+    
+    .achievements-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+}
+/* Practice Mode Styles */
+#practiceContainer {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+#practiceCanvasContainer {
+    position: relative;
+    width: 380px;
+    height: 380px;
+    margin: 20px auto;
+    border: 2px solid #333;
+    background: white;
+}
+
+#practiceCanvas {
+    display: block;
+    cursor: crosshair;
+}
+
+#practicePercentages {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+#practiceScore {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#practiceControls {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin: 20px 0;
+}
+
+#practiceControls .circular-button {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid #333;
+    background: white;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#practiceControls .circular-button:hover:not(:disabled) {
+    background: #f0f0f0;
+    transform: scale(1.1);
+}
+
+#practiceControls .circular-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#returnToGameBtn {
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    background: #4169E1;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#returnToGameBtn:hover {
+    background: #1e3a8a;
+}
+
+/* Practice Mode Navigation */
+.practice-navigation {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin: 10px 0;
+}
+
+.practice-nav-btn {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #000000;
+    border-radius: 50%;
+    background-color: #FFD700; /* Golden yellow for practice mode */
+    font-size: 0;
+    cursor: pointer;
+    box-shadow: 2px 2px 0px #000000;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.practice-nav-btn:hover {
+    background-color: #FFA500; /* Darker golden orange on hover */
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0px #000000;
+}
+
+.practice-nav-btn:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Practice Navigation Button Icons - removed generic rule that was conflicting */
+
+/* Left Arrow - FINAL VERSION */
+#practiceLeftBtn {
+    font-size: 0 !important;
+}
+#practiceLeftBtn::before {
+    content: '<' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    font-size: 24px !important;
+    font-weight: 900 !important;
+    color: #000 !important;
+    font-family: monospace !important;
+    line-height: 1 !important;
+    z-index: 100 !important;
+}
+
+/* Right Arrow - FINAL VERSION */
+#practiceRightBtn {
+    font-size: 0 !important;
+}
+#practiceRightBtn::before {
+    content: '>' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    font-size: 24px !important;
+    font-weight: 900 !important;
+    color: #000 !important;
+    font-family: monospace !important;
+    line-height: 1 !important;
+    z-index: 100 !important;
+}
+
+/* Reset Icon (circular arrow) */
+#practiceResetBtn::before {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #000;
+    border-radius: 50%;
+    border-top-color: transparent;
+    background: none;
+    transform: rotate(45deg);
+}
+
+#practiceResetBtn::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 6px solid #000;
+    top: 8px;
+    right: 10px;
+}
+
+/* Random Icon - FINAL VERSION */
+#practiceRandomBtn {
+    font-size: 0 !important;
+}
+#practiceRandomBtn::before {
+    content: '?' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    font-size: 24px !important;
+    font-weight: 900 !important;
+    color: #000 !important;
+    font-family: monospace !important;
+    line-height: 1 !important;
+    z-index: 100 !important;
+}
+
+#practiceModeIndicator {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid black;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 3px;
+    z-index: 10;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* NUCLEAR OPTION - Override everything for practice nav buttons */
+button#practiceLeftBtn,
+button#practiceLeftBtn::before,
+button#practiceLeftBtn::after {
+    background-image: none !important;
+    background: none !important;
+    border-image: none !important;
+}
+
+button#practiceLeftBtn {
+    background-color: red !important;
+}
+
+button#practiceLeftBtn::after {
+    content: '<' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 24px !important;
+    font-weight: 900 !important;
+    color: #000 !important;
+    font-family: Arial, sans-serif !important;
+    z-index: 1000 !important;
+    background-color: yellow !important;
+}
+
+button#practiceRightBtn,
+button#practiceRightBtn::before,
+button#practiceRightBtn::after {
+    background-image: none !important;
+    background: none !important;
+    border-image: none !important;
+}
+
+button#practiceRightBtn::after {
+    content: '>' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 24px !important;
+    font-weight: 900 !important;
+    color: #000 !important;
+    font-family: Arial, sans-serif !important;
+    z-index: 1000 !important;
+}
+
+button#practiceRandomBtn,
+button#practiceRandomBtn::before,
+button#practiceRandomBtn::after {
+    background-image: none !important;
+    background: none !important;
+    border-image: none !important;
+}
+
+button#practiceRandomBtn::after {
+    content: '?' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 24px !important;
+    font-weight: 900 !important;
+    color: #000 !important;
+    font-family: Arial, sans-serif !important;
+    z-index: 1000 !important;
+}
+
+/* SHORT-VIEWPORT MOBILE LAYOUT - iPhone SE/6/7/8 family (≈ 375×560 portrait) */
+@media (orientation: portrait) and (max-width: 380px) and (max-height: 580px) {
+  /* Prevent page shift when modals open - but allow modal scrolling for keyboard */
+  body {
+    width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  /* Ensure content wrapper doesn't cause scrolling */
+  html {
+    overflow: hidden !important;
+    width: 100% !important;
+  }
+
+  /* Lock main content in place */
+  #game-container,
+  #gameCanvas,
+  .canvas-container {
+    position: fixed !important;
+    top: 0 !important;
+  }
+
+  /* Fix modals to viewport to prevent scroll jumping - only when visible */
+  .success-modal[style*="display: flex"],
+  .success-modal[style*="display:flex"],
+  .auth-modal[style*="display: flex"],
+  .auth-modal[style*="display:flex"],
+  #competitionModal[style*="display: flex"],
+  #competitionModal[style*="display:flex"],
+  #successConfirmationModal[style*="display: flex"],
+  #successConfirmationModal[style*="display:flex"],
+  #joinCompetitionModal[style*="display: flex"],
+  #joinCompetitionModal[style*="display:flex"] {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Ensure modal content stays centered and not scrollable */
+  .success-modal-content,
+  .auth-modal-content {
+    position: relative !important;
+    margin: 0 !important;
+    top: auto !important;
+    transform: none !important;
+    max-height: 90vh !important;
+    overflow-y: visible !important;
+  }
+
+  /* Compact mechanic info area - override existing styles */
+  #mechanicInfo.mechanic-info,
+  .mechanic-info {
+    margin: 0px !important; /* Remove all margins */
+    margin-top: -5px !important; /* Move up to close gap with header */
+    margin-bottom: 0px !important;
+    padding: 0px !important; /* Remove all padding */
+    height: 8px !important; /* Minimal height */
+    min-height: 8px !important;
+    max-height: 8px !important;
+  }
+
+  /* Instruction area - increased height and text for better readability */
+  #instructionArea.instruction-area,
+  .instruction-area {
+    height: 16px !important; /* Increased from 10px to 16px */
+    min-height: 16px !important;
+    max-height: 16px !important;
+    padding: 1px 12px !important; /* Slight vertical padding */
+    margin: 2px 0 0 0 !important; /* Small positive margin to move down */
+    margin-top: 2px !important;
+    margin-bottom: 0px !important;
+    font-size: 14px !important; /* Increased to 14px as requested */
+    line-height: 1.1 !important; /* Slightly increased line height */
+    display: flex !important;
+    align-items: flex-end !important; /* Align text to bottom of container */
+  }
+
+  .instruction-text,
+  #instructionText {
+    font-size: 16px !important; /* Match desktop half-screen size */
+    line-height: 1.1 !important;
+    white-space: nowrap !important; /* Force single line */
+    overflow: hidden !important;
+    text-overflow: ellipsis !important; /* Handle overflow gracefully */
+    margin: -5px 0 0 0 !important; /* Move up 5px */
+    padding: 0 !important;
+  }
+
+  /* Move canvas down slightly to utilize available space */
+  .canvas-container {
+    margin-top: -5px !important; /* Less negative margin to move canvas down */
+  }
+
+  /* PRACTICE MODE - Prevent canvas from moving when split display appears */
+  body.practice-mode-active .canvas-container,
+  body.practice-mode-active #canvasContainer,
+  body:has(.practice-navigation:not([style*="display: none"])) .canvas-container,
+  body:has(.practice-navigation:not([style*="display: none"])) #canvasContainer {
+    margin-top: 0 !important; /* Keep canvas stable, no movement */
+    position: relative !important;
+  }
+
+  /* Center auth modal vertically for 375x560 layout */
+  .auth-modal-content {
+    transform: translateY(-15%) !important;
+  }
+
+  /* Compact progress tracker to save space - override with higher specificity */
+  div#demoProgressDisplay.demo-progress-display,
+  #demoProgressDisplay,
+  .demo-progress-display {
+    min-height: 20px !important; /* Reduce from default */
+    padding: 2px 8px !important; /* Tighter padding */
+    margin: -30px 0 0 0 !important; /* Position right under canvas */
+    font-size: 13px !important; /* Match instruction text size */
+    line-height: 1.2 !important; /* Tighter line spacing */
+  }
+
+  /* Move Daily Mode split display closer to canvas */
+  .fixed-percentage-area {
+    margin-top: -16px !important; /* Move up closer to progress tracker */
+    margin-bottom: 0px !important; /* Remove bottom margin */
+    position: relative !important;
+    z-index: 10 !important; /* Ensure it appears above footer */
+    transform: none !important; /* No transform */
+  }
+
+  /* Target the actual split display elements that get created */
+  .attempt-result {
+    margin-top: 0px !important; /* No extra spacing */
+    margin-bottom: 0px !important; /* No bottom spacing */
+    position: relative !important;
+    z-index: 10 !important;
+    transform: none !important; /* No transform */
+  }
+
+  .split-display-large {
+    margin-top: 0px !important; /* No extra spacing */
+    margin-bottom: 0px !important; /* No bottom spacing */
+    position: relative !important;
+    z-index: 10 !important;
+    transform: none !important; /* No transform */
+  }
+
+  /* Position buttons directly under split display with footer clearance */
+  .fixed-button-area,
+  #fixedButtonArea,
+  div.fixed-button-area,
+  div#fixedButtonArea {
+    margin-top: -2px !important; /* Move up closer to split display */
+    margin-bottom: 60px !important; /* Extra space above footer to prevent cutoff */
+    transform: none !important; /* No transform */
+  }
+
+  /* Reduce button size by 20% for 375x560 layout - but NOT next attempt/shape buttons */
+  .fixed-button-area button:not(#nextShapeBtn):not(#nextAttemptBtn),
+  #fixedButtonArea button:not(#nextShapeBtn):not(#nextAttemptBtn),
+  .fixed-button-area .progression-button:not(#nextShapeBtn):not(#nextAttemptBtn),
+  .fixed-button-area .attempt-button:not(#nextShapeBtn):not(#nextAttemptBtn) {
+    transform: scale(0.8) !important;
+  }
+
+  /* Next attempt/shape buttons - reduce padding instead of scaling */
+  #nextShapeBtn,
+  #nextAttemptBtn {
+    transform: none !important; /* Remove scale transform */
+  }
+
+  /* Target specific next attempt/shape buttons */
+  .attempt-buttons,
+  .attempt-button {
+    margin-top: 15px !important; /* Move buttons DOWN */
+    margin-bottom: 0px !important;
+  }
+
+  /* Target all buttons within the fixed button area */
+  .fixed-button-area button,
+  .fixed-button-area .attempt-button,
+  .fixed-button-area .canvas-play-button {
+    margin-top: 15px !important;
+    margin-bottom: 5px !important;
+  }
+
+  /* Target specific next shape and next attempt buttons by ID with maximum specificity - override inline styles */
+  button#nextShapeBtn[style],
+  button#nextAttemptBtn[style],
+  .fixed-button-area #nextShapeBtn[style],
+  .fixed-button-area #nextAttemptBtn[style],
+  .app-container #nextShapeBtn[style],
+  .app-container #nextAttemptBtn[style],
+  #nextShapeBtn,
+  #nextAttemptBtn {
+    margin: 10px auto 0px auto !important; /* Reduced margin for tighter spacing */
+    transform: none !important; /* Remove all transforms */
+    position: relative !important;
+    top: 10px !important; /* Reduced from 15px to move up */
+    display: block !important;
+    padding: 6px 16px !important; /* Reduce padding around text (default is ~10px 20px) */
+    min-height: unset !important; /* Remove minimum height constraint */
+    line-height: normal !important; /* Keep normal line height for text */
+  }
+
+  /* PRACTICE MODE - Move navigation container up slightly */
+  #practiceNavigation,
+  .practice-navigation,
+  .buttons-below-canvas {
+    margin-top: -3px !important; /* Move up slightly */
+  }
+
+  /* PRACTICE MODE - Reduce navigation button sizes (override inline styles) */
+  #practiceNavigation button[style],
+  #practiceNavigation .practice-nav-btn[style],
+  .practice-navigation .practice-nav-btn[style],
+  #practiceLeftBtn[style],
+  #practiceRightBtn[style],
+  #practiceRandomBtn[style],
+  #practiceResetBtn[style],
+  #practiceNavigation .practice-nav-btn,
+  .practice-navigation .practice-nav-btn,
+  #practiceLeftBtn,
+  #practiceRightBtn,
+  #practiceRandomBtn,
+  #practiceResetBtn {
+    width: 26px !important; /* Reduce from 31px inline style */
+    height: 26px !important; /* Reduce from 31px inline style */
+    font-size: 12px !important; /* Reduce from 15px inline style */
+    padding: 1px !important; /* Minimal padding */
+    margin: 0 2px !important; /* Even tighter spacing */
+    min-width: 26px !important; /* Override any min-width */
+    min-height: 26px !important; /* Override any min-height */
+    max-width: 26px !important; /* Force maximum size */
+    max-height: 26px !important; /* Force maximum size */
+  }
+
+  /* PRACTICE MODE - Position split display under navigation buttons */
+  body:has(.practice-navigation:not([style*="display: none"])) .fixed-percentage-area,
+  body:has(.practice-navigation:not([style*="display: none"])) .attempt-result,
+  body:has(.practice-navigation:not([style*="display: none"])) .split-display-large,
+  .practice-navigation:not([style*="display: none"]) ~ .fixed-percentage-area,
+  .practice-navigation:not([style*="display: none"]) ~ .attempt-result,
+  .practice-navigation:not([style*="display: none"]) ~ .split-display-large {
+    margin-top: -16px !important; /* Move up closer to navigation buttons */
+    transform: none !important; /* No transform */
+    position: relative !important;
+    z-index: 1 !important; /* Below navigation buttons */
+  }
+
+  /* PRACTICE MODE - Move score text down slightly - exclude header elements */
+  body:has(.practice-navigation:not([style*="display: none"])) .split-display-large span,
+  body:has(.practice-navigation:not([style*="display: none"])) .attempt-result span,
+  .practice-navigation:not([style*="display: none"]) ~ * .split-display-large span,
+  .practice-navigation:not([style*="display: none"]) ~ * .attempt-result span {
+    margin-top: 0px !important; /* Reset negative margin */
+    transform: translateY(8px) !important; /* Move DOWN by 8px to avoid collision with split display */
+    display: inline-block !important;
+    position: relative !important;
+    top: 0px !important; /* Reset upward positioning */
+    z-index: 1 !important; /* Below navigation */
+    letter-spacing: 0.02em !important; /* Slight letter spacing for readability */
+  }
+
+  /* Ensure score text spacing is preserved - don't override inline margins */
+  body:has(.practice-navigation:not([style*="display: none"])) span[style*="margin-left"] {
+    margin-left: 4px !important; /* Preserve the 4px margin from JavaScript */
+  }
+
+  /* Ensure header date remains visible in practice mode */
+  body:has(.practice-navigation:not([style*="display: none"])) .header span,
+  body:has(.practice-navigation:not([style*="display: none"])) header span,
+  body:has(.practice-navigation:not([style*="display: none"])) #header span {
+    margin-top: 0px !important;
+    transform: none !important;
+    position: static !important;
+    top: auto !important;
+    word-spacing: normal !important;
+    letter-spacing: normal !important;
+  }
+
+  /* Simplified targeting for practice mode score text positioning only */
+  .practice-navigation:not([style*="display: none"]) ~ * span {
+    margin-top: 0px !important;
+    transform: translateY(0px) !important;
+    position: relative !important;
+    top: 0px !important;
+    z-index: 1 !important;
+    display: inline-block !important;
+  }
+
+  /* Override header spans to stay in place */
+  .practice-navigation:not([style*="display: none"]) ~ .header span,
+  .practice-navigation:not([style*="display: none"]) ~ header span {
+    margin-top: 0px !important;
+    transform: none !important;
+    position: static !important;
+    top: auto !important;
+    word-spacing: normal !important;
+    letter-spacing: normal !important;
+  }
+
+  /* SPECIAL: In-app browsers (Messenger/WhatsApp) with extremely short viewports */
+  /* iPhone SE and similar at 375x547 or less */
+  @media screen and (max-width: 395px) and (max-height: 560px) {
+    /* Reduce split display margin even more to prevent collision */
+    body:has(.practice-navigation:not([style*="display: none"])) .fixed-percentage-area,
+    body:has(.practice-navigation:not([style*="display: none"])) .split-display-large,
+    .practice-navigation:not([style*="display: none"]) ~ .fixed-percentage-area,
+    .practice-navigation:not([style*="display: none"]) ~ .split-display-large {
+      margin-top: -20px !important; /* Even tighter spacing for short viewports */
+    }
+
+    /* Move score text down more to avoid collision */
+    body:has(.practice-navigation:not([style*="display: none"])) .split-display-large span,
+    body:has(.practice-navigation:not([style*="display: none"])) .attempt-result span,
+    .practice-navigation:not([style*="display: none"]) ~ * .split-display-large span,
+    .practice-navigation:not([style*="display: none"]) ~ * .attempt-result span {
+      transform: translateY(12px) !important; /* Move down more in short viewports */
+    }
+  }
+
+  /* PRACTICE MODE - Ensure footer stays fixed when split display shows */
+  body:has(.practice-navigation:not([style*="display: none"])) .app-container {
+    height: calc(100vh - 25px) !important; /* Match footer space in practice mode */
+    max-height: calc(100vh - 25px) !important;
+    overflow: hidden !important; /* No scrolling in practice mode either */
+  }
+
+  /* DAILY MODE - Ensure no scrolling when practice navigation is hidden */
+  body:has(.practice-navigation[style*="display: none"]) .app-container,
+  body:not(:has(.practice-navigation)) .app-container {
+    height: calc(100vh - 25px) !important; /* Match footer space in daily mode */
+    max-height: calc(100vh - 25px) !important;
+    overflow: hidden !important; /* No scrolling in daily mode */
+  }
+
+  /* PRACTICE MODE - Keep footer in place regardless of content */
+  body:has(.practice-navigation:not([style*="display: none"])) > div[style*="position: fixed"][style*="bottom: 0"] {
+    position: fixed !important;
+    bottom: 0 !important;
+    transform: translateY(0) !important; /* Prevent any vertical shift */
+  }
+
+  /* Safari-specific fix for viewport shift after modal close */
+  body {
+    position: relative !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100vh !important; /* Fixed height, no auto */
+    max-height: 100vh !important;
+    overflow: hidden !important; /* No scrolling on body */
+    /* Force Safari to recalculate viewport */
+    -webkit-transform: translateZ(0) !important;
+    transform: translateZ(0) !important;
+  }
+
+  /* Ensure app container ALWAYS leaves footer space */
+  .app-container {
+    position: relative !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: calc(100vh - 25px) !important; /* Always leave 25px for footer */
+    max-height: calc(100vh - 25px) !important; /* Prevent ANY expansion */
+    padding-bottom: 0px !important; /* Remove padding to use fixed height */
+    margin-bottom: 0px !important; /* Remove any bottom margin */
+    overflow: hidden !important; /* No scrolling allowed */
+    box-sizing: border-box !important;
+    /* Force Safari to recalculate layout */
+    -webkit-transform: translateZ(0) !important;
+    transform: translateZ(0) !important;
+  }
+
+  /* Welcome overlay and initial state specific */
+  .welcome-overlay,
+  #welcomeOverlay {
+    max-height: calc(100vh - 40px) !important;
+    overflow: hidden !important;
+    position: absolute !important; /* Ensure it doesn't push footer */
+  }
+
+  /* Ensure initial state doesn't cover footer */
+  body:has(#welcomeOverlay:not([style*="display: none"])) .app-container {
+    height: calc(100vh - 25px) !important;
+    max-height: calc(100vh - 25px) !important;
+  }
+
+  /* Override responsive.css canvas sizing - force larger canvas on short viewport */
+  canvas#geoCanvas {
+    width: 337px !important; /* Override 280px from responsive.css */
+    height: 337px !important; /* Override 280px from responsive.css */
+    min-width: 337px !important; /* Prevent shrinking */
+    min-height: 337px !important; /* Prevent shrinking */
+    max-width: calc(100vw - 20px) !important; /* Still respect device width */
+    max-height: calc(100vw - 20px) !important; /* Still respect device width */
+    overflow: hidden !important; /* No scrollbars on canvas */
+    border: 3px solid #000000 !important; /* Match original canvas border */
+    box-shadow: 4px 4px 0px #000000 !important; /* Match original canvas shadow */
+    outline: none !important; /* Remove focus outline */
+  }
+
+  /* Aggressively remove scrollbars and borders from all canvas-related elements */
+  .canvas-container,
+  #canvasContainer,
+  .canvas-wrapper,
+  div:has(canvas#geoCanvas) {
+    overflow: hidden !important;
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* Internet Explorer/Edge */
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Hide all webkit scrollbars in canvas area */
+  .canvas-container::-webkit-scrollbar,
+  #canvasContainer::-webkit-scrollbar,
+  .canvas-wrapper::-webkit-scrollbar,
+  div:has(canvas#geoCanvas)::-webkit-scrollbar,
+  *::-webkit-scrollbar {
+    display: none !important;
+    width: 0px !important;
+    height: 0px !important;
+    background: transparent !important;
+  }
+
+  /* Prevent viewport jumping on modal interactions */
+  html {
+    position: relative !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important; /* No scrolling on html */
+    -webkit-text-size-adjust: 100% !important;
+    /* Force Safari hardware acceleration */
+    -webkit-transform: translateZ(0) !important;
+    transform: translateZ(0) !important;
+  }
+
+  /* Ensure footer remains visible on short-viewport devices - above welcome overlay */
+  body > div[style*="position: fixed"][style*="bottom: 0"] {
+    position: fixed !important;
+    bottom: 0px !important; /* Keep at bottom for visibility */
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 9999 !important; /* Higher than welcome overlay (z-index: 50) */
+    display: flex !important;
+    background: rgba(255, 255, 255, 0.95) !important; /* Slight background for visibility */
+    backdrop-filter: blur(2px) !important; /* Subtle blur effect */
+    -webkit-backdrop-filter: blur(2px) !important;
+    /* Force visibility even if JavaScript tries to hide it */
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    /* Reduce footer height */
+    min-height: 25px !important;
+    height: 25px !important;
+    padding: 2px 5px !important; /* Reduce padding */
+    font-size: 11px !important; /* Smaller text */
+    line-height: 1.2 !important;
+    /* Ensure footer links are clickable */
+    pointer-events: auto !important;
+  }
+
+  /* Ensure footer links remain clickable */
+  body > div[style*="position: fixed"][style*="bottom: 0"] a,
+  body > div[style*="position: fixed"][style*="bottom: 0"] div {
+    pointer-events: auto !important;
+    z-index: 10000 !important;
+    position: relative !important;
+  }
+
+  /* Prevent all scrolling in game containers */
+  .game-container,
+  .daily-mode,
+  .practice-mode,
+  .canvas-container,
+  .split-display,
+  .main-content,
+  #gameArea,
+  #canvasContainer {
+    overflow: hidden !important;
+    max-height: none !important;
+  }
+
+  /* Position welcome overlay within canvas area */
+  .welcome-overlay,
+  #welcomeOverlay {
+    position: absolute !important;
+    top: 45% !important; /* Move up slightly to better center the text body */
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 90% !important;
+    max-width: 320px !important;
+    max-height: 300px !important; /* Fit within canvas height */
+    overflow-y: auto !important; /* Allow scrolling within welcome content if needed */
+    padding: 15px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    z-index: 50 !important; /* Lower than menu dropdown */
+  }
+
+  /* Adjust welcome overlay text sizing for better fit */
+  .welcome-overlay h1,
+  #welcomeOverlay h1 {
+    font-size: 26px !important; /* Larger but still fits on one line */
+    margin: 0 0 12px 0 !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important; /* Ensure single line */
+  }
+
+  .welcome-overlay p,
+  #welcomeOverlay p {
+    font-size: 15px !important;
+    margin: 6px 0 !important;
+    line-height: 1.3 !important;
+  }
+
+  .welcome-overlay ul,
+  #welcomeOverlay ul {
+    font-size: 14px !important;
+    margin: 6px 0 !important;
+    padding-left: 18px !important;
+  }
+
+  .welcome-overlay li,
+  #welcomeOverlay li {
+    margin: 3px 0 !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Move initial Play/Practice button container down */
+  .initial-play-container,
+  #initialPlayButton {
+    margin-top: 25px !important; /* Move container down */
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+
+  /* Ensure both Play and Practice buttons align properly */
+  .initial-play-container .canvas-play-button,
+  #initialPlayButton .canvas-play-button,
+  #playBtn.canvas-play-button,
+  #practiceBtn.canvas-play-button,
+  #practiceBtn.practice-button {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-bottom: 0 !important;
+    position: relative !important;
+    top: 0 !important; /* Reset any positioning */
+    vertical-align: middle !important;
+  }
+
+  /* Increase success modal height to fully fit Continue button for 375x560 */
+  #successConfirmationModal .success-modal-content[style],
+  #successConfirmationModal div.success-modal-content[style],
+  #successConfirmationContent[style],
+  div#successConfirmationContent[style] {
+    max-height: 200px !important;
+    min-height: 180px !important;
+    height: auto !important;
+    max-width: 320px !important;
+  }
+
+  #successConfirmationModal .success-modal-header[style],
+  div.success-modal-header[style] {
+    padding: 14px 16px !important;
+    min-height: auto !important;
+  }
+
+  #successConfirmationModal .success-modal-body[style],
+  div.success-modal-body[style] {
+    padding: 14px 16px 18px 16px !important;
+    min-height: auto !important;
+  }
+
+  /* Move completion countdown text down to avoid header overlap for 375x560 */
+  /* Only move the text itself, not the instruction area container */
+  #completion-countdown,
+  div#completion-countdown {
+    padding-top: 40px !important;
+    display: block !important;
+    position: relative !important;
+    top: 25px !important; /* Move up 5px from 30px */
+  }
+}
+
+/* GLOBAL FOOTER FIX - applies to all viewports to ensure footer visibility */
+@media (orientation: portrait) and (max-width: 380px) and (max-height: 580px) {
+  /* Force footer to always be visible even on initial load */
+  body > div[style*="position: fixed"][style*="bottom: 0"] {
+    position: fixed !important;
+    bottom: 0px !important; /* Keep at bottom for visibility */
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 99999 !important; /* Even higher z-index */
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    background: rgba(255, 255, 255, 0.98) !important; /* More opaque background */
+    backdrop-filter: blur(2px) !important;
+    -webkit-backdrop-filter: blur(2px) !important;
+  }
+}
+
+/* DESKTOP LAYOUT ADJUSTMENTS */
+@media screen and (min-width: 769px) {
+  /* Center align practice button text on desktop - shift text left */
+  .initial-play-container .canvas-play-button.practice-button,
+  .initial-play-container #practiceBtn,
+  .initial-play-container button#practiceBtn,
+  .initial-play-container .canvas-play-button[id="practiceBtn"],
+  #practiceBtn.canvas-play-button.practice-button,
+  button#practiceBtn.canvas-play-button,
+  #practiceBtn {
+    display: inline-block !important;
+    vertical-align: top !important;
+    text-indent: -8px !important; /* Shift text to the left */
+    padding-left: 20px !important;
+    padding-right: 24px !important;
+    margin-top: 70px !important; /* Match play button alignment - moved down 40px */
+    position: relative !important;
+    top: 0px !important;
+  }
+
+  /* Scale canvas to 450x450 on desktop */
+  canvas#geoCanvas {
+    width: 450px !important;
+    height: 450px !important;
+    min-width: 450px !important;
+    min-height: 450px !important;
+    max-width: 450px !important;
+    max-height: 450px !important;
+  }
+
+  /* Size welcome overlay to content for desktop */
+  .welcome-overlay,
+  #welcomeOverlay {
+    width: fit-content !important; /* Size to content */
+    max-width: 480px !important; /* Fit within canvas width */
+  }
+
+  /* Center and size welcome content container to text */
+  .welcome-overlay .welcome-content,
+  #welcomeOverlay .welcome-content {
+    width: 100% !important; /* Use full width */
+    max-width: 480px !important; /* Fit within canvas width */
+    padding: 20px !important;
+    margin: 0 auto !important; /* Center within overlay */
+    display: block !important;
+    text-align: center !important;
+  }
+
+  /* Scale welcome text for desktop */
+  .welcome-overlay h1,
+  #welcomeOverlay h1 {
+    font-size: 28px !important; /* Increase from mobile's 26px */
+    margin: 0 0 15px 0 !important;
+  }
+
+  .welcome-overlay p,
+  #welcomeOverlay p {
+    font-size: 18px !important; /* Increase from mobile's 15px */
+    margin: 8px 0 !important;
+  }
+
+  .welcome-overlay ul,
+  #welcomeOverlay ul {
+    font-size: 16px !important; /* Increase from mobile's 14px */
+    margin: 8px 0 !important;
+    padding-left: 20px !important;
+  }
+
+  .welcome-overlay li,
+  #welcomeOverlay li {
+    margin: 4px 0 !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Move both play and practice buttons down to create more space from canvas */
+  .initial-play-container,
+  .initial-play-container .canvas-play-button {
+    margin-top: 70px !important;
+  }
+
+  /* Competition modal layout improvements */
+  .success-buttons {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important; /* Fill container width */
+    gap: 15px !important;
+    width: 100% !important;
+    padding: 0 20px !important; /* Add padding instead of constraining width */
+    box-sizing: border-box !important;
+  }
+
+  /* Make both competition buttons same size and truly responsive to modal container */
+  .success-nav-btn.primary,
+  .success-nav-btn.secondary {
+    width: 100% !important; /* Full width of container */
+    height: 50px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* How competitions work box styling - match button width exactly */
+  .success-buttons div[style*="margin-top: 20px"] {
+    width: 100% !important; /* Full width to match buttons */
+    margin-top: 20px !important;
+    padding: 20px !important; /* Increase padding */
+    font-size: 15px !important; /* Increase text size */
+    line-height: 1.7 !important; /* Better line spacing */
+    box-sizing: border-box !important;
+  }
+
+  /* Increase text size in the how competitions work list */
+  .success-buttons div[style*="margin-top: 20px"] ul {
+    font-size: 15px !important;
+  }
+
+  .success-buttons div[style*="margin-top: 20px"] li {
+    margin-bottom: 8px !important; /* More space between list items */
+  }
+
+  /* Reduce loading text size in competition containers on desktop */
+  .competition-container p,
+  .competition-container div p,
+  .competition-container .loading-text,
+  .competition-container div[style*="text-align: center"] {
+    font-size: 14px !important;
+  }
+
+  /* Reduce loading text in all competition lists and containers */
+  #active-competitions-list p,
+  #past-competitions-list p,
+  #joinedCompetitionsList p,
+  #createdCompetitionsList p,
+  div[id*="competitions-list"] p,
+  .loading-spinner + text,
+  .competitions-list p {
+    font-size: 14px !important;
+  }
+
+  /* Reduce competition names in leaderboards and cards */
+  .competition-name,
+  h3.competition-name,
+  .competition-card h3,
+  .competition-card-header h3,
+  .competition-modal-title,
+  #leaderboardTitle,
+  .leaderboard-title {
+    font-size: 16px !important;
+  }
+
+  /* Reduce text following loading spinners */
+  .loading-spinner {
+    font-size: 14px !important;
+  }
+}
+
+/* Smaller laptop screens (736px viewport) - taller modal without scroll */
+@media screen and (min-width: 701px) and (max-width: 768px) {
+  /* Fix practice button text centering for half-screen desktop */
+  .initial-play-container .canvas-play-button.practice-button,
+  .initial-play-container #practiceBtn,
+  .initial-play-container button#practiceBtn,
+  .initial-play-container .canvas-play-button[id="practiceBtn"],
+  #practiceBtn.canvas-play-button.practice-button,
+  button#practiceBtn.canvas-play-button,
+  #practiceBtn {
+    text-indent: -10px !important; /* Shift text left to center */
+  }
+
+  /* Move buttons down slightly from canvas for half-screen desktop */
+  .initial-play-container,
+  .initial-play-container .canvas-play-button {
+    margin-top: 40px !important;
+  }
+
+  html body #competitionModal .success-modal-content,
+  html body div#competitionModal div.success-modal-content {
+    max-height: 700px !important;
+    height: auto !important;
+    min-height: 550px !important;
+  }
+
+  /* Override inline styles for competition views - EXCEPT leaderboard */
+  html body #competitionActiveView .success-modal-body[style],
+  html body #competitionExpiredView .success-modal-body[style],
+  html body #competitionMainView .success-modal-body[style],
+  html body div#competitionActiveView div.success-modal-body[style],
+  html body div#competitionExpiredView div.success-modal-body[style],
+  html body div#competitionMainView div.success-modal-body[style] {
+    max-height: none !important;
+    height: auto !important;
+    overflow-y: visible !important;
+  }
+
+  /* Leaderboard view - needs overflow hidden and height constraint for table scrolling */
+  html body #competitionLeaderboardView .success-modal-body[style],
+  html body div#competitionLeaderboardView div.success-modal-body[style] {
+    height: calc(75vh - 100px) !important;
+    max-height: calc(75vh - 100px) !important;
+    overflow: hidden !important;
+  }
+
+  /* Welcome back popup - ensure button is visible */
+  .welcome-popup {
+    max-height: 90vh !important;
+  }
+
+  .welcome-popup .welcome-content {
+    max-height: 85vh !important;
+    overflow-y: auto !important;
+  }
+
+  .continue-button {
+    margin: 16px auto 8px auto !important;
+  }
+}
+
+/* Medium desktop - half screen - taller competition modal without scroll */
+@media screen and (min-width: 769px) and (max-width: 1199px) {
+  html body #competitionModal .success-modal-content,
+  html body div#competitionModal div.success-modal-content {
+    max-height: 750px !important;
+    height: auto !important;
+    min-height: 650px !important;
+  }
+
+  /* Override inline styles for competition views - EXCEPT leaderboard */
+  html body #competitionActiveView .success-modal-body[style],
+  html body #competitionExpiredView .success-modal-body[style],
+  html body #competitionMainView .success-modal-body[style],
+  html body div#competitionActiveView div.success-modal-body[style],
+  html body div#competitionExpiredView div.success-modal-body[style],
+  html body div#competitionMainView div.success-modal-body[style] {
+    height: auto !important;
+    max-height: none !important;
+    min-height: auto !important;
+    overflow-y: visible !important;
+  }
+
+  /* Leaderboard view - needs overflow hidden and height constraint for table scrolling */
+  html body #competitionLeaderboardView .success-modal-body[style],
+  html body div#competitionLeaderboardView div.success-modal-body[style] {
+    height: calc(75vh - 100px) !important;
+    max-height: calc(75vh - 100px) !important;
+    overflow: hidden !important;
+  }
+}
+
+/* FULL SCREEN DESKTOP - Additional text size reductions for large viewports */
+@media screen and (min-width: 1200px) {
+  /* Increase competition modal height for full-screen desktop - only for competition modal */
+  #competitionModal .success-modal-content {
+    max-height: 700px !important;
+    height: 700px !important;
+    min-height: 700px !important;
+  }
+
+  /* Override inline styles for competition views - EXCEPT leaderboard */
+  #competitionActiveView .success-modal-body[style],
+  #competitionExpiredView .success-modal-body[style],
+  #competitionMainView .success-modal-body[style],
+  div#competitionActiveView div.success-modal-body[style],
+  div#competitionExpiredView div.success-modal-body[style],
+  div#competitionMainView div.success-modal-body[style] {
+    height: calc(700px - 74px) !important;
+    max-height: calc(700px - 74px) !important;
+    min-height: calc(700px - 74px) !important;
+    overflow-y: visible !important;
+  }
+
+  /* Leaderboard view - needs overflow hidden and height constraint for table scrolling */
+  #competitionLeaderboardView .success-modal-body[style],
+  div#competitionLeaderboardView div.success-modal-body[style] {
+    height: calc(75vh - 100px) !important;
+    max-height: calc(75vh - 100px) !important;
+    overflow: hidden !important;
+  }
+
+  /* Keep success confirmation modal at original size */
+  #successConfirmationModal .success-modal-content {
+    max-height: 185px !important;
+    height: auto !important;
+    min-height: auto !important;
+  }
+
+  /* Center modal vertically - only when shown */
+  .success-modal[style*="display: flex"],
+  .success-modal[style*="display:flex"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .success-modal-content {
+    margin: auto !important;
+  }
+
+  /* Target specific loading text in competition list containers */
+  #active-competitions-list,
+  #past-competitions-list,
+  #active-competitions-list p,
+  #past-competitions-list p,
+  #joinedCompetitionsList,
+  #joinedCompetitionsList p,
+  #createdCompetitionsList,
+  #createdCompetitionsList p,
+  .competitions-list,
+  .competitions-list p,
+  #competitions-list,
+  #competitions-list p {
+    font-size: 12px !important;
+  }
+
+  /* Target loading text with spinner and ensure containers inherit size */
+  .loading-spinner,
+  div[class*="loading"],
+  div[id*="loading"] {
+    font-size: 12px !important;
+  }
+
+  /* Target the specific structure: div with loading spinner + text */
+  #active-competitions-list > *,
+  #past-competitions-list > *,
+  #joinedCompetitionsList > *,
+  #createdCompetitionsList > * {
+    font-size: 12px !important;
+  }
+
+  /* Very aggressive targeting for loading text - use universal selector */
+  #active-competitions-list *,
+  #past-competitions-list *,
+  #active-competitions-list,
+  #past-competitions-list {
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Target containers that might have direct text nodes */
+  div[id="active-competitions-list"],
+  div[id="past-competitions-list"],
+  div[id="joinedCompetitionsList"],
+  div[id="createdCompetitionsList"] {
+    font-size: 12px !important;
+    font-family: inherit !important;
+  }
+
+  /* Nuclear option - override everything in these specific containers */
+  [id="active-competitions-list"],
+  [id="past-competitions-list"] {
+    font-size: 12px !important;
+  }
+
+  [id="active-competitions-list"] > *,
+  [id="past-competitions-list"] > * {
+    font-size: 12px !important;
+  }
+
+  /* Target loading text that appears as direct text after loading spinner */
+  .loading-spinner {
+    font-size: 12px !important;
+  }
+
+  /* Target containers that have loading text */
+  div[id*="competitions-list"],
+  .competitions-list,
+  #active-competitions-list,
+  #past-competitions-list {
+    font-size: 12px !important;
+  }
+
+  /* Further reduce competition names for full screen - target all variations */
+  .competition-name,
+  h3.competition-name,
+  .competition-card h3,
+  .competition-card-header h3,
+  .competition-modal-title,
+  #leaderboardTitle,
+  .leaderboard-title,
+  .card-title,
+  h2#leaderboardTitle,
+  h3[style*="margin: 0; color: #333"],
+  div.card-title,
+  .invite-competition-preview h3,
+  .join-competition-preview h3,
+  .already-joined-message h3 {
+    font-size: 14px !important;
+  }
+
+  /* ONLY target competition popup/modal content - be very specific */
+
+  /* Target competition names in modals only */
+  .leaderboard-modal-content #leaderboardTitle,
+  .competition-success-modal .success-header h3,
+  #competitionModal .competition-modal-title,
+  #competitionModal .card-title,
+  .custom-leaderboard-ui h2 {
+    font-size: 14px !important;
+  }
+
+  /* Target competition names in competition cards within modals only */
+  #competitionModal .competition-card .competition-name,
+  #competitionModal .competition-card-header h3,
+  .competition-success-modal .competition-name,
+  .leaderboard-modal .competition-name {
+    font-size: 14px !important;
+  }
+
+  /* Fix welcome content text to be consistent */
+  .welcome-overlay h1,
+  .welcome-content h1,
+  #welcomeOverlay h1 {
+    font-size: 18px !important; /* Match other welcome text size */
+  }
+
+  /* Exclude main page elements from competition text reductions */
+  .header *,
+  .title *,
+  .main-title *,
+  body > h1,
+  #header *,
+  #title *,
+  .instruction-text,
+  .instruction-text *,
+  .cutter-text,
+  .practice-text {
+    font-size: inherit !important;
+  }
+}
+
+/* Competition list containers responsive sizing */
+.competitions-list-compact {
+  min-height: 300px !important;
+  flex-grow: 1 !important;
+  flex-shrink: 1 !important;
+  flex-basis: auto !important;
+}
+
+/* Force competition containers to use full available space */
+#activeCompetitionsList,
+#expiredCompetitionsList {
+  height: calc(100% - 60px) !important;
+  min-height: 300px !important;
+  flex: 1 1 auto !important;
+}
+
+/* Mobile responsive adjustments for competition modal */
+@media (max-height: 600px) {
+  .success-modal-body {
+    height: 90vh !important;
+    max-height: 90vh !important;
+    min-height: 350px !important;
+  }
+
+  .competitions-list-compact,
+  #activeCompetitionsList,
+  #expiredCompetitionsList {
+    height: calc(100% - 50px) !important;
+    min-height: 200px !important;
+  }
+}
+
+/* Large desktop adjustments */
+@media (min-height: 800px) {
+  .success-modal-body {
+    height: 75vh !important;
+    max-height: 85vh !important;
+    min-height: 500px !important;
+  }
+
+  .competitions-list-compact,
+  #activeCompetitionsList,
+  #expiredCompetitionsList {
+    height: calc(100% - 55px) !important;
+    min-height: 350px !important;
+  }
+}
+
+/* Extra space for very tall screens */
+@media (min-height: 1000px) {
+  .success-modal-body {
+    height: 80vh !important;
+    max-height: 90vh !important;
+  }
+
+  .competitions-list-compact,
+  #activeCompetitionsList,
+  #expiredCompetitionsList {
+    height: calc(100% - 50px) !important;
+  }
+
+  /* PRACTICE MODE - Desktop full screen layout - move navigation, split display, and score down by 50px as a group */
+  /* Using adjacent sibling selectors to target elements when practice navigation is present */
+  .practice-navigation ~ #fixedPercentageArea,
+  .practice-navigation ~ .fixed-percentage-area,
+  body:has(.practice-navigation[style*="display: flex"]) #fixedPercentageArea,
+  body:has(.practice-navigation[style*="display: flex"]) .fixed-percentage-area,
+  body:has(.practice-navigation[style*="display: block"]) #fixedPercentageArea,
+  body:has(.practice-navigation[style*="display: block"]) .fixed-percentage-area {
+    margin-top: 55px !important;
+    position: relative !important;
+  }
+
+  .practice-navigation ~ .buttons-below-canvas,
+  .practice-navigation ~ #buttonsContainer,
+  body:has(.practice-navigation[style*="display: flex"]) .buttons-below-canvas,
+  body:has(.practice-navigation[style*="display: flex"]) #buttonsContainer,
+  body:has(.practice-navigation[style*="display: block"]) .buttons-below-canvas,
+  body:has(.practice-navigation[style*="display: block"]) #buttonsContainer {
+    margin-top: 50px !important;
+    margin-bottom: 0 !important;
+    position: relative !important;
+  }
+}
+
+/* NUCLEAR OPTION - Force competition containers to full height */
+div.success-modal-body div#activeCompetitionsList.competitions-list-compact,
+div.success-modal-body div#expiredCompetitionsList.competitions-list-compact {
+  height: calc(100% - 60px) !important;
+  min-height: 300px !important;
+  max-height: none !important;
+  flex: 1 1 auto !important;
+  flex-grow: 1 !important;
+  flex-shrink: 1 !important;
+  flex-basis: auto !important;
+  display: block !important;
+  overflow-y: visible !important;
+}
+
+/* Override any conflicting styles */
+div#activeCompetitionsList,
+div#expiredCompetitionsList {
+  height: calc(100% - 60px) !important;
+  min-height: 300px !important;
+  max-height: calc(100% - 60px) !important;
+}
+
+/* Force modal body flex layout */
+div.success-modal-body[style*="flex"] {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Reduce leaderboard title size on full-screen desktop */
+@media screen and (min-width: 1200px) {
+  #leaderboardTitle,
+  .leaderboard-modal-content #leaderboardTitle,
+  .leaderboard-header #leaderboardTitle,
+  .leaderboard-header h2#leaderboardTitle,
+  .leaderboard-header h2,
+  div.leaderboard-header h2,
+  div.leaderboard-modal-content div.leaderboard-header h2 {
+    font-size: 23px !important; /* 40% reduction from 38.77px */
+    line-height: 1.2 !important;
+  }
+}
+
+/* Even more aggressive for larger screens */
+@media screen and (min-width: 1400px) {
+  #leaderboardTitle,
+  .leaderboard-modal-content #leaderboardTitle,
+  .leaderboard-header #leaderboardTitle,
+  .leaderboard-header h2#leaderboardTitle,
+  .leaderboard-header h2,
+  div.leaderboard-header h2,
+  div.leaderboard-modal-content div.leaderboard-header h2 {
+    font-size: 23px !important;
+    line-height: 1.2 !important;
+  }
+}
+
+/* NUCLEAR OVERRIDE for leaderboard title on full screen */
+@media only screen and (min-width: 1200px) {
+  .leaderboard-modal .leaderboard-header h2,
+  .leaderboard-modal-content .leaderboard-header h2,
+  body .leaderboard-header h2,
+  body .leaderboard-modal-content .leaderboard-header h2,
+  body div.leaderboard-modal-content div.leaderboard-header h2#leaderboardTitle,
+  body div.leaderboard-modal-content div.leaderboard-header h2 {
+    font-size: 23px !important;
+    line-height: 1.2 !important;
+    max-font-size: 23px !important;
+  }
+}
+
+/* Leaderboard refresh button - circular green button */
+.leaderboard-refresh-btn {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    max-width: 30px !important;
+    max-height: 30px !important;
+    background: #4CAF50 !important;
+    color: white !important;
+    border: 1px solid #000 !important;
+    border-radius: 50% !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    flex-shrink: 0 !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    box-shadow: none !important;
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+}
+
+.leaderboard-refresh-btn:hover {
+    background: #45a049 !important;
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.leaderboard-refresh-btn:active {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.leaderboard-refresh-btn:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.leaderboard-refresh-btn svg {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+}
+
+/* ================================
+   KEYBOARD-SAFE AUTH MODAL FOR SMALL SCREENS
+   Allows modal to slide up independently when keyboard appears
+   ================================ */
+
+@media screen and (max-width: 400px) and (max-height: 700px) {
+    /* Auth modal becomes scrollable container */
+    .auth-modal {
+        position: fixed !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        align-items: flex-start !important; /* Top-align instead of center */
+        padding: 20px 0 !important;
+    }
+
+    /* Modal content stays centered within scrollable area */
+    .auth-modal-content {
+        margin: auto !important;
+        flex-shrink: 0 !important;
+    }
+}
+
+/* Small Phone Specific Fixes for iPhone SE and similar (375x547) */
+@media screen and (max-width: 400px) and (max-height: 600px) {
+    /* User Profile Popup - align to top near header line */
+    .profile-popup-overlay {
+        align-items: flex-start !important;
+        padding-top: 60px !important; /* Align with black line under header */
+    }
+
+    .profile-popup-content {
+        margin-top: 0 !important;
+        max-height: calc(100vh - 70px) !important;
+        overflow-y: auto !important;
+    }
+
+    /* Change Password Modal - same alignment as profile popup */
+    #changePasswordModal {
+        align-items: flex-start !important;
+        padding-top: 60px !important;
+    }
+
+    #changePasswordModal > div {
+        margin-top: 0 !important;
+        max-height: calc(100vh - 70px) !important;
+        overflow-y: auto !important;
+    }
+
+    /* Auth Modal - increase height to fit content, align to top */
+    .auth-modal {
+        align-items: flex-start !important;
+        padding-top: 60px !important;
+    }
+
+    .auth-modal-content {
+        max-height: calc(100vh - 70px) !important;
+        height: auto !important;
+        overflow-y: auto !important;
+        margin-top: 0 !important;
+    }
+
+    /* Competition Modal - align to top of screen */
+    #competitionModal {
+        align-items: flex-start !important;
+        padding-top: 10px !important;
+    }
+
+    #competitionModal .success-modal-content {
+        margin-top: 0 !important;
+        max-height: 480px !important;
+        height: 480px !important;
+        overflow-y: visible !important;
+    }
+
+    /* Make competition info box fit within 480px modal height */
+    .competition-info-box {
+        font-size: 11.5px !important;
+        line-height: 1.4 !important;
+        padding: 12px !important;
+        margin-top: 16px !important;
+    }
+
+    .competition-info-box strong {
+        margin-bottom: 6px !important;
+        font-size: 11.5px !important;
+    }
+
+    .competition-info-box ul {
+        padding-left: 18px !important;
+        margin: 0 !important;
+    }
+
+    .competition-info-box li {
+        margin-bottom: 4px !important;
+    }
+
+    /* Move next shapes countdown down slightly - only the text, not the canvas */
+    .countdown-text,
+    #completion-countdown,
+    div#completion-countdown {
+        position: relative !important;
+        top: 16px !important;
+    }
+
+    /* Move instruction text up slightly */
+    #instructionArea,
+    #instructionText {
+        position: relative !important;
+        top: -5px !important;
+    }
+
+    /* Reduce split display text size for small phones */
+    html body .split-display-large,
+    html body div.split-display-large,
+    body .split-display-large,
+    body div.split-display-large,
+    div.split-display-large,
+    .split-display-large {
+        font-size: 44px !important;
+        line-height: 1 !important;
+        max-height: 50px !important;
+    }
+
+    /* NUCLEAR OPTION: Force no scrolling on ALL competition modal elements */
+    html body #competitionModal *,
+    html body #competitionModal,
+    html body div#competitionModal *,
+    html body div#competitionModal {
+        overflow-y: visible !important;
+        overflow-x: hidden !important;
+    }
+}
+
+/* GLOBAL NUCLEAR OPTION: Force no scrolling on ALL competition modal elements across ALL viewports */
+html body #competitionModal *,
+html body #competitionModal,
+html body div#competitionModal *,
+html body div#competitionModal,
+#competitionModal *,
+#competitionModal,
+div#competitionModal *,
+div#competitionModal {
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
+}
+
+/* ABSOLUTE NUCLEAR OPTION: Target the specific success-modal-body in main competition view */
+html body #competitionModal #competitionMainView .success-modal-body,
+html body div#competitionModal div#competitionMainView div.success-modal-body,
+#competitionModal #competitionMainView .success-modal-body,
+#competitionModal div#competitionMainView div.success-modal-body,
+div#competitionModal #competitionMainView .success-modal-body,
+div#competitionModal div#competitionMainView div.success-modal-body,
+#competitionMainView .success-modal-body,
+div#competitionMainView div.success-modal-body {
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
+    overflow: visible !important;
+    height: fit-content !important;
+    min-height: fit-content !important;
+}
+
+/* Make the modal content tall enough to show all content without scrolling */
+html body #competitionModal .success-modal-content,
+html body div#competitionModal div.success-modal-content,
+#competitionModal .success-modal-content,
+div#competitionModal div.success-modal-content {
+    min-height: fit-content !important;
+    height: fit-content !important;
+    max-height: 90vh !important;
+}
+
+/* Also target all nested elements that could be scrolling */
+#competitionModal #competitionMainView .success-modal-body *,
+#competitionModal #competitionMainView .success-navigation *,
+#competitionModal #competitionMainView .success-buttons *,
+#competitionMainView .success-modal-body *,
+#competitionMainView .success-navigation *,
+#competitionMainView .success-buttons * {
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
+    overflow: visible !important;
+}
+
+
+
+/* CACHE BUSTER - 1761805799 - FORCE RELOAD */
+#competitionModal .success-modal-content {
+    max-height: 480px !important;
+    height: 480px !important;
+}
+
