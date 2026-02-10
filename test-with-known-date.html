@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Integration with Known Date (250923)</title>
+</head>
+<body>
+    <h1>Test Integration with Known Date (250923)</h1>
+    <div id="output"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="shape-storage.js"></script>
+    <script src="daily-mode-manager.js"></script>
+    <script src="daily-game-core.js"></script>
+
+    <script>
+        const output = document.getElementById('output');
+
+        function log(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.style.color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'black';
+            div.innerHTML = msg;
+            output.appendChild(div);
+            console.log(msg);
+        }
+
+        window.addEventListener('load', async () => {
+            try {
+                log('🔍 Testing integration with known date 250923...');
+
+                // Override the getMelbourneDate to return September 23, 2025
+                if (window.ShapeStorage) {
+                    const originalGetMelbourneDate = window.ShapeStorage.prototype.getMelbourneDate;
+
+                    window.ShapeStorage.prototype.getMelbourneDate = function() {
+                        // Return September 23, 2025 as test date
+                        return new Date(2025, 8, 23); // Month is 0-based, so 8 = September
+                    };
+
+                    log('✅ Overridden getMelbourneDate to return 2025-09-23');
+                }
+
+                // Test ShapeStorage directly with this date
+                log('📦 Testing ShapeStorage with override...');
+                const storage = new window.ShapeStorage();
+                const melbourneDate = storage.getMelbourneDate();
+                const dateStr = storage.formatDateToYYMMDD(melbourneDate);
+                log(`   Date: ${melbourneDate.toDateString()}`);
+                log(`   Formatted: ${dateStr}`);
+
+                // Test loading a shape directly
+                try {
+                    const shape = await storage.loadShape(`${dateStr}-02.geojson`);
+                    if (shape) {
+                        log(`✅ Direct shape load successful for ${dateStr}-02.geojson`, 'success');
+                        log(`   Type: ${shape.type}`);
+                        log(`   Features: ${shape.features ? shape.features.length : 0}`);
+                    } else {
+                        log(`❌ Direct shape load returned null for ${dateStr}-02.geojson`, 'error');
+                    }
+                } catch (error) {
+                    log(`❌ Direct shape load failed: ${error.message}`, 'error');
+                }
+
+                // Test DailyModeManager with overridden date
+                log('🎮 Testing DailyModeManager with override...');
+                const dailyManager = new window.DailyModeManager();
+
+                try {
+                    const result = await dailyManager.initialize();
+
+                    log(`   Initialization: ${result.success ? 'SUCCESS' : 'FAILED'}`, result.success ? 'success' : 'error');
+                    log(`   Shapes loaded: ${dailyManager.shapes.length}`);
+
+                    if (result.success) {
+                        // Check each shape
+                        dailyManager.shapes.forEach((shape, index) => {
+                            if (shape) {
+                                log(`   Shape ${index + 1}: ✅ LOADED`, 'success');
+
+                                // Check if this is a Supabase shape
+                                const shapeStr = JSON.stringify(shape);
+                                if (shapeStr.includes('v4-tests') || shapeStr.includes('demo')) {
+                                    log(`     ❌ WARNING: This appears to be a demo/local shape!`, 'error');
+                                } else {
+                                    log(`     ✅ This appears to be a Supabase shape`, 'success');
+                                }
+                            } else {
+                                log(`   Shape ${index + 1}: ❌ NULL`, 'error');
+                            }
+                        });
+                    } else {
+                        log(`   Error: ${result.error}`, 'error');
+                    }
+
+                } catch (error) {
+                    log(`❌ DailyModeManager error: ${error.message}`, 'error');
+                }
+
+                // Test DailyGameCore with overridden date
+                log('🎯 Testing DailyGameCore with override...');
+
+                try {
+                    await window.DailyGameCore.initialize();
+
+                    const shape1 = window.DailyGameCore.getShapeData(1);
+                    const shape2 = window.DailyGameCore.getShapeData(2);
+                    const shape3 = window.DailyGameCore.getShapeData(3);
+
+                    log(`   Shape 1: ${shape1 ? 'LOADED' : 'NULL'}`, shape1 ? 'success' : 'error');
+                    log(`   Shape 2: ${shape2 ? 'LOADED' : 'NULL'}`, shape2 ? 'success' : 'error');
+                    log(`   Shape 3: ${shape3 ? 'LOADED' : 'NULL'}`, shape3 ? 'success' : 'error');
+
+                    if (shape1) {
+                        // Check source
+                        const shapeStr = JSON.stringify(shape1);
+                        if (shapeStr.includes('v4-tests') || shapeStr.includes('demo')) {
+                            log(`   ❌ PROBLEM: DailyGameCore is using demo/local shapes!`, 'error');
+                        } else {
+                            log(`   ✅ SUCCESS: DailyGameCore is using Supabase shapes!`, 'success');
+                        }
+                    }
+
+                } catch (error) {
+                    log(`❌ DailyGameCore error: ${error.message}`, 'error');
+                }
+
+                log('<br>🎯 Integration test with known date complete!');
+
+            } catch (error) {
+                log('❌ Test error: ' + error.message, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

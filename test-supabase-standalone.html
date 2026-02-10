@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Storage Test - Standalone</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .shape-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .shape-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .shape-card.loaded {
+            border-color: #4caf50;
+            background: #f1f8e9;
+        }
+
+        .shape-card.error {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Supabase Storage Test - Standalone</h1>
+
+        <!-- Status Section -->
+        <div class="test-section">
+            <h2>📡 System Status</h2>
+            <div id="status" class="test-result info">Initializing...</div>
+        </div>
+
+        <!-- Daily Mode Test -->
+        <div class="test-section">
+            <h2>☀️ Daily Mode Test</h2>
+            <button onclick="testDailyMode()">Test Daily Mode</button>
+            <div class="shape-info" id="dailyShapes">
+                <div class="shape-card" id="daily1">Shape 1: Not loaded</div>
+                <div class="shape-card" id="daily2">Shape 2: Not loaded</div>
+                <div class="shape-card" id="daily3">Shape 3: Not loaded</div>
+            </div>
+            <pre id="dailyResult">No test run yet</pre>
+        </div>
+
+        <!-- Practice Mode Test -->
+        <div class="test-section">
+            <h2>🎯 Practice Mode Test</h2>
+            <button onclick="testPracticeMode()">Test Practice Mode</button>
+            <div id="practiceInfo" class="test-result info">Not initialized</div>
+            <pre id="practiceResult">No test run yet</pre>
+        </div>
+
+        <!-- Melbourne Time Test -->
+        <div class="test-section">
+            <h2>🕐 Melbourne Time Test</h2>
+            <button onclick="testMelbourneTime()">Test Melbourne Time</button>
+            <div id="timeResult" class="test-result info">Not tested</div>
+        </div>
+
+        <!-- Sunday Rotation Test -->
+        <div class="test-section">
+            <h2>🔄 Sunday Rotation Test</h2>
+            <button onclick="testSundayRotation()">Test Sunday Logic</button>
+            <div id="sundayResult" class="test-result info">Not tested</div>
+        </div>
+
+        <!-- Cache Test -->
+        <div class="test-section">
+            <h2>💾 Cache Test</h2>
+            <button onclick="testCache()">Test Cache</button>
+            <button onclick="clearTestCache()">Clear Cache</button>
+            <div id="cacheResult" class="test-result info">Not tested</div>
+        </div>
+
+        <!-- Raw API Test -->
+        <div class="test-section">
+            <h2>🔌 Direct Supabase API Test</h2>
+            <button onclick="testDirectAPI()">Test Direct API</button>
+            <pre id="apiResult">No test run yet</pre>
+        </div>
+    </div>
+
+    <!-- Load Supabase directly -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+    <script>
+        // Initialize Supabase directly
+        const SUPABASE_URL = 'https://zxrfhumifazjxgikltkz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp4cmZodW1pZmF6anhnaWtsdGt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MjMyMTAsImV4cCI6MjA2ODQ5OTIxMH0.GJGVi_So1OAklXM6oantOGd3ok1OVhgURmc7KhEwcwQ';
+
+        let supabaseClient = null;
+        let storage = null;
+        let dailyManager = null;
+        let practiceManager = null;
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initialize();
+        });
+
+        async function initialize() {
+            try {
+                updateStatus('Initializing Supabase client...', 'info');
+
+                // Create Supabase client
+                const { createClient } = window.supabase;
+                supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                window.supabaseClient = supabaseClient;
+
+                updateStatus('Supabase client created, loading modules...', 'info');
+
+                // Load our modules
+                await loadModules();
+
+                updateStatus('System ready for testing! ✅', 'success');
+
+            } catch (error) {
+                updateStatus(`Initialization failed: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        async function loadModules() {
+            const scripts = [
+                'shape-storage.js',
+                'daily-mode-manager.js',
+                'practice-mode-manager.js'
+            ];
+
+            for (const src of scripts) {
+                await loadScript(src);
+                console.log(`Loaded: ${src}`);
+            }
+
+            // Initialize storage
+            storage = new ShapeStorage();
+        }
+
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        async function testDailyMode() {
+            try {
+                updateStatus('Testing Daily Mode...', 'info');
+
+                // Reset shape display
+                for (let i = 1; i <= 3; i++) {
+                    const card = document.getElementById(`daily${i}`);
+                    card.className = 'shape-card';
+                    card.textContent = `Shape ${i}: Loading...`;
+                }
+
+                dailyManager = new DailyModeManager();
+                const result = await dailyManager.initialize();
+
+                document.getElementById('dailyResult').textContent = JSON.stringify(result, null, 2);
+
+                // Update shape cards
+                for (let i = 0; i < 3; i++) {
+                    const shape = dailyManager.getShape(i);
+                    const card = document.getElementById(`daily${i + 1}`);
+
+                    if (shape) {
+                        card.className = 'shape-card loaded';
+                        card.textContent = `Shape ${i + 1}: ✅ Loaded`;
+                    } else {
+                        card.className = 'shape-card error';
+                        card.textContent = `Shape ${i + 1}: ❌ Failed`;
+                    }
+                }
+
+                updateStatus(`Daily Mode: ${result.shapesLoaded}/3 shapes loaded`,
+                            result.shapesLoaded === 3 ? 'success' : 'warning');
+
+            } catch (error) {
+                document.getElementById('dailyResult').textContent = `Error: ${error.message}`;
+                updateStatus(`Daily Mode test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testPracticeMode() {
+            try {
+                updateStatus('Testing Practice Mode...', 'info');
+
+                practiceManager = new PracticeModeManager();
+                const result = await practiceManager.initialize();
+
+                const nav = practiceManager.getNavigationInfo();
+
+                document.getElementById('practiceInfo').textContent =
+                    `Current: ${nav.currentDate} - Shape ${nav.currentShape} (Yesterday: ${nav.isYesterday})`;
+
+                document.getElementById('practiceResult').textContent =
+                    JSON.stringify({result, navigation: nav}, null, 2);
+
+                updateStatus('Practice Mode initialized successfully', 'success');
+
+            } catch (error) {
+                document.getElementById('practiceResult').textContent = `Error: ${error.message}`;
+                updateStatus(`Practice Mode test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testMelbourneTime() {
+            try {
+                const melbourne = storage.getMelbourneDate();
+                const formatted = storage.formatDateToYYMMDD(melbourne);
+                const isSunday = storage.isSunday(melbourne);
+
+                const result = {
+                    melbourneTime: melbourne.toString(),
+                    formattedDate: formatted,
+                    isSunday: isSunday,
+                    dayOfWeek: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][melbourne.getDay()]
+                };
+
+                document.getElementById('timeResult').innerHTML =
+                    `Melbourne: ${melbourne.toLocaleString('en-AU', {timeZone: 'Australia/Melbourne'})}<br>` +
+                    `Format: ${formatted}<br>` +
+                    `Day: ${result.dayOfWeek} (Sunday: ${isSunday})`;
+
+                updateStatus('Melbourne time test complete', 'success');
+
+            } catch (error) {
+                updateStatus(`Time test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSundayRotation() {
+            try {
+                // Test with a known Sunday
+                const testSunday = new Date('2025-09-21'); // September 21, 2025 is a Sunday
+                const isSunday = storage.isSunday(testSunday);
+
+                // Test with a non-Sunday
+                const testMonday = new Date('2025-09-22'); // September 22, 2025 is a Monday
+                const isMonday = storage.isSunday(testMonday);
+
+                const result = `Sunday test (2025-09-21): ${isSunday ? '✅ Correct' : '❌ Wrong'}\n` +
+                              `Monday test (2025-09-22): ${!isMonday ? '✅ Correct' : '❌ Wrong'}`;
+
+                document.getElementById('sundayResult').textContent = result;
+
+                updateStatus('Sunday rotation test complete',
+                            (isSunday && !isMonday) ? 'success' : 'error');
+
+            } catch (error) {
+                updateStatus(`Sunday test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCache() {
+            try {
+                const stats = storage.getCacheStats();
+
+                document.getElementById('cacheResult').innerHTML =
+                    `Cache Size: ${stats.size} shapes<br>` +
+                    `Memory Usage: ${Math.round(stats.memoryUsage / 1024)} KB<br>` +
+                    `Entries: ${stats.entries.slice(0, 5).join(', ')}${stats.entries.length > 5 ? '...' : ''}`;
+
+                updateStatus('Cache test complete', 'success');
+
+            } catch (error) {
+                updateStatus(`Cache test failed: ${error.message}`, 'error');
+            }
+        }
+
+        function clearTestCache() {
+            if (storage) {
+                storage.clearCache();
+                updateStatus('Cache cleared', 'success');
+                testCache();
+            }
+        }
+
+        async function testDirectAPI() {
+            try {
+                updateStatus('Testing direct Supabase API...', 'info');
+
+                // List files in bucket
+                const { data, error } = await supabaseClient.storage
+                    .from('shapes')
+                    .list('', {
+                        limit: 10,
+                        offset: 0
+                    });
+
+                if (error) {
+                    throw error;
+                }
+
+                const result = {
+                    filesFound: data ? data.length : 0,
+                    files: data ? data.map(f => f.name).slice(0, 5) : [],
+                    bucketAccessible: true
+                };
+
+                document.getElementById('apiResult').textContent = JSON.stringify(result, null, 2);
+
+                updateStatus(`Direct API test successful - ${result.filesFound} files found`, 'success');
+
+            } catch (error) {
+                document.getElementById('apiResult').textContent = `Error: ${error.message}\n\n${JSON.stringify(error, null, 2)}`;
+                updateStatus(`Direct API test failed: ${error.message}`, 'error');
+            }
+        }
+
+        function updateStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `test-result ${type}`;
+        }
+    </script>
+</body>
+</html>

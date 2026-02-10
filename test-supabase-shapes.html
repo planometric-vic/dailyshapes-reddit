@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Supabase Shape Loading</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .status {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .success { border-color: green; background: #f0fff0; }
+        .error { border-color: red; background: #fff0f0; }
+        .warning { border-color: orange; background: #fffaf0; }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Supabase Shape Loading Test</h1>
+
+    <div id="status"></div>
+
+    <div>
+        <button onclick="testSupabaseConnection()">Test Supabase Connection</button>
+        <button onclick="testTodayShapes()">Load Today's Shapes (Daily Mode)</button>
+        <button onclick="testYesterdayShape()">Load Yesterday's Shape 03 (Practice)</button>
+        <button onclick="testShapeCache()">Test Cache</button>
+        <button onclick="clearCache()">Clear Cache</button>
+    </div>
+
+    <div id="results"></div>
+
+    <!-- Load Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Load configurations and modules -->
+    <script src="supabase-config.js"></script>
+    <script src="shape-storage.js"></script>
+    <script src="daily-mode-manager.js"></script>
+    <script src="practice-mode-manager.js"></script>
+    <script src="game-mode-integration.js"></script>
+
+    <script>
+        const status = document.getElementById('status');
+        const results = document.getElementById('results');
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            status.appendChild(div);
+            console.log(message);
+        }
+
+        async function testSupabaseConnection() {
+            log('Testing Supabase connection...');
+
+            try {
+                // Get the client
+                const client = window.supabaseClient || window.SupabaseConfig?.client;
+
+                if (!client) {
+                    log('❌ Supabase client not found', 'error');
+                    return;
+                }
+
+                log('✅ Supabase client found', 'success');
+
+                // Test bucket access
+                const { data, error } = await client.storage
+                    .from('shapes')
+                    .list('', { limit: 5 });
+
+                if (error) {
+                    log(`❌ Bucket access failed: ${error.message}`, 'error');
+                    return;
+                }
+
+                log(`✅ Bucket accessible. Found ${data.length} items`, 'success');
+
+                // Show first few files
+                if (data.length > 0) {
+                    const fileList = data.map(f => f.name).join(', ');
+                    log(`Files: ${fileList}`, 'info');
+                }
+
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testTodayShapes() {
+            log('Testing Daily Mode shape loading...');
+
+            try {
+                const storage = new ShapeStorage();
+                const today = storage.getMelbourneDate();
+                const dateStr = storage.formatDateToYYMMDD(today);
+
+                log(`Loading shapes for today: ${dateStr}`, 'info');
+
+                const result = await storage.preloadDailyShapes(today);
+
+                if (result.shapes.filter(s => s).length === 0) {
+                    log('❌ No shapes loaded', 'error');
+                    return;
+                }
+
+                log(`✅ Loaded ${result.shapes.filter(s => s).length}/3 shapes`, 'success');
+
+                if (result.isSunday) {
+                    log('🔄 Today is Sunday - rotation enabled', 'warning');
+                }
+
+                // Display shape info
+                result.shapes.forEach((shape, i) => {
+                    if (shape) {
+                        const features = shape.features ? shape.features.length : 0;
+                        log(`Shape ${i + 1}: ${features} features`, 'info');
+                    } else {
+                        log(`Shape ${i + 1}: Not available`, 'warning');
+                    }
+                });
+
+                results.innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testYesterdayShape() {
+            log('Testing Practice Mode shape loading...');
+
+            try {
+                const storage = new ShapeStorage();
+                const yesterday = storage.getYesterdayMelbourne();
+                const dateStr = storage.formatDateToYYMMDD(yesterday);
+
+                log(`Loading yesterday's shape 03: ${dateStr}-03`, 'info');
+
+                const shape = await storage.loadPracticeShape(yesterday, 3);
+
+                if (!shape) {
+                    log('❌ Shape not loaded', 'error');
+                    return;
+                }
+
+                log('✅ Shape loaded successfully', 'success');
+
+                const features = shape.features ? shape.features.length : 0;
+                log(`Shape has ${features} features`, 'info');
+
+                if (shape.properties?.rotationRef) {
+                    log('Note: Rotation reference ignored in Practice Mode', 'info');
+                }
+
+                results.innerHTML = '<pre>' + JSON.stringify({
+                    date: dateStr,
+                    features: features,
+                    type: shape.type,
+                    properties: shape.properties
+                }, null, 2) + '</pre>';
+
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testShapeCache() {
+            log('Testing shape cache...');
+
+            try {
+                const storage = new ShapeStorage();
+                const stats = storage.getCacheStats();
+
+                log(`Cache contains ${stats.size} shapes`, 'info');
+                log(`Memory usage: ${Math.round(stats.memoryUsage / 1024)}KB`, 'info');
+
+                if (stats.entries.length > 0) {
+                    log('Cached shapes: ' + stats.entries.join(', '), 'info');
+                }
+
+                results.innerHTML = '<pre>' + JSON.stringify(stats, null, 2) + '</pre>';
+
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        function clearCache() {
+            try {
+                const storage = new ShapeStorage();
+                storage.clearCache();
+                log('✅ Cache cleared', 'success');
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Initial test on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                log('Page loaded. Ready to test.', 'success');
+                testSupabaseConnection();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

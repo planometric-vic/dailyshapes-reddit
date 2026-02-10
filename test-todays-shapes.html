@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Today's Shapes (250920)</title>
+</head>
+<body>
+    <h1>Test Today's Shapes (250920)</h1>
+    <div id="output"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+
+    <script>
+        const output = document.getElementById('output');
+
+        function log(msg) {
+            output.innerHTML += msg + '<br>';
+            console.log(msg);
+        }
+
+        window.addEventListener('load', async () => {
+            try {
+                log('🔍 Testing today\'s shapes (250920)...');
+
+                if (!window.SupabaseConfig || !window.SupabaseConfig.client) {
+                    log('❌ Supabase client not available');
+                    return;
+                }
+
+                const client = window.SupabaseConfig.client;
+                const today = '250920';
+
+                // Test each shape for today
+                for (let i = 1; i <= 3; i++) {
+                    const filename = `${today}-${String(i).padStart(2, '0')}.geojson`;
+                    log(`📥 Testing ${filename}...`);
+
+                    try {
+                        const { data: urlData } = client.storage
+                            .from('shapes')
+                            .getPublicUrl(filename);
+
+                        if (urlData?.publicUrl) {
+                            const response = await fetch(urlData.publicUrl);
+
+                            if (response.ok) {
+                                const shapeData = await response.json();
+                                log(`✅ ${filename} exists and loads successfully`);
+                                log(`   Features: ${shapeData.features ? shapeData.features.length : 0}`);
+                                log(`   Type: ${shapeData.type}`);
+                            } else {
+                                log(`❌ ${filename} HTTP ${response.status}: ${response.statusText}`);
+                            }
+                        } else {
+                            log(`❌ ${filename} - No public URL generated`);
+                        }
+
+                    } catch (error) {
+                        log(`❌ ${filename} error: ${error.message}`);
+                    }
+                }
+
+                log('🎯 Today\'s shapes test complete!');
+
+            } catch (error) {
+                log('❌ Test error: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
