@@ -1,0 +1,2689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+    <title>Daily Shapes - Fun Daily Puzzle Game | Compete with Friends</title>
+    <meta name="description" content="Cut shapes perfectly in half with fun daily puzzles! Compete with friends, try different cutters, and test your skills. Easy to play, hard to master - new challenges every day!">
+    <meta name="cache-version" content="2025-10-13-mobile-scroll-fix">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://dailyshapes.com">
+    <meta property="og:title" content="Daily Shapes - Fun Daily Puzzle Game">
+    <meta property="og:description" content="Cut shapes perfectly in half with fun daily puzzles! Compete with friends, try different cutters, and test your skills. Easy to play, hard to master!">
+    <!-- Image preview removed to prevent large previews in message threads -->
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Daily Shapes - Fun Daily Puzzle Game">
+    <meta name="twitter:description" content="Cut shapes perfectly in half with fun daily puzzles! Compete with friends, try different cutters, and test your skills. Easy to play, hard to master!">
+    <!-- Twitter image removed to prevent large previews in message threads -->
+
+    <!-- JSON-LD Schema Markup -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "Daily Shapes",
+      "applicationCategory": "Game",
+      "operatingSystem": "Web",
+      "url": "https://yourdomain.com",
+      "description": "Daily Shapes is a free online daily puzzle game where players cut shapes into perfect ratios. A fun daily shape puzzle, Wordle-like puzzle, and brain teaser game for 2025 that challenges logic and creativity.",
+      "keywords": [
+        "Daily puzzle game",
+        "Wordle-like puzzle",
+        "Fun daily shape puzzle",
+        "Brain teaser games 2025",
+        "Shape-cutting puzzle game",
+        "Daily logic puzzle with shapes",
+        "Free online puzzle game",
+        "Quick daily brain game",
+        "Best daily puzzle app",
+        "Visual puzzle challenge",
+        "Casual puzzle game online",
+        "Addictive daily puzzle",
+        "Daily IQ test puzzle"
+      ],
+      "author": {
+        "@type": "Organization",
+        "name": "Daily Shapes"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Daily Shapes"
+      }
+    }
+    </script>
+
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MPQ1YV02EM"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MPQ1YV02EM');
+    </script>
+
+    <!-- Dynamic Preview URL Script - Disabled, using static image instead -->
+    <!-- <script>
+        // Set dynamic preview image URLs based on current date
+        (function() {
+            // You'll need to replace 'YOUR_PROJECT_REF' with your actual Supabase project reference
+            const SUPABASE_PROJECT_REF = 'zxrfhumifazjxgikltkz';
+            // Calculate day number (day 1 = 2025-07-24)
+            const today = new Date();
+            const todayString = today.toISOString().split('T')[0];
+            const startDate = new Date('2025-07-24');
+            const dayNumber = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
+            const previewUrl = `https://${SUPABASE_PROJECT_REF}.supabase.co/functions/v1/generate-preview?date=${todayString}&format=landscape&v=day${dayNumber}`;
+            
+            // Update meta tags
+            document.getElementById('og-image').setAttribute('content', previewUrl);
+            document.getElementById('twitter-image').setAttribute('content', previewUrl);
+        })();
+    </script> -->
+
+    <!-- KaTeX for math rendering - load immediately without defer for loading animation -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+
+    <style>
+        /* Prevent page scrolling on desktop */
+        @media screen and (min-width: 769px) {
+            html, body {
+                overflow: hidden;
+                height: 100vh;
+                width: 100vw;
+            }
+        }
+
+        /* IMMEDIATE HIDE - Prevent ANY flash by hiding progression areas */
+        #progressionButtonContainer,
+        #dynamicResultsContainer,
+        .progression-button-container {
+            opacity: 0 !important;
+            min-height: 40px;
+        }
+        
+        /* Show only when body has ready class */
+        body.ready #progressionButtonContainer,
+        body.ready #dynamicResultsContainer,
+        body.ready .progression-button-container {
+            opacity: 1 !important;
+            transition: opacity 0.1s ease;
+        }
+
+        /* INLINE CSS TEST - This should definitely work */
+        button#practiceLeftBtn {
+            background-color: red !important;
+            position: relative !important;
+            overflow: visible !important;
+            border-radius: 0 !important;
+            border: 5px solid lime !important;
+        }
+
+        button#practiceLeftBtn::after {
+            content: '<' !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 30px !important;
+            font-weight: 900 !important;
+            color: #000 !important;
+            background-color: yellow !important;
+            z-index: 9999 !important;
+        }
+
+        button#practiceRightBtn {
+            background-color: blue !important;
+            position: relative !important;
+        }
+
+        button#practiceRightBtn::after {
+            content: '>' !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 30px !important;
+            font-weight: 900 !important;
+            color: #000 !important;
+            background-color: green !important;
+            z-index: 9999 !important;
+        }
+
+        button#practiceRandomBtn {
+            background-color: purple !important;
+            position: relative !important;
+        }
+
+        button#practiceRandomBtn::after {
+            content: '?' !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 30px !important;
+            font-weight: 900 !important;
+            color: #000 !important;
+            background-color: orange !important;
+            z-index: 9999 !important;
+        }
+
+    </style>
+
+    <!-- AUTO-RESIZE PRACTICE NAV BUTTONS -->
+    <script>
+        setTimeout(() => {
+            // Find the dynamically created practice nav buttons
+            const practiceNav = document.getElementById('practiceNavigation');
+            if (practiceNav) {
+                const buttons = practiceNav.querySelectorAll('button');
+                buttons.forEach((btn, index) => {
+                    // Make buttons 10% larger: 28px -> 31px, font 14px -> 15px
+                    btn.style.width = '31px';
+                    btn.style.height = '31px';
+                    btn.style.fontSize = '15px';
+                    btn.style.fontWeight = 'bold';
+                });
+            }
+        }, 3000);
+    </script>
+    <link rel="stylesheet" href="style.css?v=1760000100">
+    <link rel="stylesheet" href="responsive.css?v=1760000104">
+    <link rel="stylesheet" href="circular-button-styles.css">
+    <link rel="stylesheet" href="custom-competition-styles.css?v=1760000001">
+    <link rel="stylesheet" href="neobrutalist-styles.css?v=1759453201">
+    <link rel="stylesheet" href="collapsible-menu-styles.css">
+    
+    <!-- Override styles to ensure layout changes take effect -->
+    <style>
+        /* Align header with canvas width and left-justify title */
+        .main-header {
+            width: clamp(280px, min(90vw, 70vh), 450px) !important;
+            max-width: calc(100vw - var(--dynamic-padding) * 2) !important;
+            margin: 0 auto 0px auto !important;
+            padding: 3px 0 !important;
+            display: flex;
+            justify-content: space-between !important;
+            align-items: center;
+            background: white;
+            border-bottom: 2px solid #000;
+        }
+
+        /* RESPONSIVE HEADER ALIGNMENT - Match canvas sizes */
+
+        /* DS Android 360×630 (smaller Android devices) */
+        @media screen and (max-width: 360px) {
+            .main-header {
+                width: 330px !important;
+            }
+
+            /* Move menu button in slightly to prevent cutoff */
+            .animated-menu-container {
+                margin-right: 8px !important;
+            }
+        }
+
+        /* iPhone SE 2 (375×560) */
+        @media screen and (min-width: 361px) and (max-width: 375px) {
+            .main-header {
+                width: 345px !important;
+            }
+        }
+
+        /* iPhone 13/14/15 (390×715) */
+        @media screen and (min-width: 376px) and (max-width: 390px) {
+            .main-header {
+                width: 360px !important;
+            }
+        }
+
+        /* Pixel/Galaxy (412×785) */
+        @media screen and (min-width: 391px) and (max-width: 412px) {
+            .main-header {
+                width: 380px !important;
+            }
+        }
+
+        /* iPhone 14 Pro Max (430×805) */
+        @media screen and (min-width: 413px) and (max-width: 430px) {
+            .main-header {
+                width: 395px !important;
+            }
+        }
+
+        /* Larger mobile devices */
+        @media screen and (min-width: 431px) and (max-width: 768px) {
+            .main-header {
+                width: min(90vw, 450px) !important;
+            }
+        }
+
+        /* RESPONSIVE CANVAS SIZING - Based on real device measurements */
+
+        /* DS Android 360×630 (smaller Android devices) */
+        @media screen and (max-width: 360px) {
+            canvas#geoCanvas,
+            #geoCanvas,
+            .canvas-container canvas#geoCanvas,
+            div.canvas-container canvas#geoCanvas {
+                width: 380px !important;
+                height: 380px !important;
+                max-width: 380px !important;
+                max-height: 380px !important;
+                min-width: 380px !important;
+                min-height: 380px !important;
+                /* Force the canvas to scale visually */
+                transform: scale(1) !important;
+                transform-origin: center center !important;
+            }
+
+            .canvas-container {
+                width: 380px !important;
+                height: 380px !important;
+                margin: 0 auto !important;
+            }
+        }
+
+        /* iPhone SE 2 (375×560) - FORCE CANVAS SCALING */
+        @media screen and (min-width: 361px) and (max-width: 375px) {
+            canvas#geoCanvas,
+            #geoCanvas,
+            .canvas-container canvas#geoCanvas,
+            div.canvas-container canvas#geoCanvas {
+                width: 380px !important;
+                height: 380px !important;
+                max-width: 380px !important;
+                max-height: 380px !important;
+                min-width: 380px !important;
+                min-height: 380px !important;
+                /* Force the canvas to scale visually */
+                transform: scale(1) !important;
+                transform-origin: center center !important;
+            }
+
+            .canvas-container {
+                width: 380px !important;
+                height: 380px !important;
+                margin: 0 auto !important;
+            }
+
+            /* REDUCE SPLIT DISPLAY TEXT SIZE FOR IPHONE SE */
+            html body .split-display-large,
+            html body div.split-display-large,
+            body .split-display-large,
+            body div.split-display-large,
+            div.split-display-large,
+            .split-display-large {
+                font-size: 44px !important;
+                line-height: 1 !important;
+            }
+        }
+
+        /* iPhone 13/14/15 (390×715) */
+        @media screen and (min-width: 376px) and (max-width: 390px) {
+            canvas#geoCanvas,
+            #geoCanvas,
+            .canvas-container canvas#geoCanvas,
+            div.canvas-container canvas#geoCanvas {
+                width: 380px !important;
+                height: 380px !important;
+                max-width: 380px !important;
+                max-height: 380px !important;
+                min-width: 380px !important;
+                min-height: 380px !important;
+            }
+
+            .canvas-container {
+                width: 380px !important;
+                height: 380px !important;
+                margin: 0 auto !important;
+            }
+        }
+
+        /* iPhone 16 Pro (393×852) - Specific targeting */
+        @media screen and (min-width: 391px) and (max-width: 395px) {
+            canvas#geoCanvas,
+            #geoCanvas,
+            .canvas-container canvas#geoCanvas,
+            div.canvas-container canvas#geoCanvas {
+                width: 375px !important;
+                height: 375px !important;
+                max-width: 375px !important;
+                max-height: 375px !important;
+                min-width: 375px !important;
+                min-height: 375px !important;
+            }
+
+            .canvas-container {
+                width: 375px !important;
+                height: 375px !important;
+                margin: 0 auto !important;
+            }
+        }
+
+        /* Pixel/Galaxy (412×785) */
+        @media screen and (min-width: 396px) and (max-width: 412px) {
+            canvas#geoCanvas,
+            #geoCanvas,
+            .canvas-container canvas#geoCanvas,
+            div.canvas-container canvas#geoCanvas {
+                width: 380px !important;
+                height: 380px !important;
+                max-width: 380px !important;
+                max-height: 380px !important;
+                min-width: 380px !important;
+                min-height: 380px !important;
+            }
+
+            .canvas-container {
+                width: 380px !important;
+                height: 380px !important;
+                margin: 0 auto !important;
+            }
+        }
+
+        /* iPhone 14 Pro Max (430×805) */
+        @media screen and (min-width: 413px) and (max-width: 430px) {
+            canvas#geoCanvas,
+            #geoCanvas,
+            .canvas-container canvas#geoCanvas,
+            div.canvas-container canvas#geoCanvas {
+                width: 380px !important;
+                height: 380px !important;
+                max-width: 380px !important;
+                max-height: 380px !important;
+                min-width: 380px !important;
+                min-height: 380px !important;
+            }
+
+            .canvas-container {
+                width: 380px !important;
+                height: 380px !important;
+                margin: 0 auto !important;
+            }
+        }
+
+        /* Larger mobile devices */
+        @media screen and (min-width: 431px) and (max-width: 768px) {
+            canvas#geoCanvas,
+            #geoCanvas,
+            .canvas-container canvas#geoCanvas,
+            div.canvas-container canvas#geoCanvas {
+                width: 380px !important;
+                height: 380px !important;
+                max-width: 380px !important;
+                max-height: 380px !important;
+            }
+
+            .canvas-container {
+                width: 380px !important;
+                height: 380px !important;
+                margin: 0 auto !important;
+            }
+        }
+
+        /* Left align the title with consistent sizing */
+        .app-title, #dateTitle {
+            text-align: left !important;
+            margin: 0 !important;
+            padding-left: 0 !important;
+            /* More consistent sizing: minimum 1.5rem on mobile, max 2.5rem on desktop */
+            font-size: clamp(1.5rem, 4vw, 2.5rem) !important;
+            /* Prevent blinking during transitions */
+            min-height: 2.5rem !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            transition: none !important;
+            position: relative;
+        }
+
+        /* Make title clickable like Today's Shapes menu option */
+        #dateTitle {
+            cursor: pointer;
+            transition: opacity 0.2s ease, transform 0.1s ease;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Hover effect for desktop */
+        @media (hover: hover) and (pointer: fine) {
+            #dateTitle:hover {
+                opacity: 0.8;
+            }
+        }
+
+        /* Active/press effect for all devices */
+        #dateTitle:active {
+            opacity: 0.6;
+        }
+
+        /* Focus outline for keyboard navigation */
+        #dateTitle:focus {
+            outline: 2px solid #6496ff;
+            outline-offset: 4px;
+            border-radius: 4px;
+        }
+
+        /* Remove focus outline when clicking with mouse */
+        #dateTitle:focus:not(:focus-visible) {
+            outline: none;
+        }
+
+        /* Touch feedback for mobile */
+        @media (hover: none) and (pointer: coarse) {
+            #dateTitle:active {
+                opacity: 0.7;
+                transform: scale(0.98);
+            }
+        }
+
+        /* Ensure title content stays stable */
+        #dateTitle strong {
+            font-weight: 900;
+        }
+
+        #dateTitle .date-light {
+            font-weight: 300;
+        }
+
+        /* Mobile-specific title adjustments */
+        @media screen and (max-width: 480px) {
+            #dateTitle {
+                font-size: clamp(1.6rem, 5vw, 2rem) !important;
+                letter-spacing: -0.5px !important;
+            }
+        }
+
+        /* Small mobile screens (iPhone SE and similar) */
+        @media screen and (max-width: 390px) {
+            #dateTitle {
+                font-size: clamp(1.4rem, 5vw, 1.8rem) !important;
+                letter-spacing: -0.3px !important;
+            }
+
+            /* Enable scrolling for very small screens without width restrictions */
+            .app-container {
+                height: auto !important;
+                min-height: 100vh !important;
+                overflow-y: auto !important;
+            }
+
+            /* Responsive canvas sizing handled by device-specific breakpoints below */
+        }
+
+        /* Tablet and small desktop */
+        @media screen and (min-width: 481px) and (max-width: 768px) {
+            #dateTitle {
+                font-size: clamp(1.8rem, 4vw, 2.2rem) !important;
+            }
+        }
+
+        /* Desktop - FIXED LAYOUT MATCHING HALF-SCREEN */
+        @media screen and (min-width: 769px) {
+            #dateTitle {
+                font-size: clamp(1.8rem, 2.5vw, 2.2rem) !important;
+            }
+
+            .app-container {
+                position: relative !important;
+                height: 100vh !important;
+                max-height: 100vh !important;
+                overflow: hidden !important;
+                padding: 5px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: flex-start !important;
+                gap: 2px !important;
+            }
+
+            .main-header {
+                margin-bottom: 2px !important;
+                padding: 2px 0 !important;
+            }
+
+            .mechanic-info {
+                height: 10px !important;
+                margin: 0 !important;
+                font-size: clamp(10px, 1.2vw, 12px) !important;
+                line-height: 1 !important;
+            }
+
+            .instruction-area {
+                margin: 2px 0 !important;
+                padding: 2px 10px !important;
+                height: 18px !important;
+                font-size: 16px !important;
+            }
+
+            .canvas-container,
+            .canvas-container-fixed {
+                position: relative !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: flex-start !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                flex: 0 0 auto !important;
+            }
+
+            #geoCanvas {
+                --max-canvas: 380px;
+                max-width: var(--max-canvas) !important;
+                max-height: var(--max-canvas) !important;
+                width: var(--max-canvas) !important;
+                height: var(--max-canvas) !important;
+                position: relative !important;
+            }
+
+            .initial-play-container {
+                margin-top: 20px !important;
+            }
+
+            .welcome-overlay {
+                position: absolute !important;
+                top: 55% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                z-index: 50 !important;
+                width: 390px !important;
+                max-width: 390px !important;
+                padding: 30px !important;
+                box-sizing: border-box !important;
+            }
+
+            .welcome-overlay .welcome-content {
+                width: 100% !important;
+            }
+
+            /* Progress tracker - positioned directly under canvas */
+            html body .app-container #demoProgressDisplay,
+            html body div#demoProgressDisplay,
+            body .app-container #demoProgressDisplay,
+            body div#demoProgressDisplay,
+            div#demoProgressDisplay,
+            #demoProgressDisplay {
+                font-size: clamp(11px, 1.3vw, 14px) !important;
+                margin: 75px auto 5px auto !important;
+                padding: 4px !important;
+                min-height: 30px !important;
+                height: 30px !important;
+                position: relative !important;
+                top: 0 !important;
+                text-align: center !important;
+                background-color: transparent !important;
+                z-index: 100 !important;
+                clear: both !important;
+            }
+
+            html body .app-container .fixed-percentage-area,
+            html body div.fixed-percentage-area,
+            body .app-container .fixed-percentage-area,
+            body div.fixed-percentage-area,
+            div.fixed-percentage-area,
+            .fixed-percentage-area {
+                position: absolute !important;
+                /* Position below canvas - adjust this value to place it correctly */
+                top: 580px !important;
+                left: 0 !important;
+                right: 0 !important;
+                width: 100% !important;
+                margin: 0 auto !important;
+                /* Remove from document flow to prevent pushing other elements */
+                z-index: 50 !important;
+                box-sizing: border-box !important;
+            }
+
+            html body .app-container .split-display,
+            html body div.split-display,
+            body .app-container .split-display,
+            body div.split-display,
+            div.split-display,
+            .split-display {
+                margin: 5px 0 !important;
+                padding: 3px !important;
+                font-size: clamp(12px, 1.4vw, 16px) !important;
+                min-height: 30px !important;
+            }
+
+            .split-display-percentage {
+                font-size: clamp(18px, 2.5vw, 28px) !important;
+            }
+
+            .split-display-label {
+                font-size: clamp(10px, 1.2vw, 12px) !important;
+            }
+
+            html body .app-container .fixed-button-area,
+            html body div.fixed-button-area,
+            body .app-container .fixed-button-area,
+            body div.fixed-button-area,
+            div.fixed-button-area,
+            .fixed-button-area {
+                position: relative !important;
+                display: block !important;
+                margin: 5px auto !important;
+                width: auto !important;
+                min-height: auto !important;
+            }
+
+            .fixed-button-area .progression-button,
+            #nextShapeBtn,
+            #nextAttemptBtn {
+                padding: 6px clamp(12px, 1.5vw, 20px) !important;
+                font-size: clamp(12px, 1.4vw, 15px) !important;
+                margin: 0 auto !important;
+                display: block !important;
+            }
+
+            .buttons-below-canvas {
+                margin-top: 10px !important;
+                margin-bottom: 5px !important;
+            }
+
+            /* Practice mode - move navigation, split display, and score down by 50px */
+            body.practice-mode-active .practice-navigation,
+            body.practice-mode-active #practiceNavigation {
+                margin-top: 50px !important;
+            }
+
+            body.practice-mode-active .fixed-percentage-area,
+            body.practice-mode-active .attempt-result,
+            body.practice-mode-active .split-display-large {
+                margin-top: 55px !important;
+            }
+
+            /* Daily mode - move split display and buttons down 20px */
+            body:not(.practice-mode-active) .fixed-percentage-area,
+            body:not(.practice-mode-active) #fixedPercentageArea {
+                margin-top: 20px !important;
+            }
+
+            body:not(.practice-mode-active) .fixed-button-area,
+            body:not(.practice-mode-active) #fixedButtonArea {
+                margin-top: 20px !important;
+            }
+        }
+
+        /* Specific mobile layouts - move score text down 20px (from -17px to 3px) */
+        @media screen and (min-width: 430px) and (max-width: 430px) and (min-height: 805px) and (max-height: 805px),
+               screen and (min-width: 390px) and (max-width: 390px) and (min-height: 715px) and (max-height: 715px),
+               screen and (min-width: 412px) and (max-width: 412px) and (min-height: 785px) and (max-height: 785px),
+               screen and (min-width: 360px) and (max-width: 360px) and (min-height: 630px) and (max-height: 630px) {
+            #practiceResultsOverlay .split-display-large + br + div,
+            .practice-results-content .split-display-large + br + div {
+                margin-top: 3px !important;
+            }
+        }
+
+        /* Mobile and Small Screen Layout - Enable Scrolling with Full Width */
+        @media screen and (max-width: 768px) {
+            /* Main container - enable scrolling but keep full width */
+            .app-container {
+                height: auto !important;
+                min-height: 100vh !important;
+                max-height: none !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                /* Keep existing padding from responsive design */
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: flex-start !important;
+            }
+
+            /* Canvas container - prevent scroll on touch drag but maintain width */
+            .canvas-container {
+                /* Prevent touch scroll on canvas area */
+                touch-action: none !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+
+            /* Canvas specific touch handling */
+            #geoCanvas {
+                touch-action: none !important;
+                -webkit-user-select: none !important;
+                -moz-user-select: none !important;
+                -ms-user-select: none !important;
+                user-select: none !important;
+                /* Responsive sizing is handled by device-specific media queries below */
+            }
+
+            /* Button areas should remain scrollable */
+            .fixed-button-area,
+            .buttons-below-canvas,
+            .practice-navigation {
+                touch-action: auto !important;
+                overflow: visible !important;
+            }
+
+            /* Canvas overlays should also prevent scrolling */
+            .canvas-button-overlay,
+            .countdown-overlay,
+            .swipe-indicators,
+            .welcome-overlay,
+            .commentary-overlay {
+                touch-action: none !important;
+                pointer-events: none !important;
+            }
+
+            /* But interactive elements within overlays should work */
+            .canvas-button-overlay button,
+            .welcome-overlay button,
+            .countdown-overlay button {
+                touch-action: auto !important;
+                pointer-events: auto !important;
+            }
+        }
+
+        /* Large desktop screens - removed to ensure consistent layout */
+        /* Extra large desktop screens - removed to ensure consistent layout */
+        /* Tall screens - removed to ensure consistent layout */
+
+        /* Ensure menu button stays on the right */
+        .animated-menu-container {
+            margin-left: auto !important;
+        }
+
+        /* Ensure menu dropdown appears above all content including welcome overlay */
+        .menu-dropdown {
+            z-index: 99999 !important;
+        }
+
+        .animated-menu-button {
+            z-index: 99999 !important;
+        }
+
+        .animated-menu-container {
+            z-index: 99999 !important;
+        }
+        .mechanic-info {
+            margin: 0 !important;
+            height: 15px !important;
+            min-height: 15px !important;
+        }
+        .instruction-area {
+            margin-top: 0px !important;
+            margin-bottom: 1px !important;
+            height: 25px !important;
+            min-height: 25px !important;
+            max-height: 25px !important;
+            padding: 1px 16px !important;
+        }
+        /* Ensure progress tracker can be shown/hidden properly */
+        #demoProgressDisplay {
+            /* Default styles when visible */
+            margin: 0;
+            text-align: center;
+            min-height: 44px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            padding: 8px;
+            background-color: transparent;
+            border: none;
+        }
+
+        /* Try Again Display - positioned with split displays under nav buttons */
+        #attemptDisplay {
+            margin: 8px 0 !important;
+            padding: 8px 16px !important;
+            text-align: center !important;
+            min-height: 40px !important;
+        }
+
+        #attemptText {
+            font-size: 18px !important;
+            font-weight: bold !important;
+            color: #d32f2f !important; /* Red color for "Try again" */
+            margin: 0 !important;
+            padding: 4px 0 !important;
+        }
+
+        /* ========================================
+           LEADERBOARD MODAL SCROLL FIX - ALL DEVICES
+           CRITICAL: Fixed height modal with isolated table scroll
+           ======================================== */
+
+        /* Prevent modal wrapper from scrolling */
+        body #customLeaderboardModal,
+        body .leaderboard-modal,
+        html body #customLeaderboardModal,
+        html body .leaderboard-modal {
+            overflow: hidden !important;
+        }
+
+        /* Fixed height modal content - prevents growing */
+        body #customLeaderboardModal .leaderboard-modal-content,
+        body .leaderboard-modal .leaderboard-modal-content,
+        html body #customLeaderboardModal .leaderboard-modal-content,
+        html body .leaderboard-modal .leaderboard-modal-content {
+            display: flex !important;
+            flex-direction: column !important;
+            height: 95vh !important;
+            max-height: 95vh !important;
+            min-height: 95vh !important;
+            overflow: hidden !important;
+            touch-action: none !important;
+        }
+
+        /* Fixed sections at top - NEVER scroll */
+        body #customLeaderboardModal .leaderboard-header,
+        body #customLeaderboardModal .custom-competition-info,
+        body #customLeaderboardModal .leaderboard-stats,
+        body #customLeaderboardModal .medal-legend,
+        body #customLeaderboardModal .user-rank-display,
+        html body #customLeaderboardModal .leaderboard-header,
+        html body #customLeaderboardModal .custom-competition-info,
+        html body #customLeaderboardModal .leaderboard-stats,
+        html body #customLeaderboardModal .medal-legend,
+        html body #customLeaderboardModal .user-rank-display {
+            flex: 0 0 auto !important;
+            flex-shrink: 0 !important;
+            flex-grow: 0 !important;
+            overflow: visible !important;
+        }
+
+        /* Scrollable container - takes remaining space */
+        body #customLeaderboardModal .leaderboard-container,
+        html body #customLeaderboardModal .leaderboard-container {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        body #customLeaderboardModal .leaderboard-table,
+        html body #customLeaderboardModal .leaderboard-table {
+            display: flex !important;
+            flex-direction: column !important;
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+        }
+
+        /* Sticky header row */
+        body #customLeaderboardModal .leaderboard-header-row,
+        html body #customLeaderboardModal .leaderboard-header-row {
+            flex: 0 0 auto !important;
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 10 !important;
+            background: #f8f9fa !important;
+        }
+
+        /* ONLY the body scrolls - player rows */
+        body #customLeaderboardModal #customLeaderboardBody,
+        body #customLeaderboardModal #leaderboardBody,
+        html body #customLeaderboardModal #customLeaderboardBody,
+        html body #customLeaderboardModal #leaderboardBody {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch !important;
+            touch-action: pan-y !important;
+        }
+
+        /* Fixed footer sections - NEVER scroll */
+        body #customLeaderboardModal .pagination-controls,
+        body #customLeaderboardModal .leaderboard-footer,
+        html body #customLeaderboardModal .pagination-controls,
+        html body #customLeaderboardModal .leaderboard-footer {
+            flex: 0 0 auto !important;
+            flex-shrink: 0 !important;
+            flex-grow: 0 !important;
+            overflow: visible !important;
+        }
+
+    </style>
+    
+    <!-- Supabase CDN - Alternative URL -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <!-- Google OAuth -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <!-- Facebook SDK -->
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
+
+    <!-- FINAL OVERRIDE FOR COMPETITION MODAL - MUST BE LAST -->
+    <style>
+        @media screen and (max-height: 580px) {
+            html body div.competition-modal-content,
+            html body .competition-modal-content,
+            body div.competition-modal-content,
+            body .competition-modal-content,
+            div.competition-modal-content,
+            .competition-modal-content,
+            .success-modal-content {
+                max-height: 490px !important;
+                height: auto !important;
+                overflow: hidden !important;
+                display: flex !important;
+                flex-direction: column !important;
+            }
+
+            /* Move modal higher on short screens */
+            .success-modal {
+                align-items: flex-start !important;
+                padding-top: 20px !important;
+            }
+
+            /* Reduce header padding */
+            .success-modal-header {
+                padding: 8px 12px !important;
+                flex-shrink: 0 !important;
+            }
+
+            .success-modal-header h2 {
+                font-size: 1rem !important;
+            }
+
+            /* Reduce body padding */
+            .success-modal-body {
+                padding: 10px 12px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                flex: 1 1 0 !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
+            }
+
+            /* Move buttons closer to header */
+            .success-navigation {
+                margin-top: 0 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                flex: 1 1 0 !important;
+                min-height: 0 !important;
+            }
+
+            .success-buttons {
+                gap: 8px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                flex: 1 1 0 !important;
+                min-height: 0 !important;
+            }
+
+            .success-nav-btn {
+                padding: 8px 14px !important;
+                font-size: 0.85rem !important;
+            }
+
+            /* Reduce spacing and make info box fill more space */
+            .success-buttons > div[style*="margin-top: 20px"] {
+                margin-top: 8px !important;
+                padding: 10px !important;
+                font-size: 13px !important;
+                line-height: 1.4 !important;
+                flex: 1 1 0 !important;
+                overflow-y: auto !important;
+                min-height: 0 !important;
+                max-height: 280px !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+
+            .success-buttons > div[style*="margin-top: 20px"] strong {
+                margin-bottom: 6px !important;
+                font-size: 13px !important;
+            }
+
+            .success-buttons > div[style*="margin-top: 20px"] ul {
+                margin: 0 !important;
+                padding-left: 18px !important;
+            }
+
+            .success-buttons > div[style*="margin-top: 20px"] li {
+                margin-bottom: 4px !important;
+            }
+
+            /* Ensure buttons don't shrink */
+            .success-nav-btn {
+                flex-shrink: 0 !important;
+            }
+
+            /* Success confirmation modal - properly sized and centered */
+            #successConfirmationModal {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+
+            #successConfirmationModal .success-modal-content,
+            #successConfirmationContent {
+                max-width: 320px !important;
+                width: 90% !important;
+                max-height: 120px !important;
+                height: auto !important;
+                min-height: 100px !important;
+            }
+
+            #successConfirmationModal .success-modal-header {
+                padding: 8px 16px !important;
+                height: auto !important;
+                min-height: auto !important;
+            }
+
+            #successConfirmationModal .success-modal-header h2 {
+                font-size: 16px !important;
+                line-height: 1.2 !important;
+            }
+
+            #successConfirmationModal .success-modal-body {
+                padding: 8px 16px 12px 16px !important;
+            }
+
+            #successConfirmationModal .success-nav-btn {
+                padding: 8px 24px !important;
+                font-size: 15px !important;
+            }
+        }
+
+        /* 375x560 layout - increase success modal height to fit continue button */
+        @media screen and (min-width: 357px) and (max-width: 375px) and (min-height: 560px) and (max-height: 600px) {
+            #successConfirmationModal #successConfirmationContent,
+            #successConfirmationModal .success-modal-content {
+                max-height: 220px !important;
+                min-height: 180px !important;
+            }
+        }
+
+        /* DESKTOP OVERRIDE - Consistent modal size for all desktop viewports */
+        @media screen and (min-width: 700px) and (min-height: 700px) {
+            html body div.success-modal-content,
+            html body .success-modal-content,
+            html body div.competition-modal-content,
+            html body .competition-modal-content,
+            body div.success-modal-content,
+            body .success-modal-content,
+            body div.competition-modal-content,
+            body .competition-modal-content,
+            div.success-modal-content,
+            .success-modal-content,
+            div.competition-modal-content,
+            .competition-modal-content,
+            #competitionModal .success-modal-content,
+            #joinCompetitionModal .success-modal-content,
+            #competitionPromptModal .success-modal-content {
+                max-height: 550px !important;
+                height: auto !important;
+                min-height: 300px !important;
+            }
+
+            html body div.success-modal-body,
+            html body .success-modal-body,
+            body div.success-modal-body,
+            body .success-modal-body,
+            div.success-modal-body,
+            .success-modal-body,
+            #competitionModal .success-modal-body {
+                max-height: 450px !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+            }
+        }
+    </style>
+
+</head>
+<body>
+
+    <!-- Welcome Back Popup -->
+    <div id="welcomeBackPopup" class="welcome-popup" style="display: none;">
+        <div class="welcome-content" id="welcomeBackContent">
+            <div class="welcome-body" id="welcomeBackBody">
+                <div class="welcome-message" id="welcomeBackMessage">
+                    <p id="welcomeBackText">You've made 1 try.</p>
+                    <button id="continueBtn" class="continue-button">Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- New Animated Menu Header -->
+        <div class="main-header">
+            <h1 id="dateTitle" class="app-title" onclick="if (window.handleOption2Click) window.handleOption2Click()" role="button" aria-label="Return to Today's Shapes" tabindex="0"><strong>Daily Shapes</strong> <span class="date-light"></span></h1>
+            <script>
+                // Add keyboard support for title button
+                (function() {
+                    const dateTitle = document.getElementById('dateTitle');
+                    if (dateTitle) {
+                        dateTitle.addEventListener('keydown', function(e) {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                if (window.handleOption2Click) {
+                                    window.handleOption2Click();
+                                }
+                            }
+                        });
+                    }
+                })();
+
+                // Immediately set the current date and clear cached data
+                (function() {
+                    // Clear any cached competition data
+                    if (typeof(Storage) !== "undefined") {
+                        // Clear competition-related localStorage
+                        Object.keys(localStorage).forEach(key => {
+                            if (key.includes('competition') || key.includes('participant')) {
+                                localStorage.removeItem(key);
+                            }
+                        });
+                    }
+
+                    // Set current date to prevent flash
+                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    const now = new Date();
+                    const month = months[now.getMonth()];
+                    const day = now.getDate();
+                    const dateSpan = document.querySelector('#dateTitle .date-light');
+                    if (dateSpan) {
+                        dateSpan.textContent = month + ' ' + day;
+                    }
+
+                    // Force reload JS files by ensuring cache is bypassed
+                    console.log('🔄 Cache cleared, forcing fresh competition data load...');
+                })();
+            </script>
+            <div class="animated-menu-container">
+                <!-- Main Menu Button with embedded profile icon -->
+                <button id="animatedMenuButton" class="animated-menu-button">
+                    <!-- Hamburger icon (default and only state) -->
+                    <svg id="hamburgerIcon" class="menu-icon hamburger-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round">
+                        <path d="M3 6h18M3 12h18M3 18h18"/>
+                    </svg>
+                </button>
+                
+                <!-- Dropdown Menu -->
+                <div id="menuDropdown" class="menu-dropdown" style="display: none; z-index: 99999 !important; position: absolute !important;">
+                    <div id="option1Btn" class="menu-item" data-action="account" style="font-weight: bold; color: #666666;">Account</div>
+                    <div id="option2Btn" class="menu-item" data-action="daily" style="font-weight: bold; color: #6496ff;">Today's Shapes</div>
+                    <div id="option3Btn" class="menu-item" data-action="competition" style="font-weight: bold; color: #666666;">Competitions</div>
+                    <div id="option4Btn" class="menu-item" data-action="practice" style="font-weight: bold; color: #666666;">Practice</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Account Dropdown Menu -->
+        <div id="accountDropdown" class="account-dropdown" style="display: none;">
+            <div class="dropdown-item" onclick="showUserStats()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M16 6l2 2v12h-16v-12l2-2v-2c0-1.11.89-2 2-2h8c1.11 0 2 .89 2 2v2zm-8 0v-2h8v2h-8zm-5 4v10h14v-10h-14z"/>
+                </svg>
+                View Stats
+            </div>
+            <div class="dropdown-item" onclick="showChangePassword()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+                </svg>
+                Change Password
+            </div>
+            <div class="dropdown-item logout-item" onclick="handleLogout()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                </svg>
+                Log Out
+            </div>
+        </div>
+        
+        <!-- Challenge Info (moved directly under main header) -->
+        <div class="mechanic-info" id="mechanicInfo">
+        </div>
+        
+        <!-- Instruction Area (appears above canvas after play is tapped) -->
+        <div id="instructionArea" class="instruction-area" style="display: flex; visibility: hidden;">
+            <div id="instructionText" class="instruction-text"></div>
+        </div>
+
+        <!-- Canvas Container with Commentary and Centered Button -->
+        <div class="canvas-container">
+            <canvas id="geoCanvas" width="380" height="380"></canvas>
+
+            <!-- Immediate loading animation start - v1759410101 -->
+            <script>
+                (function() {
+                    const canvas = document.getElementById('geoCanvas');
+
+                    // Canvas is always 380x380 internally
+                    const canvasSize = 380;
+
+                    canvas.width = canvasSize;
+                    canvas.height = canvasSize;
+                    canvas.style.width = canvasSize + 'px';
+                    canvas.style.height = canvasSize + 'px';
+
+                    console.log('🎯 Canvas initialized to ' + canvasSize + 'x' + canvasSize);
+
+                    const ctx = canvas.getContext('2d');
+
+                    // Disable image smoothing for crisp rendering
+                    ctx.imageSmoothingEnabled = false;
+
+                    // Force canvas container to match canvas size in all states
+                    const container = canvas.parentElement;
+                    console.log('📦 Container resize check:', container?.classList.contains('canvas-container'));
+                    if (container && container.classList.contains('canvas-container')) {
+                        const resizeContainer = () => {
+                            // Don't resize during completion view
+                            if (window.completionViewActive) {
+                                console.log('📐 Skipping container resize - completion view active');
+                                return;
+                            }
+
+                            // Canvas is always 380x380, container matches it
+                            const currentCanvasSize = 380;
+
+                            // Remove the class to prevent CSS from overriding
+                            container.classList.remove('canvas-container');
+                            container.classList.add('canvas-container-fixed');
+                            // Apply styles directly - let CSS handle margin-top
+                            container.style.cssText = `
+                                position: relative;
+                                width: ${currentCanvasSize}px !important;
+                                height: ${currentCanvasSize}px !important;
+                                min-width: ${currentCanvasSize}px !important;
+                                max-width: ${currentCanvasSize}px !important;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                margin-left: auto !important;
+                                margin-right: auto !important;
+                                overflow: visible !important;
+                            `;
+                            console.log('📐 Container resized to:', currentCanvasSize, 'x', currentCanvasSize, 'Actual:', container.offsetWidth);
+                        };
+                        resizeContainer();
+                        // Update on window resize
+                        window.addEventListener('resize', resizeContainer);
+                    }
+
+                    // Loading animation variables
+                    let loadingAnimationActive = true; // Start active on page load
+                    let loadingAnimationFrame = null;
+                    let rotationAngle = 0;
+                    let scalePhase = 0;
+                    let loadingStartTime = Date.now();
+                    let fadeOutOpacity = 1; // For synchronized fade-out
+                    let isFadingOut = false;
+
+                    // Loading messages (text and math equations with matching shapes)
+                    const loadingMessages = [
+                        { type: 'text', content: "Give us this day our Daily Shapes!" },
+                        { type: 'text', content: "Things are taking Shape!" },
+                        { type: 'text', content: "Shape up or ship out!" },
+                        { type: 'text', content: "What do we want? SHAPES!" },
+                        { type: 'text', content: "Let there be Shapes!" },
+                        { type: 'math', content: "Square:\\!A = s^2", shape: 'square' },
+                        { type: 'math', content: "Rectangle:\\!A = l \\times w", shape: 'rectangle' },
+                        { type: 'math', content: "Parallelogram:\\!A = b \\times h", shape: 'parallelogram' },
+                        { type: 'math', content: "Triangle:\\!A = \\tfrac{1}{2} b h", shape: 'triangle' },
+                        { type: 'math', content: "Rhombus:\\!A = \\tfrac{1}{2} d_1 d_2", shape: 'rhombus' },
+                        { type: 'math', content: "Trapezoid:\\!A = \\tfrac{1}{2}(b_1 + b_2)h", shape: 'trapezoid' },
+                        { type: 'math', content: "Circle:\\!A = \\pi r^2", shape: 'circle' },
+                        { type: 'math', content: "Ellipse:\\!A = \\pi a b", shape: 'ellipse' },
+                        { type: 'math', content: "Equilateral\\ Triangle:\\!A = \\tfrac{\\sqrt{3}}{4} s^2", shape: 'triangle' },
+                        { type: 'math', content: "Regular\\ Hexagon:\\!A = \\tfrac{3\\sqrt{3}}{2} s^2", shape: 'hexagon' }
+                    ];
+
+                    const loadingMessage = loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+
+                    // Determine which shape to draw - use hexagon or circle for non-equation text
+                    const textShapes = ['hexagon', 'circle'];
+                    const shapeToRender = loadingMessage.shape || textShapes[Math.floor(Math.random() * textShapes.length)];
+
+                    // Shape drawing function
+                    function drawShape(ctx, shape, centerX, centerY, size, rotation) {
+                        ctx.beginPath();
+
+                        switch(shape) {
+                            case 'square':
+                                const half = size / 2;
+                                ctx.moveTo(-half, -half);
+                                ctx.lineTo(half, -half);
+                                ctx.lineTo(half, half);
+                                ctx.lineTo(-half, half);
+                                ctx.closePath();
+                                break;
+
+                            case 'rectangle':
+                                const w = size * 1.4;
+                                const h = size * 0.8;
+                                ctx.moveTo(-w/2, -h/2);
+                                ctx.lineTo(w/2, -h/2);
+                                ctx.lineTo(w/2, h/2);
+                                ctx.lineTo(-w/2, h/2);
+                                ctx.closePath();
+                                break;
+
+                            case 'parallelogram':
+                                const pw = size * 1.3;
+                                const ph = size * 0.8;
+                                const offset = size * 0.3;
+                                ctx.moveTo(-pw/2 + offset, -ph/2);
+                                ctx.lineTo(pw/2 + offset, -ph/2);
+                                ctx.lineTo(pw/2 - offset, ph/2);
+                                ctx.lineTo(-pw/2 - offset, ph/2);
+                                ctx.closePath();
+                                break;
+
+                            case 'triangle':
+                                // Equilateral triangle - all sides equal
+                                const height = size * Math.sqrt(3);
+                                const sideLength = size * 2;
+                                ctx.moveTo(0, -height * 0.5);
+                                ctx.lineTo(sideLength * 0.5, height * 0.5);
+                                ctx.lineTo(-sideLength * 0.5, height * 0.5);
+                                ctx.closePath();
+                                break;
+
+                            case 'rhombus':
+                                ctx.moveTo(0, -size);
+                                ctx.lineTo(size * 0.7, 0);
+                                ctx.lineTo(0, size);
+                                ctx.lineTo(-size * 0.7, 0);
+                                ctx.closePath();
+                                break;
+
+                            case 'trapezoid':
+                                const tz = size;
+                                ctx.moveTo(-tz * 0.5, -tz * 0.6);
+                                ctx.lineTo(tz * 0.5, -tz * 0.6);
+                                ctx.lineTo(tz * 0.9, tz * 0.6);
+                                ctx.lineTo(-tz * 0.9, tz * 0.6);
+                                ctx.closePath();
+                                break;
+
+                            case 'circle':
+                                ctx.arc(0, 0, size, 0, Math.PI * 2);
+                                break;
+
+                            case 'ellipse':
+                                ctx.ellipse(0, 0, size * 1.3, size * 0.7, 0, 0, Math.PI * 2);
+                                break;
+
+                            case 'hexagon':
+                                const angleStep = (Math.PI * 2) / 6;
+                                for (let i = 0; i <= 6; i++) {
+                                    const angle = i * angleStep - Math.PI / 2;
+                                    const x = size * Math.cos(angle);
+                                    const y = size * Math.sin(angle);
+                                    if (i === 0) {
+                                        ctx.moveTo(x, y);
+                                    } else {
+                                        ctx.lineTo(x, y);
+                                    }
+                                }
+                                break;
+                        }
+
+                        ctx.stroke();
+                    }
+
+                    function animateLoading() {
+                        if (!loadingAnimationActive && !isFadingOut) return;
+
+                        // Use logical size (380x380)
+                        const logicalSize = 380;
+
+                        // Clear canvas
+                        ctx.clearRect(0, 0, logicalSize, logicalSize);
+
+                        // Draw rotating and scaling shape
+                        const centerX = logicalSize / 2;
+                        const centerY = logicalSize / 2 - 20;
+
+                        // Scale animation: smooth sine wave between 0.6 and 1.0
+                        const scale = 0.8 + Math.sin(scalePhase) * 0.2;
+                        const baseSize = logicalSize * 0.08;
+                        const size = baseSize * scale;
+
+                        ctx.save();
+                        ctx.translate(centerX, centerY);
+                        ctx.rotate(rotationAngle);
+
+                        // Apply fade-out opacity
+                        ctx.globalAlpha = fadeOutOpacity;
+                        ctx.strokeStyle = '#000';
+                        ctx.lineWidth = 2.5;
+                        ctx.lineJoin = 'miter';
+
+                        // Draw the selected shape
+                        drawShape(ctx, shapeToRender, centerX, centerY, size, rotationAngle);
+
+                        ctx.restore();
+
+                        // Don't draw text on canvas - use HTML overlay for crisp text
+                        // Text rendering moved to HTML overlay below
+
+                        // Update animation - always rotate and scale
+                        rotationAngle += 0.03; // Clockwise rotation speed
+                        scalePhase += 0.05; // Scale pulsing speed
+
+                        // Handle fade-out
+                        if (isFadingOut) {
+                            // During fade-out, decrease opacity
+                            fadeOutOpacity -= 0.04; // Fade out over ~25 frames (500ms at 60fps)
+
+                            // Update text overlay opacity to match
+                            const overlay = document.getElementById('loading-text-overlay');
+                            if (overlay) {
+                                overlay.style.opacity = fadeOutOpacity;
+                            }
+
+                            // Stop when fully faded
+                            if (fadeOutOpacity <= 0) {
+                                loadingAnimationActive = false;
+                                isFadingOut = false;
+
+                                // Remove text overlay
+                                if (overlay) {
+                                    console.log('🗑️ Removing loading text overlay after fade');
+                                    overlay.remove();
+                                }
+
+                                // Clear canvas - only hide if welcome screen is not visible AND no active game
+                                ctx.clearRect(0, 0, logicalSize, logicalSize);
+                                const welcomeOverlay = document.getElementById('welcomeOverlay');
+                                const isWelcomeVisible = welcomeOverlay && welcomeOverlay.style.visibility === 'visible';
+
+                                // CRITICAL: Check if there's an active game being restored
+                                const hasActiveGame = window.isRestoringGameState ||
+                                                     (window.gameState && window.gameState !== 'initial') ||
+                                                     (window.currentShapeNumber && window.currentShapeNumber > 0);
+
+                                if (!isWelcomeVisible && !hasActiveGame) {
+                                    canvas.style.display = 'none';
+                                    console.log('✅ Loading animation complete - canvas hidden');
+                                } else if (hasActiveGame) {
+                                    canvas.style.display = 'block';
+                                    console.log('✅ Loading animation complete - canvas kept visible for active game restoration');
+                                } else {
+                                    console.log('✅ Loading animation complete - canvas kept visible for welcome screen');
+                                }
+
+                                // Call callback if one was registered
+                                if (window._loadingAnimationCallback) {
+                                    console.log('🎯 Calling loading animation completion callback');
+                                    const callback = window._loadingAnimationCallback;
+                                    window._loadingAnimationCallback = null;
+                                    callback();
+                                }
+                                return;
+                            }
+                        }
+
+                        // Continue animation
+                        loadingAnimationFrame = requestAnimationFrame(animateLoading);
+                    }
+
+                    // Create HTML overlay for crisp loading text immediately
+                    const loadingTextOverlay = document.createElement('div');
+                    loadingTextOverlay.id = 'loading-text-overlay';
+
+                    // Calculate font size - adjust for screen size
+                    const canvasWidth = canvas.getBoundingClientRect().width;
+                    const viewportWidth = window.innerWidth;
+                    const viewportHeight = window.innerHeight;
+
+                    // Larger text for 360x630 screens
+                    let fontSize = 18; // Default
+                    let maxWidth = '90%';
+                    let whiteSpace = 'nowrap';
+                    let marginTop = 50; // Default
+
+                    if (viewportWidth >= 350 && viewportWidth <= 365 && viewportHeight >= 600 && viewportHeight <= 800) {
+                        fontSize = 18; // Keep at 18px for 360x630
+                        maxWidth = '90%';
+                        whiteSpace = 'nowrap'; // Keep loading text on single line
+                    }
+
+                    // Desktop adjustment - move loading text down by 40px
+                    if (viewportWidth >= 769) {
+                        marginTop = 90;
+                    }
+
+                    console.log('📏 Loading text - Viewport:', viewportWidth, 'Canvas width:', canvasWidth, 'Font size:', fontSize, 'Branch:', viewportWidth >= 800 ? 'DESKTOP' : viewportWidth >= 480 ? 'TABLET' : 'MOBILE');
+
+                    loadingTextOverlay.style.cssText = `
+                        position: absolute !important;
+                        top: 50% !important;
+                        left: 50% !important;
+                        transform: translate(-50%, -50%) !important;
+                        margin-top: ${marginTop}px !important;
+                        font-family: KaTeX_Main, "Times New Roman", Times, serif !important;
+                        font-size: ${fontSize}px !important;
+                        color: #000 !important;
+                        text-align: center !important;
+                        pointer-events: none !important;
+                        z-index: 100 !important;
+                        opacity: 1 !important;
+                        visibility: visible !important;
+                        transition: opacity 0.5s ease-out !important;
+                        white-space: ${whiteSpace} !important;
+                        max-width: ${maxWidth} !important;
+                        overflow: hidden !important;
+                        text-overflow: ellipsis !important;
+                        line-height: 1.3 !important;
+                        font-style: italic !important;
+                        font-weight: normal !important;
+                    `;
+
+                    // Set content based on message type
+                    if (loadingMessage.type === 'text') {
+                        loadingTextOverlay.innerHTML = loadingMessage.content;
+                        // Increase text size slightly for non-equation text - use fixed 20px
+                        loadingTextOverlay.style.setProperty('font-size', '20px', 'important');
+                    } else if (loadingMessage.type === 'math') {
+                        // KaTeX should be loaded immediately now (removed defer)
+                        try {
+                            katex.render(loadingMessage.content, loadingTextOverlay, {
+                                throwOnError: false,
+                                displayMode: false
+                            });
+                        } catch (e) {
+                            console.warn('KaTeX rendering failed, using plain text:', e);
+                            loadingTextOverlay.textContent = loadingMessage.content;
+                        }
+                    }
+
+                    const loadingContainer = canvas.parentElement;
+                    loadingContainer.style.position = 'relative';
+                    loadingContainer.appendChild(loadingTextOverlay);
+                    console.log('✅ Loading text overlay added:', loadingMessage.content);
+
+                    // Start animation immediately on page load (same timing as text)
+                    animateLoading();
+
+                    // Make globally accessible for stopping
+                    window.stopImmediateLoadingAnimation = function(callback) {
+                        const elapsed = Date.now() - loadingStartTime;
+                        const minTime = 2000; // Minimum 2 seconds display
+                        const fadeTime = 500; // Fade out duration
+
+                        // Store callback for later - don't overwrite if one already exists
+                        if (callback && !window._loadingAnimationCallback) {
+                            window._loadingAnimationCallback = callback;
+                            console.log('📝 Loading animation callback registered');
+                        } else if (callback && window._loadingAnimationCallback) {
+                            console.log('⚠️ Loading animation callback already exists, ignoring new callback');
+                        }
+
+                        if (elapsed < minTime) {
+                            setTimeout(() => {
+                                // Start fade-out instead of immediate stop
+                                loadingAnimationActive = false;
+                                isFadingOut = true;
+                                console.log('✨ Starting loading animation fade-out');
+                            }, minTime - elapsed);
+                        } else {
+                            // Start fade-out instead of immediate stop
+                            loadingAnimationActive = false;
+                            isFadingOut = true;
+                            console.log('✨ Starting loading animation fade-out');
+                        }
+                    };
+                })();
+            </script>
+
+            <!-- Practice Mode indicator - centered above canvas with semi-transparent background -->
+            <div id="practiceModeIndicator" style="display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.9); border: 1px solid black; padding: 3px 8px; font-size: 12px; font-weight: bold; border-radius: 3px; z-index: 10;">Practice Mode</div>
+            
+            <!-- Commentary Message (positioned at bottom of canvas) -->
+            <div class="commentary-overlay" id="commentaryOverlay" style="display: none;">
+                <div class="commentary-text" id="commentaryText">Perfect cut!</div>
+            </div>
+            
+            <!-- Canvas Button Overlay (now empty, used for practice mode transitions) -->
+            <div class="canvas-button-overlay" id="canvasButtonOverlay" style="display: none;">
+                <div class="canvas-buttons-group">
+                </div>
+            </div>
+            
+            <!-- Countdown Timer Overlay -->
+            <div class="countdown-overlay" id="countdownOverlay" style="display: none;">
+                <div class="countdown-box">
+                    <div class="countdown-message" id="countdownDisplay"></div>
+                </div>
+            </div>
+            
+            <!-- Visual Swipe Indicators (non-interactive) -->
+            <div class="swipe-indicators" id="swipeIndicators" style="display: none;">
+                <div class="swipe-arrow swipe-arrow-left" id="leftArrow" style="display: none;">
+                    <svg width="24" height="24" viewBox="0 0 24 24">
+                        <polygon points="18,4 6,12 18,20" />
+                    </svg>
+                </div>
+                <div class="swipe-arrow swipe-arrow-right" id="rightArrow" style="display: none;">
+                    <svg width="24" height="24" viewBox="0 0 24 24">
+                        <polygon points="6,4 18,12 6,20" />
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- Welcome Text Overlay (on canvas) -->
+            <div class="welcome-overlay" id="welcomeOverlay" style="visibility: hidden;">
+                <div class="welcome-content">
+                    <h2>WELCOME TO DAILY SHAPES!</h2>
+                    <p><strong>Your goal is to cut three unique shapes as close to 50/50 as possible each day.</strong> You get two attempts per shape.</p>
+                    <p>Your score is the sum of your smaller percentages from each cut, plus a 50-point bonus for any perfect 50/50 cut.</p>
+                    <p>Today's cutter: <strong id="todaysMechanic" style="color: #3b82f6;">Loading...</strong></p>
+                    <p>Create a free account to join competitions, practice with cutters, and track your progress.</p>
+                </div>
+            </div>
+            
+        </div>
+
+        <!-- MOVED: Initial Play/Practice Button Container - directly under canvas -->
+        <div id="initialPlayButton" class="initial-play-container" style="visibility: hidden;">
+            <button id="playBtn" class="canvas-play-button">Play</button>
+            <button id="practiceBtn" class="canvas-play-button practice-button">Practice</button>
+        </div>
+
+        <!-- Progress Tracker (positioned directly under canvas with minimal padding) -->
+        <div id="demoProgressDisplay" class="demo-progress-display" style="display: block; visibility: hidden;">
+            Shape 1 of 3 - Cut 1 of 2
+        </div>
+
+        <!-- Split Display Area - flows after progress tracker -->
+        <div id="fixedPercentageArea" class="fixed-percentage-area">
+            <!-- Percentages appear here and ONLY here -->
+
+            <!-- Try Again Display - positioned with split displays -->
+            <div id="attemptDisplay" class="attempt-display" style="display: none; text-align: center;">
+                <div id="attemptText" class="attempt-text"></div>
+            </div>
+        </div>
+
+        <!-- Button Area - flows after split display -->
+        <div id="fixedButtonArea" class="fixed-button-area" style="visibility: hidden;">
+            <!-- All progression buttons appear here and ONLY here -->
+        </div>
+
+        <script>console.log('🔧 HTML VERSION: Play/Practice buttons moved directly under canvas');</script>
+
+        <!-- Buttons Below Playing Field -->
+        <div class="buttons-below-canvas" id="buttonsContainer">
+            <!-- Practice navigation (hidden by default) -->
+            <div id="practiceNavigation" class="practice-navigation" style="display: none;">
+                <button id="practiceLeftBtn" class="practice-nav-btn" title="Previous Shape"></button>
+                <button id="practiceRandomBtn" class="practice-nav-btn" title="Random Shape"></button>
+                <button id="practiceResetBtn" class="practice-nav-btn" title="Reset Shape"></button>
+                <button id="practiceRightBtn" class="practice-nav-btn" title="Next Shape"></button>
+            </div>
+        </div>
+        
+        <!-- Results Table (static position) -->
+        <div class="results-container" id="resultsContainer" style="overflow: hidden; position: relative;">
+            <!-- Results table removed - causing excessive container height -->
+            <!-- <table class="results-table">
+                <tbody id="resultsTableBody">
+                </tbody>
+            </table> -->
+
+            <!-- Test Lab Results Display moved to fixedPercentageArea -->
+
+        </div>
+
+    </div>
+    
+    
+    
+    
+    
+    <!-- Override for user profile close button - MUST be last to override neobrutalist -->
+    <style>
+        #userStatsModal .auth-modal-close,
+        #changePasswordModal .auth-modal-close {
+            width: 28px !important;
+            height: 28px !important;
+            min-width: 28px !important;
+            min-height: 28px !important;
+            max-width: 28px !important;
+            max-height: 28px !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
+            line-height: 1 !important;
+            box-sizing: border-box !important;
+            background: white !important;
+            border: 2px solid #000 !important;
+            color: #333 !important;
+            font-size: 14px !important;
+            font-weight: bold !important;
+            overflow: hidden !important;
+            flex-shrink: 0 !important;
+        }
+    </style>
+    
+    <!-- TEST LAB SCRIPT LOADING -->
+    
+    <script>
+        console.log('🧪 Starting Test Lab script loading...');
+        
+        // Immediately check for restoration state to prevent flash
+        (function() {
+            const currentDate = new Date().toLocaleDateString('en-CA');
+            const savedGameStateKey = `dailyShapesDemoState_${currentDate}`;
+            const savedGameState = localStorage.getItem(savedGameStateKey);
+            
+            if (savedGameState) {
+                try {
+                    const parsed = JSON.parse(savedGameState);
+                    if (parsed.gameStarted) {
+                        // Add restoration class immediately to prevent any flash
+                        document.body.classList.add('restoring');
+                        console.log('🔄 Added restoration class immediately on page load');
+                    }
+                } catch (e) {
+                    // Invalid saved state, ignore
+                }
+            }
+        })();
+    </script>
+    
+    <!-- Console logging enabled for troubleshooting -->
+    <!-- Bulletproof Refresh Protection - DISABLED (uses popup, old approach) -->
+    <!-- <script src="bulletproof-refresh.js?v=20"></script> -->
+    <!-- <script src="emergency-fix.js"></script> -->
+    <script src="simple-refresh.js"></script>
+    <script src="shape-types.js?v=2"></script>
+    
+    <!-- Mechanic Modules -->
+    <script src="mechanics/default-with-undo.js?v=20251005g"></script>
+    <script src="mechanics/horizontal-only.js?v=20250915b"></script>
+    <script src="mechanics/diagonal-ascending.js?v=20250909"></script>
+    <script src="mechanics/circle-cut.js"></script>
+    <script src="mechanics/rotating-square.js?v=1759503013"></script>
+    <script src="mechanics/three-point-triangle.js?v=1759499443"></script>
+    <script src="mechanics/rotating-shape-vector.js?v=20251005b"></script>
+    
+    <!-- Global Error Notification System - Must load first -->
+    <script src="global-error-notifications.js?v=fix_modal_close"></script>
+    
+    <!-- Competition System -->
+    <script src="competitions.js?v=1758528484"></script>
+    <script src="competition-ui.js?v=ENHANCED_DEBUG_LEADERBOARD"></script>
+    <script src="local-competition-demo.js"></script>
+    
+    <!-- Practice Mode System -->
+    <script src="practice-mode.js?v=20251005b"></script>
+    
+    <!-- Main Test Lab Logic -->
+    <script src="main.js?v=1760107950"></script>
+    
+    <!-- Stats Window -->
+    <div id="statsOverlay" class="stats-overlay">
+        <div class="stats-window">
+            <div class="stats-header">
+                Daily Stats
+                <button class="stats-close" onclick="closeStatsWindow()">&times;</button>
+            </div>
+            <div class="stats-content" id="statsContent">
+                <!-- Stats content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Authentication Modal -->
+    <div id="authModal" class="auth-modal" style="display: none;">
+        <div class="auth-modal-content">
+            <div class="auth-modal-header">
+                <h2 id="authModalTitle">Sign Up</h2>
+                <button class="auth-modal-close" onclick="closeAuthModal()">&times;</button>
+            </div>
+            <div class="auth-modal-body">
+                <div class="auth-form">
+                    <div class="form-group" id="usernameGroup">
+                        <label for="authUsername">Username</label>
+                        <input type="text" id="authUsername" placeholder="Choose a username" minlength="3" maxlength="20" required>
+                        <div class="input-help">3-20 characters, letters, numbers, and underscores only</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="authPassword">Password</label>
+                        <input type="password" id="authPassword" placeholder="Enter your password" required minlength="6">
+                        <div class="input-help">Minimum 6 characters</div>
+                    </div>
+                    <div class="form-group" id="confirmPasswordGroup" style="display: none;">
+                        <label for="authConfirmPassword">Confirm Password</label>
+                        <input type="password" id="authConfirmPassword" placeholder="Re-enter your password" required minlength="6">
+                        <div class="input-help">Must match password above</div>
+                    </div>
+                    <div id="authError" class="auth-feedback error" style="display: none;"></div>
+                    <div id="authSuccess" class="auth-feedback success" style="display: none;"></div>
+
+                    <!-- Forgot Password Link (only shown in login mode) -->
+                    <div id="forgotPasswordLink" class="forgot-password-link" style="display: none;">
+                        <a href="#" onclick="showForgotPasswordForm(); return false;">Forgot your password?</a>
+                    </div>
+
+                    <button id="authSubmitButton" class="auth-submit-button" onclick="handleSignup()">Sign Up</button>
+
+                    <div class="auth-switch" id="authSwitchText">
+                        Don't have an account? <a href="#" onclick="switchAuthMode('signup'); return false;">Sign Up</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Confirmation Popup -->
+    <div id="successConfirmationModal" class="success-modal" style="display: none !important;" onclick="if(event.target === this) closeSuccessModal();">
+        <div class="success-modal-content" id="successConfirmationContent" style="max-width: 320px; min-height: auto; height: auto; padding: 0; box-sizing: border-box;">
+            <div class="success-modal-header" style="padding: 12px 16px; text-align: center; min-height: auto;">
+                <h2 style="margin: 0; font-size: 18px; line-height: 1.3;">You're signed in!</h2>
+                <button class="success-modal-close" onclick="closeSuccessModal()">&times;</button>
+            </div>
+            <div class="success-modal-body" style="padding: 8px 16px 16px 16px; min-height: auto;">
+                <div class="success-navigation">
+                    <div class="success-buttons">
+                        <button class="success-nav-btn primary" style="padding: 12px 24px; font-size: 16px;" onclick="continueToOriginalDestination()">
+                            Continue
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Competition Popup -->
+    <div id="competitionModal" class="success-modal" style="display: none;">
+        <div class="success-modal-content">
+            <!-- Main Competition Menu -->
+            <div id="competitionMainView">
+                <div class="success-modal-header">
+                    <h2>Competitions</h2>
+                    <button class="success-modal-close" onclick="closeCompetitionModal()">&times;</button>
+                </div>
+                <div class="success-modal-body">
+                    <div class="success-navigation">
+                        <div class="success-buttons">
+                            <button class="success-nav-btn primary" onclick="showActiveCompetitions()">
+                                View My Competitions
+                            </button>
+                            <button class="success-nav-btn secondary" onclick="showCreateCompetition()">
+                                Create Competition
+                            </button>
+                            <div class="competition-info-box">
+                                <strong>How competitions work:</strong>
+                                <ul>
+                                    <li>Create a competition, set custom dates, & share the link to invite friends</li>
+                                    <li>Your daily score automatically counts for all active competitions</li>
+                                    <li>Each cut scores the smaller percentage (the colored side). All 6 cuts are added together for your daily score</li>
+                                    <li>Perfect 50/50 cuts earn +50 bonus points each</li>
+                                    <li>Missing a day scores 0 points. Game resets at midnight</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Active Competitions View -->
+            <div id="competitionActiveView" style="display: none;">
+                <div class="success-modal-header">
+                    <button class="back-arrow" onclick="showCompetitionMain()"></button>
+                    <h2>My Competitions</h2>
+                    <button class="success-modal-close" onclick="closeCompetitionModal()">&times;</button>
+                </div>
+                <div class="success-modal-body competition-list-view-body">
+                    <div id="activeCompetitionsList" class="competitions-list-compact">
+                        <!-- Active competitions will be loaded here -->
+                    </div>
+                    <button class="success-nav-btn secondary" onclick="showExpiredCompetitions()">
+                        Past Competitions
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Past Competitions View -->
+            <div id="competitionExpiredView" style="display: none;">
+                <div class="success-modal-header">
+                    <button class="back-arrow" onclick="showActiveCompetitions()"></button>
+                    <h2>Past Competitions</h2>
+                    <button class="success-modal-close" onclick="closeCompetitionModal()">&times;</button>
+                </div>
+                <div class="success-modal-body competition-list-view-body">
+                    <div id="expiredCompetitionsList" class="competitions-list-compact">
+                        <!-- Ended competitions will be loaded here -->
+                    </div>
+                    <button class="success-nav-btn secondary" onclick="showActiveCompetitions()">
+                        Back to Competitions
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Create Competition View -->
+            <div id="competitionCreateView" style="display: none;">
+                <div class="success-modal-header">
+                    <button class="back-arrow" onclick="showCompetitionMain()"></button>
+                    <h2>Create Competition</h2>
+                    <button class="success-modal-close" onclick="closeCompetitionModal()">&times;</button>
+                </div>
+                <div class="success-modal-body">
+                    <div class="create-competition-form">
+                        <!-- Competition creation form will be loaded here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Competition Leaderboard View -->
+            <div id="competitionLeaderboardView" style="display: none;">
+                <div class="success-modal-header">
+                    <button class="back-arrow" onclick="showActiveCompetitions()"></button>
+                    <h2 id="leaderboardCompetitionTitle">Leaderboard</h2>
+                    <button class="success-modal-close" onclick="closeCompetitionModal()">&times;</button>
+                </div>
+                <div class="success-modal-body" style="display: flex; flex-direction: column; height: calc(75vh - 100px); max-height: calc(75vh - 100px); padding: 20px 25px; position: relative; overflow: hidden;">
+                    <div id="competitionLeaderboardContainer" style="flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 0; min-height: 0;">
+                        <!-- Leaderboard will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- INLINE OVERRIDE: Force competition modal height for desktop (bypasses all caching) -->
+    <script>
+    (function() {
+        function forceCompetitionModalHeight() {
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            if (vh >= 700) {
+                const modalContent = document.querySelector('#competitionModal .success-modal-content');
+                if (modalContent) {
+                    modalContent.style.setProperty('max-height', '700px', 'important');
+                    modalContent.style.setProperty('height', '700px', 'important');
+                    modalContent.style.setProperty('min-height', '700px', 'important');
+                    console.log('🚀 INLINE SCRIPT: Set modal to 700px for screen height:', vh);
+
+                    // Adjust modal body height - set to 600px to fill the 700px modal
+                    const modalBody = modalContent.querySelector('.success-modal-body');
+                    if (modalBody) {
+                        modalBody.style.setProperty('height', '600px', 'important');
+                        modalBody.style.setProperty('max-height', '600px', 'important');
+                        modalBody.style.setProperty('min-height', '600px', 'important');
+                        modalBody.style.setProperty('overflow-y', 'hidden', 'important');
+                        console.log('🚀 INLINE SCRIPT: Set modal body to 600px for viewport', vw + 'x' + vh);
+
+                        // Set cards container to be scrollable with appropriate height
+                        const activeList = document.getElementById('activeCompetitionsList');
+                        const expiredList = document.getElementById('expiredCompetitionsList');
+                        if (activeList) {
+                            activeList.style.setProperty('max-height', '540px', 'important');
+                            activeList.style.setProperty('overflow-y', 'auto', 'important');
+                        }
+                        if (expiredList) {
+                            expiredList.style.setProperty('max-height', '540px', 'important');
+                            expiredList.style.setProperty('overflow-y', 'auto', 'important');
+                        }
+                    }
+                }
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', forceCompetitionModalHeight);
+        } else {
+            forceCompetitionModalHeight();
+        }
+
+        window.addEventListener('resize', forceCompetitionModalHeight);
+    })();
+    </script>
+
+    <!-- Join Competition Popup -->
+    <div id="joinCompetitionModal" class="success-modal" style="display: none;">
+        <div class="success-modal-content">
+            <div class="success-modal-header">
+                <h2>🏆 Join Competition</h2>
+                <button class="success-modal-close" onclick="closeJoinCompetitionModal()">&times;</button>
+            </div>
+            <div class="success-modal-body">
+                <div id="joinCompetitionContent">
+                    <!-- Competition details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Competition Prompt Modal (after daily game completion) -->
+    <div id="competitionPromptModal" class="success-modal" style="display: none;">
+        <div class="success-modal-content" style="max-width: 400px; text-align: center;">
+            <div class="success-modal-header">
+                <h2 style="margin: 0;">Thanks for playing!</h2>
+                <button class="success-modal-close" onclick="closeCompetitionPromptModal()">&times;</button>
+            </div>
+            <div class="success-modal-body">
+                <p style="font-size: 16px; line-height: 1.5; margin-bottom: 16px;">
+                    Want to play with friends? Set up your own competition!
+                </p>
+                <button class="success-nav-btn primary" onclick="openCreateCompetition()" style="width: 100%; margin-bottom: 10px;">
+                    Create Competition
+                </button>
+                <button class="success-nav-btn secondary" onclick="closeCompetitionPromptModal()" style="width: 100%;">
+                    Maybe Later
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Stats Modal -->
+    <div id="userStatsModal" class="auth-modal" style="display: none;">
+        <div class="auth-modal-content">
+            <div class="auth-header">
+                <h2>Your Statistics</h2>
+                <button class="auth-modal-close" onclick="closeUserStatsModal()">&times;</button>
+            </div>
+            
+            <div class="stats-content">
+                <div class="stats-loading" id="statsLoading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading your stats...</p>
+                </div>
+                
+                <div class="stats-display" id="statsDisplay" style="display: none;">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">🎯</div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="perfectCuts">0</div>
+                                <div class="stat-label">Perfect Cuts</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">🔥</div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="currentStreak">0</div>
+                                <div class="stat-label">Current Streak</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">⭐</div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="bestStreak">0</div>
+                                <div class="stat-label">Best Streak</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">🏆</div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="averageScore">0</div>
+                                <div class="stat-label">Avg Score</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">💯</div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="totalScore">0</div>
+                                <div class="stat-label">Total Score</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">🥇</div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="competitionsWon">0</div>
+                                <div class="stat-label">Competitions Won</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-actions">
+                        <button class="auth-button secondary" onclick="closeUserStatsModal()">Close</button>
+                    </div>
+                </div>
+                
+                <div class="stats-error" id="statsError" style="display: none;">
+                    <p>Unable to load statistics. Please try again later.</p>
+                    <button class="auth-button secondary" onclick="closeUserStatsModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal" class="auth-modal" style="display: none;" onclick="if(event.target === this) closeChangePasswordModal()">
+        <div class="auth-modal-content">
+            <div class="auth-header">
+                <h2>Change Password</h2>
+                <button class="auth-modal-close" onclick="closeChangePasswordModal()">&times;</button>
+            </div>
+            
+            <div class="auth-form-container">
+                <form id="changePasswordForm" onsubmit="handleChangePassword(event)">
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password</label>
+                        <input type="password" id="currentPassword" name="currentPassword" required 
+                               placeholder="Enter your current password">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <input type="password" id="newPassword" name="newPassword" required 
+                               placeholder="New password (min 6)" minlength="6">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm New Password</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" required 
+                               placeholder="Confirm password">
+                    </div>
+                    
+                    <div class="auth-error" id="changePasswordError" style="display: none;"></div>
+                    <div class="auth-success" id="changePasswordSuccess" style="display: none;"></div>
+                    
+                    <div class="auth-buttons">
+                        <button type="button" class="auth-button secondary" onclick="closeChangePasswordModal()">Cancel</button>
+                        <button type="submit" class="auth-button primary" id="changePasswordSubmit">
+                            <span class="button-text">Change Password</span>
+                            <div class="loading-spinner" style="display: none;"></div>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="auth-modal" style="display: none;" onclick="if(event.target === this) closeForgotPasswordModal()">
+        <div class="auth-modal-content">
+            <div class="auth-modal-header">
+                <h2>Reset Password</h2>
+                <button class="auth-modal-close" onclick="closeForgotPasswordModal()">&times;</button>
+            </div>
+
+            <div class="auth-modal-body">
+                <div class="auth-form">
+                    <p style="margin-bottom: 16px; color: #333; font-size: 15px; line-height: 1.5;">
+                        To reset your password, email us with your username and recovery code:
+                    </p>
+
+                    <div style="background-color: #f5f5f5; border: 2px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                        <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px; color: #333;">Email:</div>
+                        <a href="mailto:dailyshapesgame@gmail.com?subject=Password%20Reset%20Request"
+                           style="color: #6496ff; font-size: 15px; text-decoration: none; word-break: break-all;">
+                            dailyshapesgame@gmail.com
+                        </a>
+
+                        <div style="font-weight: 600; font-size: 13px; margin-top: 12px; margin-bottom: 8px; color: #333;">Subject:</div>
+                        <div style="color: #666; font-size: 14px;">Password Reset Request</div>
+
+                        <div style="font-weight: 600; font-size: 13px; margin-top: 12px; margin-bottom: 8px; color: #333;">Include:</div>
+                        <div style="color: #666; font-size: 14px;">
+                            • Your username<br>
+                            • Your recovery code (XXXX-XXXX-XXXX)
+                        </div>
+                    </div>
+
+                    <p style="margin-bottom: 8px; color: #666; font-size: 13px; line-height: 1.4;">
+                        We'll verify your recovery code and send you a new temporary password.
+                    </p>
+
+                    <p style="margin-bottom: 20px; color: #856404; font-size: 12px; line-height: 1.4; background-color: #fff3cd; padding: 8px; border-radius: 4px;">
+                        <strong>Don't have your recovery code?</strong> Unfortunately, we cannot recover your account without it. You'll need to create a new account.
+                    </p>
+
+                    <div class="auth-switch">
+                        <a href="#" onclick="closeForgotPasswordModal(); openAuthModal('login'); return false;">Back to Login</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recovery Code Modal (shown after signup) -->
+    <div id="recoveryCodeModal" class="auth-modal" style="display: none;">
+        <div class="auth-modal-content">
+            <div class="auth-modal-header">
+                <h2>Save Your Recovery Code</h2>
+            </div>
+
+            <div class="auth-modal-body">
+                <div class="auth-form">
+                    <p style="margin-bottom: 16px; color: #333; font-size: 15px; line-height: 1.5; font-weight: 600;">
+                        ⚠️ Important: Save this code in a safe place!
+                    </p>
+
+                    <p style="margin-bottom: 16px; color: #666; font-size: 14px; line-height: 1.5;">
+                        You'll need this code if you ever forget your password. We cannot recover your account without it.
+                    </p>
+
+                    <div style="background-color: #f5f5f5; border: 3px solid #000; border-radius: 8px; padding: 20px; margin-bottom: 20px; text-align: center;">
+                        <div style="font-weight: 600; margin-bottom: 12px; color: #333; font-size: 14px;">Your Recovery Code:</div>
+                        <div id="recoveryCodeDisplay" style="font-family: 'Courier New', monospace; font-size: 24px; font-weight: bold; color: #000; letter-spacing: 2px; user-select: all;">
+                            ----/----/----
+                        </div>
+                        <button id="copyRecoveryCodeBtn" class="auth-submit-button" style="margin-top: 16px; padding: 8px 16px; font-size: 14px;" onclick="copyRecoveryCode()">
+                            📋 Copy to Clipboard
+                        </button>
+                    </div>
+
+                    <div style="background-color: #fff3cd; border: 2px solid #ffc107; border-radius: 6px; padding: 12px; margin-bottom: 16px;">
+                        <p style="margin: 0; color: #856404; font-size: 13px; line-height: 1.4;">
+                            <strong>Tip:</strong> Take a screenshot, write it down, or save it in your password manager.
+                        </p>
+                    </div>
+
+                    <button class="auth-submit-button" onclick="closeRecoveryCodeModal()">
+                        I've Saved My Recovery Code
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load authentication system -->
+    <script src="supabase-config.js"></script>
+    <script src="auth-service.js"></script>
+    <script src="user-account-manager.js"></script>
+    <script src="auth-header.js?v=1759499150"></script>
+
+    <!-- Supabase integration for shape loading -->
+    <script src="supabase-shape-init.js"></script>
+    <script src="shape-loader-adapter.js"></script>
+    
+    <!-- Load collapsible menu system -->
+    <script src="collapsible-menu.js"></script>
+    
+    <!-- Load daily game system -->
+    <script src="scoring-system.js"></script>
+    <script src="daily-game-core.js"></script>
+    <!-- Old integration disabled - using new Supabase integration -->
+    <!-- <script src="game-integration.js"></script> -->
+    
+    <!-- Load competition system -->
+    <script src="global-competition.js"></script>
+    <script src="leaderboard-ui.js?v=1758522951"></script>
+    <script src="competition-integration.js"></script>
+
+    <!-- Load custom competition system -->
+    <script src="custom-competition-manager.js"></script>
+    <script src="custom-leaderboard-ui.js?v=MOBILE_SCROLL_FIX_V5"></script>
+    <script src="competition-invite-system.js"></script>
+    <script src="custom-competition-realtime.js"></script>
+    <!-- <script src="test-refresh-protection.js"></script> -->
+
+    <!-- Test interstitial ad function (development only) -->
+    <script src="test-interstitial.js"></script>
+    
+    <!-- Completion View System -->
+    <script src="countdown.js"></script>
+    <script src="complete-view.js"></script>
+    
+    <!-- Simple validation -->
+    <script>
+        window.addEventListener('load', function() {
+            console.log('🧪 Test Lab loaded successfully!');
+
+            // Force close join competition modal on page load and clear any stale data
+            const joinModal = document.getElementById('joinCompetitionModal');
+            if (joinModal && joinModal.style.display !== 'none') {
+                joinModal.style.display = 'none';
+                console.log('🔒 Forced join competition modal closed on load');
+            }
+
+            // Clear any stale pending competition join unless there's a join URL parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            if (!urlParams.has('join')) {
+                sessionStorage.removeItem('pendingJoinCompetitionId');
+                console.log('🗑️ Cleared stale pending competition join data');
+            }
+
+            // Using native practice-mode.js system - no override needed
+            console.log('✅ Latest practice mode system loaded');
+
+            // Lock scroll position on short screens to prevent keyboard shift
+            if (window.innerWidth <= 380 && window.innerHeight <= 580) {
+                // Immediately lock the body position at top
+                document.body.style.position = 'fixed';
+                document.body.style.top = '0';
+                document.body.style.left = '0';
+                document.body.style.width = '100%';
+                document.body.style.height = '100vh';
+                document.body.style.overflow = 'hidden';
+
+                console.log('🔒 Short screen detected - body locked to prevent shift');
+            }
+
+            // Make competition modals responsive to screen height
+            // UPDATED: 2025-11-14 - Set to 700px for all desktop with height >= 700px
+            function adjustModalHeight() {
+                const vh = window.innerHeight;
+                const vw = window.innerWidth;
+
+                // Target all possible modal elements
+                const mainModal = document.querySelector('#competitionModal .success-modal-content');
+                const mainModalContainer = document.querySelector('#competitionModal');
+                const joinModalFromMain = document.querySelector('#joinCompetitionModal .success-modal-content');
+                const joinModalFromSystem = document.querySelector('.join-competition-modal .competition-modal-content');
+                const joinContainerFromMain = document.querySelector('#joinCompetitionModal');
+                const joinContainerFromSystem = document.querySelector('.join-competition-modal');
+
+                // Handle main competition modal - ONLY if it's actually visible
+                if (mainModal && mainModalContainer && mainModalContainer.offsetParent !== null) {
+                    let maxHeight = '490px';
+
+                    // For desktop with height >= 700px, set to 700px (consistent for 736x799 and 1486x808)
+                    if (vh >= 700) {
+                        maxHeight = '700px';
+                        mainModal.style.setProperty('max-height', maxHeight, 'important');
+                        mainModal.style.setProperty('height', maxHeight, 'important');
+                        mainModal.style.setProperty('min-height', maxHeight, 'important');
+
+                        // Adjust modal body height - set to 600px to fill the 700px modal
+                        const modalBody = mainModal.querySelector('.success-modal-body');
+                        if (modalBody) {
+                            modalBody.style.setProperty('height', '600px', 'important');
+                            modalBody.style.setProperty('max-height', '600px', 'important');
+                            modalBody.style.setProperty('min-height', '600px', 'important');
+                            modalBody.style.setProperty('overflow-y', 'hidden', 'important');
+
+                            // Set cards container to be scrollable with appropriate height
+                            const activeList = document.getElementById('activeCompetitionsList');
+                            const expiredList = document.getElementById('expiredCompetitionsList');
+                            if (activeList) {
+                                activeList.style.setProperty('max-height', '540px', 'important');
+                                activeList.style.setProperty('overflow-y', 'auto', 'important');
+                            }
+                            if (expiredList) {
+                                expiredList.style.setProperty('max-height', '540px', 'important');
+                                expiredList.style.setProperty('overflow-y', 'auto', 'important');
+                            }
+                        }
+                    }
+                    // For mobile/narrow screens, use viewport-based heights
+                    else if (vh > 580 && vh <= 600) {
+                        maxHeight = '75vh';
+                        mainModal.style.setProperty('max-height', maxHeight, 'important');
+                    }
+                    else if (vh > 600 && vh <= 700) {
+                        maxHeight = '80vh';
+                        mainModal.style.setProperty('max-height', maxHeight, 'important');
+                    }
+                    else if (vh > 700) {
+                        maxHeight = '85vh';
+                        mainModal.style.setProperty('max-height', maxHeight, 'important');
+                    }
+                }
+
+                // Handle join competition modal from main.js (#joinCompetitionModal)
+                if (joinModalFromMain && joinModalFromMain.offsetParent !== null) {
+                    let maxHeight = '490px';
+                    let minHeight = '400px';
+
+                    // Special handling for very small screens (iPhone SE: 375x547)
+                    if (vh <= 580 && vw <= 430) {
+                        maxHeight = '92vh'; // Use most of screen height (~503px on iPhone SE)
+                        minHeight = '500px'; // Ensure it's tall enough for content
+                        joinModalFromMain.style.setProperty('max-height', maxHeight, 'important');
+                        joinModalFromMain.style.setProperty('min-height', minHeight, 'important');
+                        joinModalFromMain.style.setProperty('width', '92%', 'important');
+                        joinModalFromMain.style.setProperty('display', 'flex', 'important');
+                        joinModalFromMain.style.setProperty('flex-direction', 'column', 'important');
+
+                        // Position the container higher on the screen
+                        if (joinContainerFromMain) {
+                            joinContainerFromMain.style.setProperty('align-items', 'flex-start', 'important');
+                            joinContainerFromMain.style.setProperty('padding-top', '10px', 'important');
+                        }
+
+                        console.log(`✅ Set join modal (main.js) for small screen: max-height=${maxHeight}, min-height=${minHeight}, positioned higher (screen: ${vw}x${vh}px)`);
+                    }
+                    // For taller mobile screens
+                    else if (vh > 580 && vh <= 700) {
+                        maxHeight = '80vh';
+                        joinModalFromMain.style.setProperty('max-height', maxHeight, 'important');
+                        console.log(`✅ Set join modal (main.js) max-height to ${maxHeight} (screen: ${vw}x${vh}px)`);
+                    }
+                    // For desktop/large screens
+                    else if (vh > 700) {
+                        maxHeight = '85vh';
+                        joinModalFromMain.style.setProperty('max-height', maxHeight, 'important');
+                        console.log(`✅ Set join modal (main.js) max-height to ${maxHeight} (screen: ${vw}x${vh}px)`);
+                    }
+                }
+
+                // Handle join competition modal from competition-invite-system.js (if present)
+                if (joinModalFromSystem && joinModalFromSystem.offsetParent !== null) {
+                    let maxHeight = '490px';
+                    let minHeight = '400px';
+
+                    // Special handling for very small screens (iPhone SE: 375x547)
+                    if (vh <= 580 && vw <= 430) {
+                        maxHeight = '92vh';
+                        minHeight = '500px';
+                        joinModalFromSystem.style.setProperty('max-height', maxHeight, 'important');
+                        joinModalFromSystem.style.setProperty('min-height', minHeight, 'important');
+                        joinModalFromSystem.style.setProperty('width', '92%', 'important');
+                        joinModalFromSystem.style.setProperty('display', 'flex', 'important');
+                        joinModalFromSystem.style.setProperty('flex-direction', 'column', 'important');
+
+                        // Position the container higher on the screen
+                        if (joinContainerFromSystem) {
+                            joinContainerFromSystem.style.setProperty('align-items', 'flex-start', 'important');
+                            joinContainerFromSystem.style.setProperty('padding-top', '10px', 'important');
+                        }
+
+                        console.log(`✅ Set join modal (invite system) for small screen: max-height=${maxHeight}, min-height=${minHeight}, positioned higher (screen: ${vw}x${vh}px)`);
+                    }
+                    // For taller mobile screens
+                    else if (vh > 580 && vh <= 700) {
+                        maxHeight = '80vh';
+                        joinModalFromSystem.style.setProperty('max-height', maxHeight, 'important');
+                        console.log(`✅ Set join modal (invite system) max-height to ${maxHeight} (screen: ${vw}x${vh}px)`);
+                    }
+                    // For desktop/large screens
+                    else if (vh > 700) {
+                        maxHeight = '85vh';
+                        joinModalFromSystem.style.setProperty('max-height', maxHeight, 'important');
+                        console.log(`✅ Set join modal (invite system) max-height to ${maxHeight} (screen: ${vw}x${vh}px)`);
+                    }
+                }
+            }
+
+            const observer = new MutationObserver(adjustModalHeight);
+            observer.observe(document.body, { childList: true, subtree: true });
+
+            // Also run on window resize and load
+            window.addEventListener('resize', adjustModalHeight);
+            window.addEventListener('load', adjustModalHeight);
+            // Run immediately
+            adjustModalHeight();
+        });
+    </script>
+
+    <!-- NUCLEAR OPTION: Force split display positioning for iPhone SE 375x547 -->
+    <style>
+        /* HIGHEST PRIORITY OVERRIDE FOR IPHONE SE LAYOUT */
+        @media (orientation: portrait) and (max-width: 380px) and (max-height: 580px) {
+            /* Daily mode split display - FORCE UP TO PROGRESS TRACKER */
+            html body div#fixedPercentageArea.fixed-percentage-area,
+            html body div#fixedPercentageArea,
+            html body .fixed-percentage-area,
+            body div#fixedPercentageArea.fixed-percentage-area,
+            body div#fixedPercentageArea,
+            body .fixed-percentage-area,
+            div#fixedPercentageArea.fixed-percentage-area,
+            div#fixedPercentageArea,
+            .fixed-percentage-area,
+            #fixedPercentageArea {
+                margin-top: -16px !important;
+                margin-bottom: 0px !important;
+                position: relative !important;
+                z-index: 10 !important;
+                transform: none !important;
+            }
+
+            /* Practice mode split display - FORCE UP TO NAVIGATION BUTTONS */
+            html body:has(.practice-navigation:not([style*="display: none"])) div#fixedPercentageArea.fixed-percentage-area,
+            html body:has(.practice-navigation:not([style*="display: none"])) div#fixedPercentageArea,
+            html body:has(.practice-navigation:not([style*="display: none"])) .fixed-percentage-area,
+            html body:has(.practice-navigation:not([style*="display: none"])) .attempt-result,
+            html body:has(.practice-navigation:not([style*="display: none"])) .split-display-large,
+            body:has(.practice-navigation:not([style*="display: none"])) div#fixedPercentageArea.fixed-percentage-area,
+            body:has(.practice-navigation:not([style*="display: none"])) div#fixedPercentageArea,
+            body:has(.practice-navigation:not([style*="display: none"])) .fixed-percentage-area,
+            body:has(.practice-navigation:not([style*="display: none"])) .attempt-result,
+            body:has(.practice-navigation:not([style*="display: none"])) .split-display-large {
+                margin-top: -16px !important;
+                transform: none !important;
+                position: relative !important;
+                z-index: 1 !important;
+            }
+
+            /* BUTTON CONTAINER - MOVE UP */
+            html body div#fixedButtonArea.fixed-button-area,
+            html body div#fixedButtonArea,
+            html body .fixed-button-area,
+            body div#fixedButtonArea.fixed-button-area,
+            body div#fixedButtonArea,
+            body .fixed-button-area,
+            div#fixedButtonArea.fixed-button-area,
+            div#fixedButtonArea,
+            .fixed-button-area,
+            #fixedButtonArea {
+                margin-top: -13px !important;
+                margin-bottom: 60px !important;
+                transform: none !important;
+                position: relative !important;
+            }
+
+            /* BUTTON INNER CONTAINER - MOVE UP */
+            html body div#demoProgressionButton,
+            html body #demoProgressionButton,
+            body div#demoProgressionButton,
+            body #demoProgressionButton,
+            div#demoProgressionButton,
+            #demoProgressionButton {
+                margin-top: -21px !important;
+                margin-bottom: 0px !important;
+                padding: 4px !important;
+            }
+
+            /* NEXT SHAPE / NEXT ATTEMPT BUTTONS - MOVE UP */
+            html body button#nextShapeBtn[style],
+            html body button#nextAttemptBtn[style],
+            html body #nextShapeBtn,
+            html body #nextAttemptBtn,
+            body button#nextShapeBtn[style],
+            body button#nextAttemptBtn[style],
+            body #nextShapeBtn,
+            body #nextAttemptBtn,
+            button#nextShapeBtn[style],
+            button#nextAttemptBtn[style],
+            button#nextShapeBtn,
+            button#nextAttemptBtn,
+            #nextShapeBtn,
+            #nextAttemptBtn {
+                margin: 0px auto 0px auto !important;
+                transform: none !important;
+                position: relative !important;
+                top: 0px !important;
+                display: block !important;
+            }
+        }
+    </style>
+
+    <!-- Footer -->
+    <div style="position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; pointer-events: none; z-index: 100;">
+        <div style="color: #999; font-size: 12px; pointer-events: auto; white-space: nowrap;">
+            © Daily Shapes
+        </div>
+        <div style="color: #999; font-size: 12px; pointer-events: auto;">
+            <a href="mailto:dailyshapesgame@gmail.com" style="color: #999; text-decoration: none;">Get in touch →</a>
+        </div>
+    </div>
+
+    <!-- Competition Prompt Modal Functions -->
+    <script>
+        // Flag to track if we've shown the prompt this session
+        let hasShownCompetitionPrompt = sessionStorage.getItem('hasShownCompetitionPrompt') === 'true';
+
+        // Show competition prompt modal after daily game completion
+        function showCompetitionPromptModal() {
+            if (hasShownCompetitionPrompt) {
+                console.log('🏆 Competition prompt already shown this session');
+                return;
+            }
+
+            const modal = document.getElementById('competitionPromptModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                hasShownCompetitionPrompt = true;
+                sessionStorage.setItem('hasShownCompetitionPrompt', 'true');
+                console.log('🏆 Showing competition prompt modal');
+            }
+        }
+
+        // Close competition prompt modal
+        function closeCompetitionPromptModal() {
+            const modal = document.getElementById('competitionPromptModal');
+            if (modal) {
+                modal.style.display = 'none';
+                console.log('🏆 Competition prompt modal closed');
+            }
+        }
+
+        // Open create competition screen
+        function openCreateCompetition() {
+            closeCompetitionPromptModal();
+
+            // Check if user is logged in first
+            const isLoggedIn = window.AuthService && !window.AuthService.isGuest;
+
+            if (!isLoggedIn) {
+                // Show account required modal instead of opening competition modal
+                if (window.showAuthenticationPopup) {
+                    window.showAuthenticationPopup();
+                    console.log('🏆 Showing auth popup - user not logged in');
+                }
+                return;
+            }
+
+            // User is logged in - open competition modal and show create competition view
+            if (window.openCompetitionModal && window.showCreateCompetition) {
+                window.openCompetitionModal();
+                window.showCreateCompetition();
+                console.log('🏆 Opening create competition screen');
+            } else {
+                console.error('❌ Competition functions not available');
+            }
+        }
+
+        // Make functions globally available
+        window.showCompetitionPromptModal = showCompetitionPromptModal;
+        window.closeCompetitionPromptModal = closeCompetitionPromptModal;
+        window.openCreateCompetition = openCreateCompetition;
+    </script>
+</body>
+</html>

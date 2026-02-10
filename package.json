@@ -1,0 +1,22 @@
+{
+  "name": "daily-shapes-v4-simulation",
+  "version": "1.0.0",
+  "description": "Week-long gameplay simulation for Daily Shapes v4.0",
+  "main": "simulate-week-gameplay.js",
+  "scripts": {
+    "simulate": "node simulate-week-gameplay.js",
+    "simulate:cleanup": "node simulate-week-gameplay.js cleanup",
+    "simulate:validate": "node simulate-week-gameplay.js validate",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "simulation",
+    "testing",
+    "daily-shapes"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  }
+}

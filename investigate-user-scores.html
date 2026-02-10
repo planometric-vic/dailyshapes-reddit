@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Score Investigation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .result {
+            background: #f0f0f0;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 2px solid #000;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+        .info {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+        }
+        .warning {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 User Score Investigation</h1>
+
+    <div id="results"></div>
+
+    <button onclick="investigateUser()">Investigate User Scores</button>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://zxrfhumifazjxgikltkz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp4cmZodW1pZmF6anhnaWtsdGt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MjMyMTAsImV4cCI6MjA2ODQ5OTIxMH0.GJGVi_So1OAklXM6oantOGd3ok1OVhgURmc7KhEwcwQ';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // User with score issue
+        const USER_ID = 'b306be71-3ca5-464d-a76e-943dd326a569';
+        const COMPETITION_ID = '6b68e958-f2ec-4bfd-842d-dd5169446fbe';
+
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = message;
+            document.getElementById('results').appendChild(div);
+        }
+
+        async function investigateUser() {
+            document.getElementById('results').innerHTML = '';
+            addResult('<h3>🔍 Investigating User Score Issue...</h3>');
+
+            try {
+                // Get user's competition participant record
+                addResult('<strong>Step 1: Checking competition participant record...</strong>');
+                const { data: participant, error: participantError } = await supabase
+                    .from('competition_participants')
+                    .select('*')
+                    .eq('user_id', USER_ID)
+                    .eq('competition_id', COMPETITION_ID)
+                    .single();
+
+                if (participantError) {
+                    addResult(`❌ Error: ${participantError.message}`, 'error');
+                    return;
+                }
+
+                addResult(`✅ Competition Participant Record:<br><pre>${JSON.stringify(participant, null, 2)}</pre>`, 'info');
+
+                // Get competition details
+                addResult('<strong>Step 2: Checking competition details...</strong>');
+                const { data: competition, error: compError } = await supabase
+                    .from('competitions')
+                    .select('*')
+                    .eq('id', COMPETITION_ID)
+                    .single();
+
+                if (compError) {
+                    addResult(`❌ Error: ${compError.message}`, 'error');
+                    return;
+                }
+
+                const startDate = competition.start_date;
+                const endDate = competition.end_date;
+                addResult(`✅ Competition runs from ${startDate} to ${endDate}`, 'success');
+
+                // Get ALL daily scores for this user during competition period
+                addResult('<strong>Step 3: Fetching all daily scores during competition...</strong>');
+                const { data: dailyScores, error: scoresError } = await supabase
+                    .from('daily_scores')
+                    .select('*')
+                    .eq('user_id', USER_ID)
+                    .gte('date', startDate)
+                    .lte('date', endDate)
+                    .order('date', { ascending: true });
+
+                if (scoresError) {
+                    addResult(`❌ Error: ${scoresError.message}`, 'error');
+                    return;
+                }
+
+                if (!dailyScores || dailyScores.length === 0) {
+                    addResult('⚠️ No daily scores found during competition period!', 'warning');
+                    return;
+                }
+
+                // Build table of daily scores
+                let tableHTML = '<table><thead><tr><th>Date</th><th>Attempt Scores</th><th>Average</th></tr></thead><tbody>';
+                let totalCalculated = 0;
+
+                dailyScores.forEach(score => {
+                    const avg = (
+                        score.shape1_attempt1 +
+                        score.shape1_attempt2 +
+                        score.shape2_attempt1 +
+                        score.shape2_attempt2 +
+                        score.shape3_attempt1 +
+                        score.shape3_attempt2
+                    ) / 6;
+
+                    totalCalculated += avg;
+
+                    const attempts = [
+                        score.shape1_attempt1,
+                        score.shape1_attempt2,
+                        score.shape2_attempt1,
+                        score.shape2_attempt2,
+                        score.shape3_attempt1,
+                        score.shape3_attempt2
+                    ].join(', ');
+
+                    tableHTML += `<tr>
+                        <td>${score.date}</td>
+                        <td>${attempts}</td>
+                        <td><strong>${avg.toFixed(2)}</strong></td>
+                    </tr>`;
+                });
+
+                tableHTML += '</tbody></table>';
+
+                addResult(`✅ Found ${dailyScores.length} daily scores:<br>${tableHTML}`, 'success');
+
+                // Compare with stored total
+                addResult('<strong>Step 4: Score Analysis...</strong>');
+                addResult(`📊 Total in database: <strong>${participant.total_score}</strong>`, 'info');
+                addResult(`📊 Calculated total from daily scores: <strong>${totalCalculated.toFixed(2)}</strong>`, 'info');
+                addResult(`📊 Days played (stored): <strong>${participant.days_played || 0}</strong>`, 'info');
+                addResult(`📊 Days with scores: <strong>${dailyScores.length}</strong>`, 'info');
+
+                if (Math.abs(participant.total_score - totalCalculated) > 0.01) {
+                    addResult(`⚠️ <strong>MISMATCH DETECTED!</strong><br>
+                        Stored total (${participant.total_score}) does not match calculated total (${totalCalculated.toFixed(2)})<br>
+                        Difference: ${Math.abs(participant.total_score - totalCalculated).toFixed(2)}`, 'error');
+
+                    // Check if it's only one day's score
+                    const lastDayScore = dailyScores[dailyScores.length - 1];
+                    const lastDayAvg = (
+                        lastDayScore.shape1_attempt1 +
+                        lastDayScore.shape1_attempt2 +
+                        lastDayScore.shape2_attempt1 +
+                        lastDayScore.shape2_attempt2 +
+                        lastDayScore.shape3_attempt1 +
+                        lastDayScore.shape3_attempt2
+                    ) / 6;
+
+                    if (Math.abs(participant.total_score - lastDayAvg) < 0.01) {
+                        addResult(`🔍 <strong>DIAGNOSIS: Only last day's score was recorded!</strong><br>
+                            The total_score (${participant.total_score}) matches only the most recent day's score (${lastDayAvg.toFixed(2)}).<br>
+                            Previous days' scores were NOT accumulated.`, 'error');
+                    }
+                } else {
+                    addResult(`✅ Scores match! Total is correct.`, 'success');
+                }
+
+            } catch (error) {
+                addResult(`❌ Unexpected error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-investigate on load
+        window.addEventListener('load', investigateUser);
+    </script>
+</body>
+</html>
