@@ -1,0 +1,19 @@
+{
+  "name": "daily-shapes-reddit",
+  "version": "1.0.0",
+  "description": "Daily Shapes - A daily puzzle game where players cut shapes into perfect halves",
+  "type": "module",
+  "main": "src/main.tsx",
+  "scripts": {
+    "build": "devvit build",
+    "upload": "devvit upload",
+    "playtest": "devvit playtest"
+  },
+  "dependencies": {
+    "@devvit/public-api": "^0.12.0"
+  },
+  "devDependencies": {
+    "@devvit/tsconfig": "^0.12.0",
+    "typescript": "^5.0.0"
+  }
+}

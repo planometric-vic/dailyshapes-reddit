@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Daily Shapes</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Main Game Container -->
+    <div id="game-container">
+
+        <!-- Game Info Bar -->
+        <div class="game-info-bar">
+            <span class="game-title">DAILY SHAPES</span>
+            <span id="shape-label" class="game-day"></span>
+        </div>
+
+        <!-- Progress Dots (3 shapes x 2 attempts = 6 dots) -->
+        <div class="progress-tracker">
+            <div class="progress-dot" title="Shape 1, Attempt 1"></div>
+            <div class="progress-dot" title="Shape 1, Attempt 2"></div>
+            <div class="progress-separator"></div>
+            <div class="progress-dot" title="Shape 2, Attempt 1"></div>
+            <div class="progress-dot" title="Shape 2, Attempt 2"></div>
+            <div class="progress-separator"></div>
+            <div class="progress-dot" title="Shape 3, Attempt 1"></div>
+            <div class="progress-dot" title="Shape 3, Attempt 2"></div>
+        </div>
+
+        <!-- Instruction Text -->
+        <div class="instruction-area">
+            <span id="instruction-text"></span>
+        </div>
+
+        <!-- Canvas -->
+        <div class="canvas-wrapper">
+            <canvas id="geoCanvas" width="380" height="380"></canvas>
+        </div>
+
+        <!-- Cut Result Display -->
+        <div id="cut-result"></div>
+
+        <!-- Progression Button Area -->
+        <div id="progression-area"></div>
+    </div>
+
+    <!-- Overlays -->
+    <div id="welcome-overlay"></div>
+    <div id="completion-overlay"></div>
+    <div id="leaderboard-overlay"></div>
+
+    <!-- Scripts (load order matters) -->
+    <script src="js/devvit-bridge.js"></script>
+    <script src="js/scoring.js"></script>
+    <script src="js/shape-renderer.js"></script>
+    <script src="js/ui-manager.js"></script>
+    <script src="js/game-engine.js"></script>
+
+    <!-- Mechanics -->
+    <script src="js/mechanics/default.js"></script>
+    <script src="js/mechanics/horizontal-only.js"></script>
+    <script src="js/mechanics/diagonal-ascending.js"></script>
+    <script src="js/mechanics/circle-cut.js"></script>
+    <script src="js/mechanics/three-point-triangle.js"></script>
+    <script src="js/mechanics/rotating-square.js"></script>
+    <script src="js/mechanics/rotating-shape-vector.js"></script>
+
+    <!-- App Init -->
+    <script>
+        // Wait for Devvit bridge to provide init data, then start the game
+        window.addEventListener('devvit-init', (event) => {
+            console.log('[DailyShapes] Init data received from Devvit');
+            GameEngine.init(event.detail);
+        });
+
+        // Initialize the bridge (requests init data from Devvit backend)
+        DevvitBridge.init();
+    </script>
+</body>
+</html>
