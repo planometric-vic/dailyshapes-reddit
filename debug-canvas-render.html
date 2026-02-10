@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Canvas Rendering</title>
+    <style>
+        body { font-family: monospace; padding: 20px; max-width: 1000px; }
+        .log { margin: 5px 0; padding: 5px; border-radius: 3px; font-size: 12px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .warning { background: #fff3cd; color: #856404; }
+        button { margin: 5px; padding: 8px 16px; }
+        #gameCanvas { border: 2px solid #333; margin: 10px 0; }
+        .debug-info { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Canvas Rendering Debug Test</h1>
+    <div>
+        <button onclick="initializeTest()">Initialize Test</button>
+        <button onclick="testNavigation()">Test Navigation</button>
+        <button onclick="debugCanvasState()">Debug Canvas State</button>
+        <button onclick="forceRedraw()">Force Canvas Redraw</button>
+    </div>
+
+    <div class="debug-info">
+        <strong>Canvas Info:</strong>
+        <div id="canvasInfo">Canvas not found</div>
+    </div>
+
+    <div id="logs"></div>
+
+    <!-- Include game canvas -->
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="shape-storage.js"></script>
+    <script src="practice-mode-manager.js"></script>
+    <script src="daily-mode-manager.js"></script>
+    <script src="game-mode-integration.js"></script>
+    <script src="practice-mode.js"></script>
+
+    <script>
+        const logs = document.getElementById('logs');
+        const canvasInfo = document.getElementById('canvasInfo');
+
+        function log(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = new Date().toLocaleTimeString() + ' - ' + msg;
+            logs.appendChild(div);
+            console.log(msg);
+        }
+
+        function updateCanvasInfo() {
+            const canvas = document.getElementById('gameCanvas');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const pixels = imageData.data;
+
+                // Count non-transparent pixels
+                let nonTransparentPixels = 0;
+                for (let i = 3; i < pixels.length; i += 4) { // Check alpha channel
+                    if (pixels[i] > 0) nonTransparentPixels++;
+                }
+
+                canvasInfo.innerHTML = `
+                    Canvas: ${canvas.width}x${canvas.height}<br>
+                    Non-transparent pixels: ${nonTransparentPixels}<br>
+                    Canvas style: ${canvas.style.cssText || 'none'}<br>
+                    Canvas display: ${getComputedStyle(canvas).display}<br>
+                    Canvas visibility: ${getComputedStyle(canvas).visibility}<br>
+                    Canvas opacity: ${getComputedStyle(canvas).opacity}
+                `;
+            } else {
+                canvasInfo.innerHTML = 'Canvas not found';
+            }
+        }
+
+        async function initializeTest() {
+            logs.innerHTML = '';
+            log('🧪 Initializing canvas rendering test...', 'info');
+
+            updateCanvasInfo();
+
+            try {
+                // Initialize practice mode
+                if (!window.practiceMode) {
+                    window.practiceMode = new PracticeMode();
+                }
+
+                await window.practiceMode.initialize();
+                log('✅ Practice mode initialized', 'success');
+
+                // Get current shape info
+                const integration = window.practiceMode.integration;
+                if (integration && integration.practiceMode) {
+                    const navInfo = integration.practiceMode.getNavigationInfo();
+                    if (navInfo) {
+                        log(`📅 Current shape: ${navInfo.currentShapeName}`, 'success');
+                    }
+
+                    const currentShape = integration.practiceMode.getCurrentShape();
+                    if (currentShape && currentShape.features) {
+                        log(`📐 Shape features: ${currentShape.features.length}`, 'success');
+
+                        // Check if shape is already rendered
+                        updateCanvasInfo();
+
+                        if (window.parsedShapes && window.parsedShapes.length > 0) {
+                            log(`✅ Parsed shapes available: ${window.parsedShapes.length}`, 'success');
+                        } else {
+                            log('⚠️ No parsed shapes available', 'warning');
+                        }
+                    }
+                }
+
+            } catch (error) {
+                log(`❌ Test initialization failed: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        async function testNavigation() {
+            if (!window.practiceMode) {
+                log('❌ Initialize test first', 'error');
+                return;
+            }
+
+            log('🔄 Testing navigation and rendering...', 'info');
+
+            try {
+                // Clear canvas first
+                const canvas = document.getElementById('gameCanvas');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                log('🧹 Canvas manually cleared', 'info');
+                updateCanvasInfo();
+
+                // Navigate to next shape
+                await window.practiceMode.navigateShape('right');
+
+                // Wait a moment for rendering
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                log('📊 Canvas state after navigation:', 'info');
+                updateCanvasInfo();
+
+                // Check if renderShapeForCutting function exists and works
+                if (typeof window.renderShapeForCutting === 'function' && window.parsedShapes) {
+                    log('🎨 Manually calling renderShapeForCutting...', 'info');
+                    window.renderShapeForCutting();
+
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    log('📊 Canvas state after manual render:', 'info');
+                    updateCanvasInfo();
+                } else {
+                    log('❌ renderShapeForCutting not available or no parsed shapes', 'error');
+                }
+
+            } catch (error) {
+                log(`❌ Navigation test failed: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        function debugCanvasState() {
+            log('🔍 Debugging canvas state...', 'info');
+
+            const canvas = document.getElementById('gameCanvas');
+            if (!canvas) {
+                log('❌ Canvas not found', 'error');
+                return;
+            }
+
+            const ctx = canvas.getContext('2d');
+
+            // Log canvas properties
+            log(`📐 Canvas dimensions: ${canvas.width}x${canvas.height}`, 'info');
+            log(`📐 Canvas client size: ${canvas.clientWidth}x${canvas.clientHeight}`, 'info');
+            log(`🎨 Canvas context: ${ctx ? 'available' : 'not available'}`, ctx ? 'success' : 'error');
+
+            // Check global variables
+            log(`📊 parsedShapes: ${window.parsedShapes ? window.parsedShapes.length : 'not available'}`,
+                window.parsedShapes ? 'success' : 'warning');
+            log(`🎮 practiceMode: ${window.practiceMode ? 'available' : 'not available'}`,
+                window.practiceMode ? 'success' : 'warning');
+            log(`🔧 renderShapeForCutting: ${typeof window.renderShapeForCutting}`,
+                typeof window.renderShapeForCutting === 'function' ? 'success' : 'warning');
+
+            // Check current transform
+            const transform = ctx.getTransform();
+            log(`🔄 Canvas transform: ${JSON.stringify(transform)}`, 'info');
+
+            updateCanvasInfo();
+
+            // Draw a test rectangle to verify canvas is working
+            ctx.fillStyle = 'red';
+            ctx.fillRect(10, 10, 50, 50);
+            log('🔴 Drew test red rectangle at (10,10)', 'success');
+
+            setTimeout(() => {
+                updateCanvasInfo();
+            }, 100);
+        }
+
+        function forceRedraw() {
+            log('🎨 Forcing complete redraw...', 'info');
+
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // Clear everything
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+
+            // If we have parsed shapes, render them
+            if (window.parsedShapes && window.parsedShapes.length > 0) {
+                log(`📐 Rendering ${window.parsedShapes.length} shapes...`, 'info');
+
+                // Simple direct rendering
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+
+                window.parsedShapes.forEach((shape, index) => {
+                    if (shape.type === 'Polygon' && shape.coordinates && shape.coordinates[0]) {
+                        ctx.beginPath();
+                        const coords = shape.coordinates[0];
+                        if (coords.length > 0) {
+                            ctx.moveTo(coords[0][0] * 400 + 200, coords[0][1] * 400 + 200);
+                            for (let i = 1; i < coords.length; i++) {
+                                ctx.lineTo(coords[i][0] * 400 + 200, coords[i][1] * 400 + 200);
+                            }
+                            ctx.closePath();
+                            ctx.stroke();
+                            log(`✅ Drew shape ${index + 1}`, 'success');
+                        }
+                    }
+                });
+
+                // Draw grid
+                ctx.strokeStyle = '#ccc';
+                ctx.lineWidth = 1;
+                for (let i = 0; i <= canvas.width; i += 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, 0);
+                    ctx.lineTo(i, canvas.height);
+                    ctx.stroke();
+                }
+                for (let i = 0; i <= canvas.height; i += 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, i);
+                    ctx.lineTo(canvas.width, i);
+                    ctx.stroke();
+                }
+
+                log('✅ Force redraw complete', 'success');
+            } else {
+                log('❌ No parsed shapes to render', 'error');
+            }
+
+            updateCanvasInfo();
+        }
+
+        // Auto-initialize
+        setTimeout(initializeTest, 1000);
+
+        // Update canvas info periodically
+        setInterval(updateCanvasInfo, 2000);
+    </script>
+</body>
+</html>

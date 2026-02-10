@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Bucket Access</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .test {
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .success { border-color: #28a745; }
+        .error { border-color: #dc3545; }
+        .warning { border-color: #ffc107; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            overflow: auto;
+            white-space: pre-wrap;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Debug Bucket Access</h1>
+
+    <button onclick="runAllTests()">Run All Tests</button>
+    <button onclick="clearResults()">Clear Results</button>
+
+    <div id="results"></div>
+
+    <!-- Load Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+
+    <script>
+        const results = document.getElementById('results');
+
+        function log(title, content, type = 'test') {
+            const div = document.createElement('div');
+            div.className = `test ${type}`;
+            div.innerHTML = `
+                <h3>${title}</h3>
+                <pre>${typeof content === 'object' ? JSON.stringify(content, null, 2) : content}</pre>
+            `;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            results.innerHTML = '';
+        }
+
+        async function runAllTests() {
+            clearResults();
+
+            // Test 1: Client availability
+            const client = window.supabaseClient || window.SupabaseConfig?.client;
+            log('1. Supabase Client Check', client ? 'Client available' : 'Client NOT available', client ? 'success' : 'error');
+
+            if (!client) {
+                log('ERROR', 'Cannot continue without Supabase client', 'error');
+                return;
+            }
+
+            // Test 2: Direct file access (what's working)
+            log('2. Testing Direct File Access', 'Testing 250920-01.geojson...');
+            try {
+                const { data: publicUrlData } = client.storage
+                    .from('shapes')
+                    .getPublicUrl('250920-01.geojson');
+
+                const testUrl = publicUrlData?.publicUrl;
+                log('2a. Public URL Generated', testUrl || 'No URL generated');
+
+                if (testUrl) {
+                    const response = await fetch(testUrl);
+                    log('2b. Direct HTTP Response', {
+                        status: response.status,
+                        statusText: response.statusText,
+                        ok: response.ok,
+                        headers: Object.fromEntries(response.headers.entries())
+                    }, response.ok ? 'success' : 'error');
+
+                    if (response.ok) {
+                        const text = await response.text();
+                        log('2c. File Content Sample', text.substring(0, 200) + '...', 'success');
+                    }
+                }
+            } catch (error) {
+                log('2. Direct File Access ERROR', error.message, 'error');
+            }
+
+            // Test 3: Storage API list() method (what's failing)
+            log('3. Testing Storage List API', 'Calling storage.list()...');
+            try {
+                const { data, error } = await client.storage
+                    .from('shapes')
+                    .list('', { limit: 10 });
+
+                if (error) {
+                    log('3a. List API Error', {
+                        message: error.message,
+                        details: error.details,
+                        hint: error.hint,
+                        code: error.code
+                    }, 'error');
+                } else {
+                    log('3b. List API Success', {
+                        fileCount: data?.length || 0,
+                        files: data || []
+                    }, data?.length > 0 ? 'success' : 'warning');
+                }
+            } catch (error) {
+                log('3. List API Exception', error.message, 'error');
+            }
+
+            // Test 4: Alternative list methods
+            log('4. Testing Alternative List Methods', 'Trying different parameters...');
+
+            const listTests = [
+                { name: 'Empty prefix', params: [''] },
+                { name: 'Null prefix', params: [null] },
+                { name: 'Root prefix', params: ['/'] },
+                { name: 'With options', params: ['', { limit: 5 }] },
+                { name: 'Search mode', params: ['', { limit: 10, search: '250920' }] }
+            ];
+
+            for (const test of listTests) {
+                try {
+                    const { data, error } = await client.storage
+                        .from('shapes')
+                        .list(...test.params);
+
+                    log(`4.${test.name}`, {
+                        error: error?.message || null,
+                        count: data?.length || 0,
+                        sample: data?.slice(0, 3) || []
+                    }, error ? 'error' : (data?.length > 0 ? 'success' : 'warning'));
+                } catch (err) {
+                    log(`4.${test.name} Exception`, err.message, 'error');
+                }
+            }
+
+            // Test 5: Check bucket info
+            log('5. Testing Bucket Info', 'Getting bucket metadata...');
+            try {
+                const { data: buckets, error } = await client.storage.listBuckets();
+
+                if (error) {
+                    log('5a. List Buckets Error', error.message, 'error');
+                } else {
+                    const shapesBucket = buckets?.find(b => b.name === 'shapes');
+                    log('5b. Buckets Available', {
+                        totalBuckets: buckets?.length || 0,
+                        bucketNames: buckets?.map(b => b.name) || [],
+                        shapesBucket: shapesBucket || 'NOT FOUND'
+                    }, shapesBucket ? 'success' : 'error');
+                }
+            } catch (error) {
+                log('5. Bucket Info Exception', error.message, 'error');
+            }
+
+            // Test 6: Raw API call
+            log('6. Testing Raw Storage API', 'Direct REST API call...');
+            try {
+                const url = 'https://zxrfhumifazjxgikltkz.supabase.co/storage/v1/object/list/shapes';
+                const headers = {
+                    'Authorization': `Bearer ${window.SupabaseConfig?.anonKey}`,
+                    'Content-Type': 'application/json'
+                };
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        limit: 10,
+                        offset: 0,
+                        sortBy: { column: 'name', order: 'asc' }
+                    })
+                });
+
+                const result = await response.json();
+                log('6. Raw API Response', {
+                    status: response.status,
+                    ok: response.ok,
+                    data: result
+                }, response.ok ? 'success' : 'error');
+
+            } catch (error) {
+                log('6. Raw API Exception', error.message, 'error');
+            }
+
+            log('Debug Complete', 'All tests finished', 'success');
+        }
+
+        // Auto-run tests on load
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 1000);
+        });
+    </script>
+</body>
+</html>

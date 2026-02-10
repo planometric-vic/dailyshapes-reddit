@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug LocalStorage</title>
+</head>
+<body>
+    <h1>LocalStorage Debug</h1>
+    <button onclick="checkStorage()">Check Storage</button>
+    <button onclick="clearStorage()">Clear All Storage</button>
+    <div id="output"></div>
+    
+    <script>
+        function checkStorage() {
+            const output = document.getElementById('output');
+            let html = '<h2>LocalStorage Contents:</h2>';
+            
+            if (localStorage.length === 0) {
+                html += '<p>No items in localStorage</p>';
+            } else {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    const value = localStorage.getItem(key);
+                    html += `<p><strong>${key}:</strong> ${value}</p>`;
+                }
+            }
+            
+            output.innerHTML = html;
+        }
+        
+        function clearStorage() {
+            localStorage.clear();
+            checkStorage();
+        }
+        
+        // Auto-check on load
+        checkStorage();
+    </script>
+</body>
+</html>

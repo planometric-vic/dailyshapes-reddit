@@ -1,0 +1,408 @@
+/* Circular Button Styles for Daily Shapes v4.0 */
+/* Small circular buttons aligned inline with left-justified title */
+
+/* ================================
+   MAIN HEADER LAYOUT
+   ================================ */
+
+.main-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: white;
+    border-bottom: 2px solid #000;
+    position: relative;
+    z-index: 100;
+    min-height: 60px;
+}
+
+.app-title {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #333;
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+/* ================================
+   BUTTON SUITE LAYOUT
+   ================================ */
+
+.button-suite {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    position: relative;
+}
+
+/* ================================
+   CIRCULAR BUTTON STYLES
+   ================================ */
+
+.circle-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #000;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.circle-button svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.2s ease;
+    pointer-events: none;
+}
+
+.circle-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.circle-button:hover svg {
+    transform: scale(1.1);
+}
+
+.circle-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ================================
+   BUTTON COLOR THEMES
+   ================================ */
+
+/* Auth Button - Purple/Blue */
+.circle-button.auth-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #5a67d8;
+}
+
+.circle-button.auth-btn:hover {
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Stats Button - Green */
+.circle-button.stats-btn {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+    border-color: #10b981;
+}
+
+.circle-button.stats-btn:hover {
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+/* Archive Button - Orange */
+.circle-button.archive-btn {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    color: #333;
+    border-color: #f59e0b;
+}
+
+.circle-button.archive-btn:hover {
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+/* Competition Button - Red/Pink */
+.circle-button.comp-btn {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border-color: #ec4899;
+}
+
+.circle-button.comp-btn:hover {
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4);
+}
+
+/* ================================
+   BUTTON STATES
+   ================================ */
+
+/* Hidden buttons maintain space */
+.circle-button.hidden {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Disabled state */
+.circle-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Pulse animation for auth button */
+@keyframes buttonPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(102, 126, 234, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+    }
+}
+
+.circle-button.auth-btn.pulse {
+    animation: buttonPulse 2s infinite;
+}
+
+/* Logged in indicator */
+.circle-button.auth-btn.logged-in::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 10px;
+    height: 10px;
+    background: #4CAF50;
+    border: 2px solid white;
+    border-radius: 50%;
+}
+
+/* ================================
+   ACCOUNT DROPDOWN
+   ================================ */
+
+.account-dropdown {
+    position: absolute;
+    top: calc(100% + 5px);
+    right: 0;
+    background: white;
+    border: 2px solid #000;
+    border-radius: 6px;
+    box-shadow: 4px 4px 0px #000;
+    min-width: 180px;
+    z-index: 1000;
+}
+
+/* ================================
+   COMPETITION DROPDOWN
+   ================================ */
+
+#compButtonDropdown {
+    position: absolute;
+    top: calc(100% + 5px);
+    right: 0;
+    background: white;
+    border: 2px solid #000;
+    border-radius: 6px;
+    box-shadow: 4px 4px 0px #000;
+    min-width: 200px;
+    z-index: 1000;
+}
+
+/* ================================
+   GAME INFO ADJUSTMENTS
+   ================================ */
+
+.header-row {
+    padding: 10px 20px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+}
+
+.game-info-container {
+    text-align: center;
+}
+
+.mechanic-info {
+    display: inline-block;
+}
+
+.mechanic-label {
+    font-size: 0.875rem;
+    color: #666;
+    margin-right: 8px;
+}
+
+.mechanic-name {
+    font-weight: 600;
+    color: #333;
+}
+
+/* ================================
+   RESPONSIVE DESIGN
+   ================================ */
+
+/* Tablet adjustments */
+@media screen and (min-width: 768px) and (max-width: 1023px) {
+    .main-header {
+        padding: 18px 24px;
+    }
+    
+    .app-title {
+        font-size: 1.875rem;
+    }
+    
+    .circle-button {
+        width: 44px;
+        height: 44px;
+    }
+    
+    .button-suite {
+        gap: 10px;
+    }
+}
+
+/* Desktop adjustments */
+@media screen and (min-width: 1024px) {
+    .main-header {
+        padding: 20px 32px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .app-title {
+        font-size: 2rem;
+    }
+    
+    .circle-button {
+        width: 46px;
+        height: 46px;
+    }
+    
+    .circle-button svg {
+        width: 22px;
+        height: 22px;
+    }
+    
+    .button-suite {
+        gap: 12px;
+    }
+}
+
+/* Mobile adjustments */
+@media screen and (max-width: 767px) {
+    .main-header {
+        padding: 12px 16px;
+        min-height: 50px;
+    }
+    
+    .app-title {
+        font-size: 1.5rem;
+    }
+    
+    .circle-button {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .circle-button svg {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .button-suite {
+        gap: 6px;
+    }
+}
+
+/* Very small mobile devices */
+@media screen and (max-width: 375px) {
+    .main-header {
+        padding: 10px 12px;
+    }
+    
+    .app-title {
+        font-size: 1.25rem;
+    }
+    
+    .circle-button {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .circle-button svg {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .button-suite {
+        gap: 4px;
+    }
+    
+    /* Hide green dot on very small screens */
+    .circle-button.auth-btn.logged-in::after {
+        width: 8px;
+        height: 8px;
+        bottom: 1px;
+        right: 1px;
+    }
+}
+
+/* Extra small screens - stack if needed */
+@media screen and (max-width: 320px) {
+    .main-header {
+        flex-wrap: wrap;
+        padding: 8px 10px;
+    }
+    
+    .app-title {
+        font-size: 1.125rem;
+        flex: 1 1 100%;
+        margin-bottom: 8px;
+    }
+    
+    .button-suite {
+        flex: 1 1 100%;
+        justify-content: center;
+    }
+}
+
+/* ================================
+   TOOLTIPS (Desktop only)
+   ================================ */
+
+@media (hover: hover) and (pointer: fine) {
+    .circle-button {
+        position: relative;
+    }
+    
+    .circle-button::before {
+        content: attr(title);
+        position: absolute;
+        bottom: calc(100% + 8px);
+        left: 50%;
+        transform: translateX(-50%) scale(0);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        pointer-events: none;
+        transition: transform 0.2s ease;
+        transform-origin: bottom center;
+    }
+    
+    .circle-button:hover::before {
+        transform: translateX(-50%) scale(1);
+    }
+}
+
+/* ================================
+   PRINT STYLES
+   ================================ */
+
+@media print {
+    .main-header {
+        border-bottom: 1px solid #000;
+    }
+    
+    .button-suite {
+        display: none !important;
+    }
+}
