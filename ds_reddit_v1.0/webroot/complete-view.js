@@ -123,8 +123,11 @@ const completeView = (() => {
             // Show actions and modal immediately
             createPostCanvasActions();
 
-            // Don't show competition prompt on reload - only on first completion
-            console.log('🔄 Reload detected - skipping competition prompt');
+            // On reload, show leaderboard immediately (no animation to wait for)
+            console.log('🔄 Reload detected - showing leaderboard immediately');
+            if (window.WeeklyLeaderboard) {
+                window.WeeklyLeaderboard.show();
+            }
 
         } else {
             // First time today - show animated sequence
