@@ -89,10 +89,6 @@
         window.isPracticeMode = false;
         window.isSupabaseMode = false;
 
-        // Prevent main.js DOMContentLoaded from running a second initializeDemoGame
-        // (main.js checks this flag and skips demo init if Supabase is "active")
-        window._devvitInitRunning = true;
-
         // Set day of week (1-7, where 7=Sunday, matching original main.js)
         const dow = initData.dayOfWeek; // 0=Sun, 6=Sat
         window.currentDay = dow === 0 ? 7 : dow; // Convert to 1-7
@@ -189,6 +185,20 @@
             console.log('[Devvit Init] initializeDemoGame not found, using manual init');
             manualInit(mechanicName, shapes[0]);
         }
+
+        // Prevent main.js DOMContentLoaded from running a second initialization.
+        // main.js waits up to 5s for supabaseIntegrationActive, then calls either
+        // initializeSupabaseGameMode() or initializeDemoGame(). Replace both with
+        // no-ops since we already initialized above.
+        console.log('[Devvit Init] Replacing init functions with no-ops to prevent double init');
+        window.initializeDemoGame = function() {
+            console.log('[Devvit] initializeDemoGame already ran - skipping');
+            return Promise.resolve();
+        };
+        window.initializeSupabaseGameMode = function() {
+            console.log('[Devvit] initializeSupabaseGameMode blocked - using Devvit init');
+            return Promise.resolve();
+        };
     });
 
     function manualInit(mechanicName, firstShape) {
