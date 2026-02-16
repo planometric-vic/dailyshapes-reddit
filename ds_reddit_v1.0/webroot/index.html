@@ -47,7 +47,12 @@
         .main-header {
             display: none !important;
         }
-        /* Hide practice button for now (no practice mode shapes in Reddit) */
+        /* Hide practice button for now (no practice mode shapes in Reddit).
+           Must use high specificity to override style.css rules like
+           .initial-play-container #practiceBtn { display: inline-block !important } */
+        .initial-play-container #practiceBtn,
+        .initial-play-container button#practiceBtn,
+        #initialPlayButton #practiceBtn,
         #practiceBtn {
             display: none !important;
         }

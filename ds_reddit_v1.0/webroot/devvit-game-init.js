@@ -196,6 +196,25 @@
             console.log('[Devvit] initializeSupabaseGameMode blocked - using Devvit init');
             return Promise.resolve();
         };
+
+        // Override Supabase-dependent functions that crash on Reddit.
+        // checkIfUserHasPlayedToday calls SupabaseConfig.isReady() which gets
+        // destroyed when local-competition-demo.js overwrites SupabaseConfig.
+        window.checkIfUserHasPlayedToday = async function() { return false; };
+        window.syncServerCompletionState = async function() {};
+
+        // local-competition-demo.js overwrites CompetitionManager on DOMContentLoaded,
+        // removing parseJoinLink/clearJoinLink. Patch it back after a delay.
+        setTimeout(function() {
+            if (window.CompetitionManager) {
+                if (typeof window.CompetitionManager.parseJoinLink !== 'function') {
+                    window.CompetitionManager.parseJoinLink = function() { return null; };
+                }
+                if (typeof window.CompetitionManager.clearJoinLink !== 'function') {
+                    window.CompetitionManager.clearJoinLink = function() {};
+                }
+            }
+        }, 100);
     });
 
     function manualInit(mechanicName, firstShape) {
