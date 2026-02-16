@@ -43,9 +43,20 @@
         .app-container {
             padding-top: 0;
         }
-        /* Hide header - Reddit post title replaces it */
+        /* Hide elements not needed in Reddit context */
         .main-header,
         .mechanic-info {
+            display: none !important;
+        }
+        /* Hide countdown timer - new game posts daily, no 24h time limit */
+        #countdownOverlay,
+        #completion-countdown,
+        .countdown-overlay {
+            display: none !important;
+        }
+        /* Hide competition buttons - replaced by weekly leaderboard */
+        #option3Btn,
+        .competition-close-btn {
             display: none !important;
         }
         /* Hide practice button for now (no practice mode shapes in Reddit).
@@ -58,18 +69,17 @@
             display: none !important;
         }
         /* ============================================
-           DESKTOP: Side-by-side layout (canvas left, UI right)
+           DESKTOP: Side-by-side layout (canvas left, leaderboard right)
            ============================================ */
         @media (min-width: 600px) {
             .app-container {
                 display: grid !important;
-                /* Left column: canvas (auto-sized), Right column: UI panel */
                 grid-template-columns: auto 1fr;
-                /* Rows: 1=instruction, 2=spacer, 3=progress, 4=split, 5=button, 6=spacer, 7=play/other */
-                grid-template-rows: auto 1fr auto auto auto 1fr auto;
-                gap: 0 20px !important;
+                /* Row 1: instruction (above both), Row 2: canvas+leaderboard */
+                grid-template-rows: auto 1fr;
+                gap: 0 16px !important;
                 max-width: 100% !important;
-                padding: 4px 12px !important;
+                padding: 4px 16px 4px 24px !important;
                 align-items: start !important;
             }
             /* Row 1: instruction spans full width */
@@ -82,60 +92,69 @@
                 margin: 0 !important;
                 padding: 0 8px !important;
             }
-            /* Canvas spans left column, rows 2-7 (full height of right panel) */
+            /* Canvas in left column, vertically centered */
             .canvas-container, .canvas-container-fixed {
                 grid-column: 1 !important;
-                grid-row: 2 / 8 !important;
+                grid-row: 2 !important;
                 margin: 0 !important;
-                align-self: start !important;
+                align-self: center !important;
             }
-            /* Play button below canvas on left side */
+            /* Play button below canvas */
             #initialPlayButton, #initialPlayButton.initial-play-container {
                 grid-column: 1 !important;
-                grid-row: 8 !important;
+                grid-row: 3 !important;
                 margin-top: -6px !important;
                 position: relative !important;
                 z-index: 25 !important;
                 transform: none !important;
                 text-align: center !important;
             }
-            /* Right column items - centered vertically against canvas */
+            /* Right panel: stack progress, split, button, then leaderboard */
             #demoProgressDisplay, .demo-progress-display {
                 grid-column: 2 !important;
-                grid-row: 3 !important;
-                align-self: end !important;
+                grid-row: 2 !important;
+                align-self: start !important;
                 margin: 0 !important;
-                padding: 0 !important;
-                font-size: 14px !important;
+                padding: 4px 0 0 0 !important;
+                font-size: 13px !important;
                 text-align: center !important;
             }
             .fixed-percentage-area, #fixedPercentageArea {
                 grid-column: 2 !important;
-                grid-row: 4 !important;
-                align-self: center !important;
+                grid-row: 2 !important;
+                align-self: start !important;
                 min-height: auto !important;
-                margin: 8px 0 !important;
+                margin: 22px 0 0 0 !important;
             }
             .split-display-large {
-                font-size: 40px !important;
+                font-size: 32px !important;
                 min-height: auto !important;
             }
             .fixed-button-area, #fixedButtonArea {
                 grid-column: 2 !important;
-                grid-row: 5 !important;
+                grid-row: 2 !important;
                 align-self: start !important;
                 min-height: auto !important;
-                margin: 0 !important;
+                margin: 70px 0 0 0 !important;
             }
             .fixed-button-area .progression-button,
             #fixedButtonArea .progression-button {
                 margin-top: 0 !important;
                 transform: none !important;
             }
-            /* Hide elements not needed in grid */
-            .mechanic-info, .buttons-below-canvas, .results-container {
+            /* Leaderboard fills right column below the controls */
+            .weekly-leaderboard {
                 grid-column: 2 !important;
-                grid-row: 7 !important;
+                grid-row: 2 !important;
+                align-self: start !important;
+                margin-top: 115px !important;
+            }
+            /* Hide practice nav / results in grid */
+            .buttons-below-canvas, .results-container {
+                grid-column: 2 !important;
+                grid-row: 3 !important;
+                overflow: hidden !important;
+                max-height: 0 !important;
             }
         }
         /* Center the single Play button (Practice is hidden) */
@@ -190,6 +209,88 @@
                 margin-top: 0 !important;
                 transform: none !important;
             }
+        }
+        /* ============================================
+           LEADERBOARD: Neobrutalist style
+           ============================================ */
+        .weekly-leaderboard {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            width: 100%;
+            max-width: 280px;
+        }
+        .lb-header {
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 6px 8px;
+            border-bottom: 3px solid #000;
+            margin-bottom: 0;
+        }
+        .lb-table {
+            max-height: 340px;
+            overflow-y: auto;
+        }
+        .lb-row {
+            display: flex;
+            align-items: center;
+            padding: 2px 8px;
+            font-size: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .lb-row-first {
+            font-weight: 700;
+        }
+        .lb-row-user {
+            background: #FFF3CD;
+            font-weight: 700;
+            border-bottom: 2px solid #000;
+        }
+        .lb-rank {
+            width: 26px;
+            font-weight: 700;
+            font-size: 11px;
+            color: #666;
+            flex-shrink: 0;
+        }
+        .lb-row-first .lb-rank {
+            color: #000;
+        }
+        .lb-row-user .lb-rank {
+            color: #000;
+        }
+        .lb-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+        }
+        .lb-score {
+            font-weight: 700;
+            font-size: 12px;
+            min-width: 36px;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+        .lb-separator {
+            height: 2px;
+            background: #000;
+            margin: 2px 0;
+        }
+        .lb-empty {
+            padding: 12px 8px;
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+            font-style: italic;
+        }
+        .lb-table::-webkit-scrollbar {
+            width: 4px;
+        }
+        .lb-table::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 2px;
         }
     </style>
 </head>
@@ -305,6 +406,9 @@
 
         <!-- Button Area -->
         <div id="fixedButtonArea" class="fixed-button-area" style="visibility: hidden;"></div>
+
+        <!-- Weekly Leaderboard (Reddit only) -->
+        <div id="weeklyLeaderboard" class="weekly-leaderboard"></div>
 
         <!-- Practice Navigation -->
         <div class="buttons-below-canvas" id="buttonsContainer">
@@ -438,6 +542,7 @@
     <script src="test-interstitial.js"></script>
 
     <!-- 14. Devvit game initializer (MUST be LAST - bootstraps game with Devvit data) -->
+    <script src="devvit-leaderboard.js"></script>
     <script src="devvit-game-init.js"></script>
 
 </body>

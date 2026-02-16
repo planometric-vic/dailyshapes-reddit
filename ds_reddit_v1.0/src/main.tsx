@@ -17,6 +17,10 @@ interface InitData {
   existingProgress: string | null;
   existingScore: number | null;
   leaderboard: LeaderboardEntry[];
+  weeklyLeaderboard: LeaderboardEntry[];
+  weekKey: string;
+  userWeeklyScore: number;
+  userWeeklyRank: number;
   postTitle: string;
 }
 
@@ -69,6 +73,20 @@ function getDayOfWeek(): number {
   return melb.getDay();
 }
 
+/** Get the week key (YYMMDD of the Monday of the current week, UTC).
+ *  Competitions run Mon-Sun. This key identifies the current week. */
+function getWeekKey(): string {
+  const now = new Date();
+  const day = now.getUTCDay(); // 0=Sun, 1=Mon, ...
+  const diff = day === 0 ? 6 : day - 1; // Days since Monday
+  const monday = new Date(now);
+  monday.setUTCDate(monday.getUTCDate() - diff);
+  const yy = String(monday.getUTCFullYear()).slice(-2);
+  const mm = String(monday.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(monday.getUTCDate()).padStart(2, '0');
+  return `${yy}${mm}${dd}`;
+}
+
 // ============================================================
 // REDIS KEY HELPERS
 // ============================================================
@@ -77,8 +95,8 @@ const redisKeys = {
   shape: (dayKey: string, index: number) => `shapes:${dayKey}:${index}`,
   userScore: (dayKey: string, username: string) => `scores:${dayKey}:${username}`,
   leaderboard: (dayKey: string) => `leaderboard:${dayKey}`,
+  weeklyLeaderboard: (weekKey: string) => `weekly:${weekKey}`,
   progress: (dayKey: string, username: string) => `progress:${dayKey}:${username}`,
-  competition: (yearMonth: string) => `competition:${yearMonth}`,
   userStats: (username: string) => `stats:${username}`,
 };
 
@@ -306,6 +324,23 @@ Devvit.addCustomPostType({
             rank: idx + 1,
           }));
 
+          // Weekly leaderboard (Mon-Sun)
+          const weekKey = getWeekKey();
+          const rawWeekly = await context.redis.zRange(
+            redisKeys.weeklyLeaderboard(weekKey), 0, 19, { reverse: true, by: 'rank' }
+          );
+          const weeklyLeaderboard: LeaderboardEntry[] = rawWeekly.map((entry, idx) => ({
+            username: entry.member,
+            score: entry.score,
+            rank: idx + 1,
+          }));
+          const userWeeklyScore = await context.redis.zScore(
+            redisKeys.weeklyLeaderboard(weekKey), username
+          ) ?? 0;
+          const userWeeklyRank = await context.redis.zRank(
+            redisKeys.weeklyLeaderboard(weekKey), username
+          );
+
           context.ui.webView.postMessage('game-webview', {
             type: 'INIT_RESPONSE',
             data: {
@@ -318,6 +353,10 @@ Devvit.addCustomPostType({
               existingProgress,
               existingScore,
               leaderboard,
+              weeklyLeaderboard,
+              weekKey,
+              userWeeklyScore,
+              userWeeklyRank: userWeeklyRank !== undefined ? userWeeklyRank + 1 : -1,
               postTitle: `Daily Shapes #${dayNum}`,
             } as InitData,
           } as any);
@@ -327,26 +366,46 @@ Devvit.addCustomPostType({
         case 'SUBMIT_SCORE': {
           const { dayKey, scores, total } = msg.data;
 
+          // Store daily score
           await context.redis.set(redisKeys.userScore(dayKey, username), String(total));
           await context.redis.zAdd(redisKeys.leaderboard(dayKey), { member: username, score: total });
 
-          const yearMonth = dayKey.substring(0, 4);
-          const currentMonthly = await context.redis.zScore(redisKeys.competition(yearMonth), username);
-          await context.redis.zAdd(redisKeys.competition(yearMonth), {
+          // Update weekly leaderboard (accumulate scores Mon-Sun)
+          const weekKey = getWeekKey();
+          const currentWeekly = await context.redis.zScore(
+            redisKeys.weeklyLeaderboard(weekKey), username
+          ) ?? 0;
+          const newWeeklyTotal = currentWeekly + total;
+          await context.redis.zAdd(redisKeys.weeklyLeaderboard(weekKey), {
             member: username,
-            score: (currentMonthly ?? 0) + total,
+            score: newWeeklyTotal,
           });
 
+          // Update user stats
           const statsKey = redisKeys.userStats(username);
           await context.redis.hIncrBy(statsKey, 'totalGames', 1);
           await context.redis.hIncrBy(statsKey, 'totalScore', total);
 
-          const rank = await context.redis.zRank(redisKeys.leaderboard(dayKey), username);
-          const leaderboardSize = await context.redis.zCard(redisKeys.leaderboard(dayKey));
+          // Get updated weekly leaderboard to send back
+          const rawWeekly = await context.redis.zRange(
+            redisKeys.weeklyLeaderboard(weekKey), 0, 19, { reverse: true, by: 'rank' }
+          );
+          const weeklyLeaderboard: LeaderboardEntry[] = rawWeekly.map((entry, idx) => ({
+            username: entry.member,
+            score: entry.score,
+            rank: idx + 1,
+          }));
+          const userWeeklyRank = await context.redis.zRank(
+            redisKeys.weeklyLeaderboard(weekKey), username
+          );
 
           context.ui.webView.postMessage('game-webview', {
             type: 'SCORE_SAVED',
-            data: { rank: rank !== undefined ? rank + 1 : -1, total: leaderboardSize },
+            data: {
+              weeklyLeaderboard,
+              userWeeklyScore: newWeeklyTotal,
+              userWeeklyRank: userWeeklyRank !== undefined ? userWeeklyRank + 1 : -1,
+            },
           } as any);
           break;
         }
@@ -365,6 +424,35 @@ Devvit.addCustomPostType({
           context.ui.webView.postMessage('game-webview', {
             type: 'LEADERBOARD_RESPONSE',
             data: leaderboard,
+          } as any);
+          break;
+        }
+
+        case 'GET_WEEKLY_LEADERBOARD': {
+          const weekKey = getWeekKey();
+          const rawWeekly = await context.redis.zRange(
+            redisKeys.weeklyLeaderboard(weekKey), 0, 19, { reverse: true, by: 'rank' }
+          );
+          const weeklyLb: LeaderboardEntry[] = rawWeekly.map((entry, idx) => ({
+            username: entry.member,
+            score: entry.score,
+            rank: idx + 1,
+          }));
+          const userWScore = await context.redis.zScore(
+            redisKeys.weeklyLeaderboard(weekKey), username
+          ) ?? 0;
+          const userWRank = await context.redis.zRank(
+            redisKeys.weeklyLeaderboard(weekKey), username
+          );
+
+          context.ui.webView.postMessage('game-webview', {
+            type: 'WEEKLY_LEADERBOARD_RESPONSE',
+            data: {
+              weeklyLeaderboard: weeklyLb,
+              userWeeklyScore: userWScore,
+              userWeeklyRank: userWRank !== undefined ? userWRank + 1 : -1,
+              weekKey,
+            },
           } as any);
           break;
         }

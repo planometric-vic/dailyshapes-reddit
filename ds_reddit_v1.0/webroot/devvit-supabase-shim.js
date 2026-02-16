@@ -86,8 +86,30 @@ window.AuthService = {
         return this._loggedIn;
     },
 
-    // Scores go through DevvitBridge, not Supabase — no-op here
-    async saveDailyScore() { return { success: true }; },
+    // Submit scores via DevvitBridge to Reddit Redis
+    async saveDailyScore(dateString, shapeScores, mechanicName) {
+        if (!window.DevvitBridge || !window.DevvitBridge.initData) {
+            console.warn('[Devvit Shim] Cannot submit score - bridge not ready');
+            return { success: false };
+        }
+        const dayKey = window.DevvitBridge.initData.dayKey;
+        let total = 0;
+        for (let i = 1; i <= 3; i++) {
+            const shape = shapeScores && shapeScores['shape' + i];
+            if (shape) {
+                total += (shape.attempt1 || 0) + (shape.attempt2 || 0);
+            }
+        }
+        total = Math.round(total);
+        console.log('[Devvit Shim] Submitting score:', { dayKey, total, shapeScores });
+        try {
+            await window.DevvitBridge.submitScore(dayKey, shapeScores, total);
+            return { success: true };
+        } catch (e) {
+            console.error('[Devvit Shim] Score submission failed:', e);
+            return { success: false };
+        }
+    },
 
     // Called by game to track events - no-op on Reddit
     trackPerfectCut() {},

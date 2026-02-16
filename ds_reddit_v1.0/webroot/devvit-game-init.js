@@ -203,6 +203,11 @@
         window.checkIfUserHasPlayedToday = async function() { return false; };
         window.syncServerCompletionState = async function() {};
 
+        // Stub countdown functions - no daily countdown in Reddit (new post each day).
+        // CSS hides the UI, but the JS intervals still fire. Replace with no-ops.
+        window.startDailyCountdown = function() { return function() {}; };
+        window.startNextGameCountdown = function() {};
+
         // local-competition-demo.js overwrites CompetitionManager on DOMContentLoaded,
         // removing parseJoinLink/clearJoinLink. Patch it back after a delay.
         setTimeout(function() {

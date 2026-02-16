@@ -52,6 +52,10 @@ const DevvitBridge = {
             case 'SHAPES_RESPONSE':
                 window.dispatchEvent(new CustomEvent('devvit-shapes', { detail: msg.data }));
                 break;
+
+            case 'WEEKLY_LEADERBOARD_RESPONSE':
+                window.dispatchEvent(new CustomEvent('devvit-weekly-leaderboard', { detail: msg.data }));
+                break;
         }
 
         // Resolve any pending callbacks
@@ -99,6 +103,11 @@ const DevvitBridge = {
     getProgress(dayKey) {
         this.postMessage({ type: 'GET_PROGRESS', data: { dayKey } });
         return this.waitFor('PROGRESS_RESPONSE');
+    },
+
+    getWeeklyLeaderboard() {
+        this.postMessage({ type: 'GET_WEEKLY_LEADERBOARD' });
+        return this.waitFor('WEEKLY_LEADERBOARD_RESPONSE');
     }
 };
 

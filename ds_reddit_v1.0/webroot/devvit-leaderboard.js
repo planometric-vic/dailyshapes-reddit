@@ -1,0 +1,127 @@
+/**
+ * Weekly Leaderboard UI for Daily Shapes (Reddit/Devvit)
+ * Neobrutalist style - bold borders, stark typography, minimal color
+ */
+
+(function() {
+    var container = document.getElementById('weeklyLeaderboard');
+    if (!container) return;
+
+    var currentUsername = '';
+    var leaderboardData = [];
+    var userScore = 0;
+    var userRank = -1;
+
+    function render() {
+        var html = '<div class="lb-header">THIS WEEK</div>';
+        html += '<div class="lb-table">';
+
+        if (leaderboardData.length === 0) {
+            html += '<div class="lb-empty">No scores yet</div>';
+        } else {
+            for (var i = 0; i < leaderboardData.length; i++) {
+                var entry = leaderboardData[i];
+                var isUser = entry.username === currentUsername;
+                var cls = 'lb-row' + (isUser ? ' lb-row-user' : '') + (i === 0 ? ' lb-row-first' : '');
+                html += '<div class="' + cls + '">';
+                html += '<span class="lb-rank">' + entry.rank + '</span>';
+                html += '<span class="lb-name">' + escapeHtml(truncName(entry.username)) + '</span>';
+                html += '<span class="lb-score">' + entry.score + '</span>';
+                html += '</div>';
+            }
+        }
+
+        html += '</div>';
+
+        // Show user's row at bottom if not in top 20
+        var userInTop = false;
+        for (var j = 0; j < leaderboardData.length; j++) {
+            if (leaderboardData[j].username === currentUsername) {
+                userInTop = true;
+                break;
+            }
+        }
+
+        if (!userInTop && currentUsername && userRank > 0) {
+            html += '<div class="lb-separator"></div>';
+            html += '<div class="lb-row lb-row-user">';
+            html += '<span class="lb-rank">' + userRank + '</span>';
+            html += '<span class="lb-name">' + escapeHtml(truncName(currentUsername)) + '</span>';
+            html += '<span class="lb-score">' + userScore + '</span>';
+            html += '</div>';
+        } else if (!userInTop && currentUsername) {
+            html += '<div class="lb-separator"></div>';
+            html += '<div class="lb-row lb-row-user lb-row-norank">';
+            html += '<span class="lb-rank">-</span>';
+            html += '<span class="lb-name">' + escapeHtml(truncName(currentUsername)) + '</span>';
+            html += '<span class="lb-score">0</span>';
+            html += '</div>';
+        }
+
+        container.innerHTML = html;
+    }
+
+    function truncName(name) {
+        return name.length > 14 ? name.substring(0, 13) + '\u2026' : name;
+    }
+
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // Public API
+    window.WeeklyLeaderboard = {
+        update: function(data) {
+            if (data.username) currentUsername = data.username;
+            if (data.weeklyLeaderboard) leaderboardData = data.weeklyLeaderboard;
+            if (data.userWeeklyScore !== undefined) userScore = data.userWeeklyScore;
+            if (data.userWeeklyRank !== undefined) userRank = data.userWeeklyRank;
+            render();
+        },
+        refresh: function() {
+            if (window.DevvitBridge) {
+                window.DevvitBridge.getWeeklyLeaderboard().then(function(data) {
+                    if (data) {
+                        leaderboardData = data.weeklyLeaderboard || [];
+                        userScore = data.userWeeklyScore || 0;
+                        userRank = data.userWeeklyRank || -1;
+                        render();
+                    }
+                });
+            }
+        }
+    };
+
+    // Listen for init data
+    window.addEventListener('devvit-init', function(e) {
+        var d = e.detail;
+        currentUsername = d.username || '';
+        leaderboardData = d.weeklyLeaderboard || [];
+        userScore = d.userWeeklyScore || 0;
+        userRank = d.userWeeklyRank || -1;
+        render();
+    });
+
+    // Listen for score saved (includes updated leaderboard)
+    window.addEventListener('devvit-score-saved', function(e) {
+        var d = e.detail;
+        if (d.weeklyLeaderboard) leaderboardData = d.weeklyLeaderboard;
+        if (d.userWeeklyScore !== undefined) userScore = d.userWeeklyScore;
+        if (d.userWeeklyRank !== undefined) userRank = d.userWeeklyRank;
+        render();
+    });
+
+    // Listen for explicit weekly leaderboard response
+    window.addEventListener('devvit-weekly-leaderboard', function(e) {
+        var d = e.detail;
+        if (d.weeklyLeaderboard) leaderboardData = d.weeklyLeaderboard;
+        if (d.userWeeklyScore !== undefined) userScore = d.userWeeklyScore;
+        if (d.userWeeklyRank !== undefined) userRank = d.userWeeklyRank;
+        render();
+    });
+
+    // Initial empty render
+    render();
+})();
