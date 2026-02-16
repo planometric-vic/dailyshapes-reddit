@@ -69,21 +69,8 @@
     <div class="app-container">
         <!-- Header -->
         <div class="main-header">
-            <h1 id="dateTitle" class="app-title" onclick="if (window.handleOption2Click) window.handleOption2Click()" role="button" tabindex="0"><strong>Daily Shapes</strong> <span class="date-light"></span></h1>
-            <script>
-                // Set the current date immediately
-                (function() {
-                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                    const now = new Date();
-                    const month = months[now.getMonth()];
-                    const day = now.getDate();
-                    const dateSpan = document.querySelector('#dateTitle .date-light');
-                    if (dateSpan) {
-                        dateSpan.textContent = month + ' ' + day;
-                    }
-                })();
-            </script>
+            <h1 id="dateTitle" class="app-title" role="button" tabindex="0"><strong>Daily Shapes</strong> <span class="date-light"></span></h1>
+            <script src="date-display.js"></script>
             <div class="animated-menu-container">
                 <button id="animatedMenuButton" class="animated-menu-button">
                     <svg id="hamburgerIcon" class="menu-icon hamburger-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round">
@@ -115,217 +102,7 @@
             <canvas id="geoCanvas" width="380" height="380"></canvas>
 
             <!-- Loading animation (simplified - no KaTeX dependency) -->
-            <script>
-                (function() {
-                    const canvas = document.getElementById('geoCanvas');
-                    const canvasSize = 380;
-
-                    canvas.width = canvasSize;
-                    canvas.height = canvasSize;
-                    canvas.style.width = canvasSize + 'px';
-                    canvas.style.height = canvasSize + 'px';
-
-                    console.log('[Devvit] Canvas initialized to ' + canvasSize + 'x' + canvasSize);
-
-                    const ctx = canvas.getContext('2d');
-                    ctx.imageSmoothingEnabled = false;
-
-                    // Force canvas container sizing
-                    const container = canvas.parentElement;
-                    if (container && container.classList.contains('canvas-container')) {
-                        const resizeContainer = () => {
-                            if (window.completionViewActive) return;
-                            const currentCanvasSize = 380;
-                            container.classList.remove('canvas-container');
-                            container.classList.add('canvas-container-fixed');
-                            container.style.cssText = `
-                                position: relative;
-                                width: ${currentCanvasSize}px !important;
-                                height: ${currentCanvasSize}px !important;
-                                min-width: ${currentCanvasSize}px !important;
-                                max-width: ${currentCanvasSize}px !important;
-                                display: flex;
-                                justify-content: center;
-                                align-items: center;
-                                margin-left: auto !important;
-                                margin-right: auto !important;
-                                overflow: visible !important;
-                            `;
-                        };
-                        resizeContainer();
-                        window.addEventListener('resize', resizeContainer);
-                    }
-
-                    // Loading animation
-                    let loadingAnimationActive = true;
-                    let loadingAnimationFrame = null;
-                    let rotationAngle = 0;
-                    let scalePhase = 0;
-                    let loadingStartTime = Date.now();
-                    let fadeOutOpacity = 1;
-                    let isFadingOut = false;
-
-                    const loadingMessages = [
-                        "Give us this day our Daily Shapes!",
-                        "Things are taking Shape!",
-                        "Shape up or ship out!",
-                        "What do we want? SHAPES!",
-                        "Let there be Shapes!"
-                    ];
-                    const loadingMessage = loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
-
-                    const shapes = ['hexagon', 'circle', 'square', 'triangle'];
-                    const shapeToRender = shapes[Math.floor(Math.random() * shapes.length)];
-
-                    function drawShape(ctx, shape, size) {
-                        ctx.beginPath();
-                        switch(shape) {
-                            case 'square':
-                                const half = size / 2;
-                                ctx.moveTo(-half, -half);
-                                ctx.lineTo(half, -half);
-                                ctx.lineTo(half, half);
-                                ctx.lineTo(-half, half);
-                                ctx.closePath();
-                                break;
-                            case 'triangle':
-                                const height = size * Math.sqrt(3);
-                                const sideLength = size * 2;
-                                ctx.moveTo(0, -height * 0.5);
-                                ctx.lineTo(sideLength * 0.5, height * 0.5);
-                                ctx.lineTo(-sideLength * 0.5, height * 0.5);
-                                ctx.closePath();
-                                break;
-                            case 'circle':
-                                ctx.arc(0, 0, size, 0, Math.PI * 2);
-                                break;
-                            case 'hexagon':
-                                const angleStep = (Math.PI * 2) / 6;
-                                for (let i = 0; i <= 6; i++) {
-                                    const angle = i * angleStep - Math.PI / 2;
-                                    const x = size * Math.cos(angle);
-                                    const y = size * Math.sin(angle);
-                                    if (i === 0) ctx.moveTo(x, y);
-                                    else ctx.lineTo(x, y);
-                                }
-                                break;
-                        }
-                        ctx.stroke();
-                    }
-
-                    function animateLoading() {
-                        if (!loadingAnimationActive && !isFadingOut) return;
-
-                        const logicalSize = 380;
-                        ctx.clearRect(0, 0, logicalSize, logicalSize);
-
-                        const centerX = logicalSize / 2;
-                        const centerY = logicalSize / 2 - 20;
-                        const scale = 0.8 + Math.sin(scalePhase) * 0.2;
-                        const baseSize = logicalSize * 0.08;
-                        const size = baseSize * scale;
-
-                        ctx.save();
-                        ctx.translate(centerX, centerY);
-                        ctx.rotate(rotationAngle);
-                        ctx.globalAlpha = fadeOutOpacity;
-                        ctx.strokeStyle = '#000';
-                        ctx.lineWidth = 2.5;
-                        ctx.lineJoin = 'miter';
-
-                        drawShape(ctx, shapeToRender, size);
-
-                        ctx.restore();
-
-                        rotationAngle += 0.03;
-                        scalePhase += 0.05;
-
-                        if (isFadingOut) {
-                            fadeOutOpacity -= 0.04;
-                            const overlay = document.getElementById('loading-text-overlay');
-                            if (overlay) overlay.style.opacity = fadeOutOpacity;
-
-                            if (fadeOutOpacity <= 0) {
-                                loadingAnimationActive = false;
-                                isFadingOut = false;
-                                if (overlay) overlay.remove();
-                                ctx.clearRect(0, 0, logicalSize, logicalSize);
-
-                                const welcomeOverlay = document.getElementById('welcomeOverlay');
-                                const isWelcomeVisible = welcomeOverlay && welcomeOverlay.style.visibility === 'visible';
-                                const hasActiveGame = window.isRestoringGameState ||
-                                    (window.gameState && window.gameState !== 'initial') ||
-                                    (window.currentShapeNumber && window.currentShapeNumber > 0);
-
-                                if (!isWelcomeVisible && !hasActiveGame) {
-                                    canvas.style.display = 'none';
-                                } else if (hasActiveGame) {
-                                    canvas.style.display = 'block';
-                                }
-
-                                if (window._loadingAnimationCallback) {
-                                    const callback = window._loadingAnimationCallback;
-                                    window._loadingAnimationCallback = null;
-                                    callback();
-                                }
-                                return;
-                            }
-                        }
-                        loadingAnimationFrame = requestAnimationFrame(animateLoading);
-                    }
-
-                    // Create loading text overlay
-                    const loadingTextOverlay = document.createElement('div');
-                    loadingTextOverlay.id = 'loading-text-overlay';
-                    loadingTextOverlay.style.cssText = `
-                        position: absolute !important;
-                        top: 50% !important;
-                        left: 50% !important;
-                        transform: translate(-50%, -50%) !important;
-                        margin-top: 50px !important;
-                        font-family: Georgia, "Times New Roman", Times, serif !important;
-                        font-size: 20px !important;
-                        color: #000 !important;
-                        text-align: center !important;
-                        pointer-events: none !important;
-                        z-index: 100 !important;
-                        opacity: 1 !important;
-                        white-space: nowrap !important;
-                        max-width: 90% !important;
-                        overflow: hidden !important;
-                        text-overflow: ellipsis !important;
-                        line-height: 1.3 !important;
-                        font-style: italic !important;
-                        font-weight: normal !important;
-                    `;
-                    loadingTextOverlay.textContent = loadingMessage;
-
-                    const loadingContainer = canvas.parentElement;
-                    loadingContainer.style.position = 'relative';
-                    loadingContainer.appendChild(loadingTextOverlay);
-
-                    animateLoading();
-
-                    window.stopImmediateLoadingAnimation = function(callback) {
-                        const elapsed = Date.now() - loadingStartTime;
-                        const minTime = 2000;
-
-                        if (callback && !window._loadingAnimationCallback) {
-                            window._loadingAnimationCallback = callback;
-                        }
-
-                        if (elapsed < minTime) {
-                            setTimeout(() => {
-                                loadingAnimationActive = false;
-                                isFadingOut = true;
-                            }, minTime - elapsed);
-                        } else {
-                            loadingAnimationActive = false;
-                            isFadingOut = true;
-                        }
-                    };
-                })();
-            </script>
+            <script src="loading-animation.js"></script>
 
             <!-- Practice Mode indicator -->
             <div id="practiceModeIndicator" style="display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.9); border: 1px solid black; padding: 3px 8px; font-size: 12px; font-weight: bold; border-radius: 3px; z-index: 10;">Practice Mode</div>
@@ -408,7 +185,7 @@
         <div class="stats-window">
             <div class="stats-header">
                 Daily Stats
-                <button class="stats-close" onclick="if(window.closeStatsWindow) closeStatsWindow()">&times;</button>
+                <button class="stats-close" id="statsCloseBtn">&times;</button>
             </div>
             <div class="stats-content" id="statsContent"></div>
         </div>
@@ -421,7 +198,7 @@
             <div id="competitionMainView">
                 <div class="success-modal-header">
                     <h2>Leaderboard</h2>
-                    <button class="success-modal-close" onclick="if(window.closeCompetitionModal) closeCompetitionModal()">&times;</button>
+                    <button class="success-modal-close competition-close-btn">&times;</button>
                 </div>
                 <div class="success-modal-body"></div>
             </div>
@@ -431,7 +208,7 @@
             <div id="competitionLeaderboardView" style="display: none;">
                 <div class="success-modal-header">
                     <h2 id="leaderboardCompetitionTitle">Leaderboard</h2>
-                    <button class="success-modal-close" onclick="if(window.closeCompetitionModal) closeCompetitionModal()">&times;</button>
+                    <button class="success-modal-close competition-close-btn">&times;</button>
                 </div>
                 <div class="success-modal-body">
                     <div id="competitionLeaderboardContainer"></div>
@@ -478,55 +255,7 @@
     <script src="devvit-supabase-shim.js"></script>
 
     <!-- 3. Stubs for missing competition/auth globals -->
-    <script>
-        // Competition system stubs - these functions are referenced by main.js and other files
-        // but the actual competition system files (competitions.js, global-competition.js, etc.)
-        // are not loaded in the Reddit port.
-        window.CustomCompetitionManager = window.CustomCompetitionManager || {
-            initialize: function() {},
-            isInitialized: function() { return false; },
-            getActiveCompetitions: function() { return Promise.resolve([]); },
-            submitScore: function() { return Promise.resolve(); },
-        };
-        window.CompetitionSystem = window.CompetitionSystem || {
-            initialize: function() {},
-            submitScore: function() {},
-            getLeaderboard: function() { return Promise.resolve([]); },
-        };
-        window.GlobalCompetition = window.GlobalCompetition || {
-            submit: function() {},
-            getLeaderboard: function() { return Promise.resolve([]); },
-        };
-        // Auth functions that main.js may call
-        window.openAuthModal = window.openAuthModal || function() { console.log('[Devvit] Auth not needed on Reddit'); };
-        window.closeAuthModal = window.closeAuthModal || function() {};
-        window.handleSignup = window.handleSignup || function() {};
-        window.handleLogout = window.handleLogout || function() {};
-        window.showUserStats = window.showUserStats || function() {};
-        window.showChangePassword = window.showChangePassword || function() {};
-        window.closeUserStatsModal = window.closeUserStatsModal || function() {};
-        window.closeChangePasswordModal = window.closeChangePasswordModal || function() {};
-        window.closeForgotPasswordModal = window.closeForgotPasswordModal || function() {};
-        window.closeRecoveryCodeModal = window.closeRecoveryCodeModal || function() {};
-        window.closeSuccessModal = window.closeSuccessModal || function() {};
-        window.closeCompetitionPromptModal = window.closeCompetitionPromptModal || function() {};
-        window.openCreateCompetition = window.openCreateCompetition || function() {};
-        window.showActiveCompetitions = window.showActiveCompetitions || function() {};
-        window.showExpiredCompetitions = window.showExpiredCompetitions || function() {};
-        window.showCreateCompetition = window.showCreateCompetition || function() {};
-        window.showCompetitionMain = window.showCompetitionMain || function() {};
-        window.closeCompetitionModal = window.closeCompetitionModal || function() {};
-        window.closeJoinCompetitionModal = window.closeJoinCompetitionModal || function() {};
-        window.continueToOriginalDestination = window.continueToOriginalDestination || function() {};
-        window.closeStatsWindow = window.closeStatsWindow || function() {};
-        window.copyRecoveryCode = window.copyRecoveryCode || function() {};
-        // Supabase-dependent functions that should be no-ops
-        window.loadSupabaseShape = window.loadSupabaseShape || function() { return Promise.resolve(null); };
-        window.initializeSupabase = window.initializeSupabase || function() { return Promise.resolve(); };
-        window.checkSupabaseReady = window.checkSupabaseReady || function() { return true; };
-        // katex stub (loading animation references it)
-        window.katex = window.katex || { render: function() {} };
-    </script>
+    <script src="devvit-stubs.js"></script>
 
     <!-- 4. Refresh protection -->
     <script src="simple-refresh.js"></script>

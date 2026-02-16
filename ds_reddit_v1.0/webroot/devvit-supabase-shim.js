@@ -58,21 +58,36 @@ window.SupabaseConfig.client = window.supabaseClient;
 
 window.AuthService = {
     currentUser: null,
-    isLoggedIn: false,
+    _loggedIn: false,
     _username: 'anonymous',
+    initialized: false,
+    isGuest: true,
 
     async initialize() {
         // Will be populated when Devvit init data arrives
+        this.initialized = true;
         return true;
+    },
+
+    // main.js calls isLoggedIn() as a function
+    isLoggedIn() {
+        return this._loggedIn;
     },
 
     getUser() {
         return this.currentUser;
     },
 
-    isAuthenticated() {
-        return this.isLoggedIn;
+    getCurrentUser() {
+        return this.currentUser;
     },
+
+    isAuthenticated() {
+        return this._loggedIn;
+    },
+
+    // Scores go through DevvitBridge, not Supabase — no-op here
+    async saveDailyScore() { return { success: true }; },
 
     // Called by game to track events - no-op on Reddit
     trackPerfectCut() {},
@@ -82,7 +97,9 @@ window.AuthService = {
     // Populate from Devvit init data
     _setFromDevvit(initData) {
         this._username = initData.username || 'anonymous';
-        this.isLoggedIn = true;
+        this._loggedIn = true;
+        this.initialized = true;
+        this.isGuest = false;
         this.currentUser = {
             id: initData.username, // Reddit username as ID
             username: initData.username,
