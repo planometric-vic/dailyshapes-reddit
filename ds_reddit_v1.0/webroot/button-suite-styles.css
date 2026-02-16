@@ -1,0 +1,346 @@
+/* Button Suite Styles for Daily Shapes v4.0 */
+/* Modern, colorful button suite running along the top of the screen */
+
+/* ================================
+   BUTTON SUITE LAYOUT
+   ================================ */
+
+.button-suite {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-bottom: 2px solid #000;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.suite-button {
+    flex: 1;
+    max-width: 150px;
+    min-width: 80px;
+    height: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border: 2px solid #000;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 600;
+    font-size: 12px;
+    position: relative;
+    overflow: hidden;
+    background: white;
+}
+
+.suite-button svg {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.2s ease;
+}
+
+.suite-button .button-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ================================
+   BUTTON COLOR THEMES
+   ================================ */
+
+/* Auth Button - Blue */
+.suite-button.auth-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #5a67d8;
+}
+
+.suite-button.auth-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.suite-button.auth-btn:active {
+    transform: translateY(0);
+}
+
+/* Stats Button - Green */
+.suite-button.stats-btn {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+    border-color: #10b981;
+}
+
+.suite-button.stats-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.suite-button.stats-btn:active {
+    transform: translateY(0);
+}
+
+/* Archive Button - Orange */
+.suite-button.archive-btn {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    color: #333;
+    border-color: #f59e0b;
+}
+
+.suite-button.archive-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+}
+
+.suite-button.archive-btn:active {
+    transform: translateY(0);
+}
+
+/* Competition Button - Red/Pink */
+.suite-button.comp-btn {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border-color: #ec4899;
+}
+
+.suite-button.comp-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(236, 72, 153, 0.4);
+}
+
+.suite-button.comp-btn:active {
+    transform: translateY(0);
+}
+
+/* ================================
+   BUTTON STATES
+   ================================ */
+
+/* Hidden buttons maintain space */
+.suite-button.hidden {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Disabled state */
+.suite-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Active/Selected state */
+.suite-button.active {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Button hover effects */
+.suite-button:hover svg {
+    transform: scale(1.1);
+}
+
+/* ================================
+   RESPONSIVE DESIGN
+   ================================ */
+
+/* Mobile adjustments */
+@media screen and (max-width: 767px) {
+    .button-suite {
+        padding: 8px 4px;
+        gap: 6px;
+    }
+    
+    .suite-button {
+        height: 50px;
+        min-width: 60px;
+        max-width: 100px;
+        border-width: 1.5px;
+        border-radius: 6px;
+    }
+    
+    .suite-button svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .suite-button .button-label {
+        font-size: 9px;
+        letter-spacing: 0.3px;
+    }
+}
+
+/* Small mobile devices */
+@media screen and (max-width: 375px) {
+    .button-suite {
+        flex-wrap: wrap;
+        padding: 6px;
+    }
+    
+    .suite-button {
+        flex: 1 1 45%;
+        max-width: none;
+        height: 45px;
+    }
+    
+    .suite-button svg {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .suite-button .button-label {
+        display: none; /* Hide labels on very small screens */
+    }
+}
+
+/* Tablet adjustments */
+@media screen and (min-width: 768px) and (max-width: 1023px) {
+    .button-suite {
+        padding: 14px;
+        gap: 10px;
+    }
+    
+    .suite-button {
+        height: 65px;
+        max-width: 160px;
+    }
+    
+    .suite-button svg {
+        width: 26px;
+        height: 26px;
+    }
+    
+    .suite-button .button-label {
+        font-size: 12px;
+    }
+}
+
+/* Desktop adjustments */
+@media screen and (min-width: 1024px) {
+    .button-suite {
+        padding: 16px;
+        gap: 14px;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .suite-button {
+        height: 70px;
+        max-width: 170px;
+    }
+    
+    .suite-button svg {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .suite-button .button-label {
+        font-size: 13px;
+    }
+}
+
+/* ================================
+   HEADER ADJUSTMENTS
+   ================================ */
+
+.main-header {
+    background: white;
+    border-bottom: 2px solid #000;
+    position: relative;
+    z-index: 100;
+}
+
+.header-top-row {
+    padding: 12px 20px;
+    text-align: center;
+    border-bottom: none; /* Remove old border since button-suite has it */
+}
+
+.header-top-row h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #333;
+}
+
+/* Game info container adjustments */
+.game-info-container {
+    justify-content: center;
+    padding: 10px 20px;
+}
+
+.mechanic-info {
+    text-align: center;
+}
+
+/* ================================
+   COMPETITION DROPDOWN ADJUSTMENT
+   ================================ */
+
+.button-suite {
+    position: relative;
+}
+
+#compButtonDropdown {
+    position: absolute;
+    top: calc(100% + 5px);
+    right: 10px;
+    background: white;
+    border: 2px solid #000;
+    border-radius: 6px;
+    box-shadow: 4px 4px 0px #000;
+    min-width: 200px;
+    z-index: 1000;
+}
+
+@media screen and (max-width: 767px) {
+    #compButtonDropdown {
+        right: 5px;
+        min-width: 180px;
+    }
+}
+
+/* ================================
+   ANIMATIONS
+   ================================ */
+
+@keyframes buttonPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+    }
+}
+
+/* Add pulse animation to auth button when not logged in */
+.suite-button.auth-btn.pulse {
+    animation: buttonPulse 2s infinite;
+}
+
+/* ================================
+   DARK MODE SUPPORT (Future)
+   ================================ */
+
+@media (prefers-color-scheme: dark) {
+    /* Dark mode styles can be added here if needed */
+}
+
+/* ================================
+   PRINT STYLES
+   ================================ */
+
+@media print {
+    .button-suite {
+        display: none !important;
+    }
+}

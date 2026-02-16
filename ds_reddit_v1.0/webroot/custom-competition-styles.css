@@ -1,0 +1,1084 @@
+/* Custom Competition Styles for Daily Shapes v4.0 */
+
+/* ================================
+   COMPETITION MODAL STYLES
+   ================================ */
+
+.competition-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10003;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.competition-modal-content {
+    background: white;
+    border-radius: 12px;
+    border: 2px solid #000;
+    width: 95%;
+    max-width: 600px;
+    height: 90vh;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease-out;
+    overflow: hidden !important;
+    touch-action: none;
+}
+
+/* Desktop fullscreen: taller container for Past Competitions and Back button */
+/* Smaller laptop screens - taller modal without scroll */
+@media screen and (min-width: 701px) and (max-width: 768px) {
+    html body .competition-modal-content,
+    html body #competitionModal .success-modal-content,
+    html body div#competitionModal div.success-modal-content {
+        max-height: 700px !important;
+        height: auto !important;
+        min-height: 550px !important;
+    }
+
+    html body #competitionModal .success-modal-body,
+    html body #competitionModal div.success-modal-body,
+    html body div#competitionModal div.success-modal-body,
+    html body #competitionActiveView .success-modal-body,
+    html body #competitionExpiredView .success-modal-body {
+        max-height: none !important;
+        height: auto !important;
+        overflow-y: visible !important;
+    }
+}
+
+/* Half-screen desktop - taller modal without scroll */
+@media screen and (min-width: 769px) and (max-width: 1199px) {
+    html body .competition-modal-content,
+    html body #competitionModal .success-modal-content,
+    html body div#competitionModal div.success-modal-content {
+        max-height: 750px !important;
+        height: auto !important;
+        min-height: 650px !important;
+    }
+
+    html body #competitionModal .success-modal-body,
+    html body #competitionModal div.success-modal-body,
+    html body div#competitionModal div.success-modal-body,
+    html body #competitionActiveView .success-modal-body,
+    html body #competitionExpiredView .success-modal-body {
+        max-height: none !important;
+        height: auto !important;
+        overflow-y: visible !important;
+    }
+}
+
+/* Full-screen desktop - fixed height with scroll */
+@media screen and (min-width: 1200px) {
+    .competition-modal-content,
+    #competitionModal .success-modal-content {
+        max-height: 700px !important;
+        height: 700px !important;
+    }
+
+    #competitionModal .success-modal-body {
+        max-height: calc(700px - 74px) !important;
+        overflow-y: visible !important;
+    }
+}
+
+/* Responsive height adjustments */
+@media screen and (max-height: 700px) {
+    .competition-modal-content {
+        max-height: 80vh !important;
+    }
+}
+
+@media screen and (max-height: 600px) {
+    .competition-modal-content {
+        max-height: 75vh !important;
+    }
+
+    .competition-modal-header {
+        padding: 8px 10px !important;
+    }
+
+    .competition-modal-header h2 {
+        font-size: 1rem !important;
+    }
+
+    .competition-modal-body {
+        padding: 10px !important;
+    }
+}
+
+@media screen and (max-height: 580px) {
+    .competition-modal-content {
+        max-height: 440px !important;
+    }
+
+    .competition-main-buttons {
+        gap: 8px !important;
+    }
+
+    .competition-primary-btn {
+        padding: 10px !important;
+        font-size: 0.9rem !important;
+    }
+
+    .empty-state-icon {
+        font-size: 1.8rem !important;
+    }
+
+    .empty-state-text {
+        font-size: 0.85rem !important;
+        line-height: 1.3 !important;
+    }
+}
+
+.competition-management-content {
+    max-width: 800px;
+}
+
+.competition-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 2px solid #000;
+    background: #C0D6DF !important;
+    border-radius: 15px 15px 0 0;
+}
+
+.competition-modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: black !important;
+    text-align: center;
+    flex: 1;
+}
+
+.competition-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.competition-modal-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.competition-modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden !important;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ================================
+   COMPETITION BUTTON DROPDOWN
+   ================================ */
+
+.comp-button-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 2px solid #000;
+    border-radius: 6px;
+    box-shadow: 4px 4px 0px #000;
+    min-width: 200px;
+    z-index: 1000;
+    margin-top: 5px;
+}
+
+.comp-button-dropdown .dropdown-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+.comp-button-dropdown .dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.comp-button-dropdown .dropdown-item:hover {
+    background: #f5f5f5;
+}
+
+/* ================================
+   FORM STYLES
+   ================================ */
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #333;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border-color 0.2s;
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #6496ff;
+    box-shadow: 0 0 0 3px rgba(100, 150, 255, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+    max-height: 120px;
+}
+
+.date-inputs-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.helper-text {
+    font-size: 0.875rem;
+    color: #666;
+    margin-top: 4px;
+}
+
+.validation-message {
+    margin-top: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.validation-message.valid {
+    color: #4CAF50;
+}
+
+.validation-message.invalid {
+    color: #f44336;
+}
+
+.validation-message.checking {
+    color: #666;
+}
+
+/* Checkbox styling */
+.checkbox-label {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-weight: 500 !important;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: auto !important;
+    margin: 0;
+}
+
+/* ================================
+   COMPETITION PREVIEW
+   ================================ */
+
+.competition-preview {
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 10px;
+}
+
+.competition-preview h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 1rem;
+}
+
+.preview-content {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.preview-item {
+    font-size: 0.875rem;
+}
+
+.preview-item strong {
+    color: #333;
+}
+
+/* ================================
+   FORM ACTIONS
+   ================================ */
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.cancel-btn,
+.create-btn {
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid;
+}
+
+.cancel-btn {
+    background: white;
+    color: #666;
+    border-color: #ddd;
+}
+
+.cancel-btn:hover {
+    background: #f5f5f5;
+    border-color: #999;
+}
+
+.create-btn {
+    background: #E0E0E0;
+    color: #333;
+    border-color: #E0E0E0;
+}
+
+.create-btn:hover:not(:disabled) {
+    background: #D0D0D0;
+    border-color: #D0D0D0;
+    transform: translateY(-2px);
+}
+
+.create-btn:disabled {
+    background: #ccc;
+    color: #999;
+    border-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ================================
+   COMPETITION TABS
+   ================================ */
+
+.competition-tabs {
+    display: flex;
+    border-bottom: 2px solid #000;
+    margin-bottom: 20px;
+}
+
+.competition-tab {
+    flex: 1;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border: none;
+    border-right: 2px solid #000;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.competition-tab:last-child {
+    border-right: none;
+}
+
+.competition-tab:hover {
+    background: #e9ecef;
+}
+
+.competition-tab.active {
+    background: white;
+    color: #6496ff;
+}
+
+.tab-count {
+    background: #6496ff;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    min-width: 16px;
+    text-align: center;
+}
+
+.competition-tab.active .tab-count {
+    background: #333;
+}
+
+.competition-tab-panel {
+    display: none;
+}
+
+.competition-tab-panel.active {
+    display: block;
+}
+
+/* ================================
+   GLOBAL COMPETITION TAB
+   ================================ */
+
+.global-competition-info {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.global-competition-info p {
+    margin-bottom: 20px;
+    color: #666;
+    font-size: 1.1rem;
+}
+
+.view-global-btn {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #000;
+    border: 2px solid #000;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.view-global-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 4px 4px 0px #000;
+}
+
+/* ================================
+   COMPETITIONS LIST
+   ================================ */
+
+.competitions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.no-competitions {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+}
+
+.no-competitions p {
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+}
+
+.competition-card {
+    border: 2px solid #000;
+    border-radius: 8px;
+    background: #e8e8e8;
+    width: calc(100% - 20px);
+    margin: 0 10px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.competition-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 4px 4px 0px #000;
+}
+
+.competition-card.active {
+    border-color: #4CAF50;
+}
+
+.competition-card.upcoming {
+    border-color: #FF9800;
+}
+
+.competition-card.completed {
+    border-color: #9E9E9E;
+    opacity: 0.8;
+}
+
+.competition-card.ended {
+    border-color: #f44336;
+    opacity: 0.7;
+}
+
+.competition-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #eee;
+}
+
+.competition-card-header h4 {
+    margin: 0;
+    color: #333;
+    font-size: 1.2rem;
+}
+
+.competition-status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.competition-status.active {
+    background: #4CAF50;
+    color: white;
+}
+
+.competition-status.upcoming {
+    background: #FF9800;
+    color: white;
+}
+
+.competition-status.completed {
+    background: #9E9E9E;
+    color: white;
+}
+
+.competition-status.ended {
+    background: #f44336;
+    color: white;
+}
+
+.competition-card-body {
+    padding: 15px 20px;
+}
+
+.competition-description {
+    margin: 0 0 12px 0;
+    color: #666;
+    font-style: italic;
+}
+
+.competition-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.875rem;
+    color: #666;
+}
+
+.creator-info {
+    font-size: 0.875rem;
+    color: #666;
+}
+
+.creator-timezone {
+    font-family: monospace;
+}
+
+.competition-card-actions {
+    padding: 15px 20px;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.view-leaderboard-btn,
+.manage-competition-btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid;
+}
+
+.view-leaderboard-btn {
+    background: #6496ff;
+    color: white;
+    border-color: #6496ff;
+}
+
+.view-leaderboard-btn:hover {
+    background: #5080e0;
+    border-color: #5080e0;
+}
+
+.manage-competition-btn {
+    background: white;
+    color: #333;
+    border-color: #ddd;
+}
+
+.manage-competition-btn:hover {
+    background: #f5f5f5;
+    border-color: #999;
+}
+
+/* ================================
+   MANAGEMENT ACTIONS
+   ================================ */
+
+.management-actions {
+    margin-top: 20px;
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.create-competition-btn {
+    background: #4CAF50;
+    color: white;
+    border: 2px solid #4CAF50;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.create-competition-btn:hover {
+    background: #45a049;
+    border-color: #45a049;
+    transform: translateY(-2px);
+}
+
+/* ================================
+   SUCCESS MODAL
+   ================================ */
+
+.competition-success-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10004;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* Position success modal high up on small screens */
+@media screen and (max-width: 768px) {
+    .competition-success-modal {
+        align-items: flex-start !important;
+        padding-top: 60px !important;
+    }
+}
+
+.competition-success-modal.show {
+    opacity: 1;
+}
+
+.success-modal-content {
+    background: white;
+    border-radius: 12px;
+    border: 2px solid #000;
+    width: 95%;
+    max-width: 500px;
+    height: 90vh;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden !important;
+    touch-action: none;
+    animation: bounceIn 0.5s ease-out;
+}
+
+.success-header {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    text-align: center;
+    padding: 20px;
+    border-radius: 10px 10px 0 0;
+}
+
+.success-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.success-body {
+    padding: 20px;
+}
+
+.success-body p {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.invite-link-section {
+    margin: 20px 0;
+}
+
+.invite-link-section label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.invite-link-input {
+    display: flex;
+    gap: 8px;
+}
+
+.invite-link-input input {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.copy-btn {
+    padding: 10px 16px;
+    background: #6496ff;
+    color: white;
+    border: 2px solid #6496ff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.copy-btn:hover {
+    background: #5080e0;
+    border-color: #5080e0;
+}
+
+.success-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.close-success-btn,
+.view-comp-btn {
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid;
+}
+
+.close-success-btn {
+    background: white;
+    color: #666;
+    border-color: #ddd;
+}
+
+.close-success-btn:hover {
+    background: #f5f5f5;
+    border-color: #999;
+}
+
+.view-comp-btn {
+    background: #6496ff;
+    color: white;
+    border-color: #6496ff;
+}
+
+.view-comp-btn:hover {
+    background: #5080e0;
+    border-color: #5080e0;
+}
+
+/* ================================
+   ANIMATIONS
+   ================================ */
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* ================================
+   RESPONSIVE DESIGN
+   ================================ */
+
+@media screen and (max-width: 768px) {
+    .competition-modal-content {
+        width: 98%;
+        max-height: 440px;
+    }
+
+    /* Position modal high up on screen for small devices */
+    .competition-modal {
+        align-items: flex-start !important;
+        padding-top: 60px !important;
+    }
+}
+
+@media screen and (max-width: 768px) and (min-height: 600px) {
+    .competition-modal-content {
+        max-height: 95vh;
+    }
+    
+    .competition-modal-header {
+        padding: 15px;
+    }
+    
+    .competition-modal-header h2 {
+        font-size: 1.25rem;
+    }
+    
+    .competition-modal-body {
+        padding: 15px;
+    }
+    
+    .date-inputs-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+    
+    .cancel-btn,
+    .create-btn {
+        width: 100%;
+        padding: 14px;
+    }
+    
+    .competition-tabs {
+        flex-direction: column;
+    }
+    
+    .competition-tab {
+        border-right: none;
+        border-bottom: 2px solid #000;
+    }
+    
+    .competition-tab:last-child {
+        border-bottom: none;
+    }
+    
+    .competition-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .competition-card-actions {
+        flex-direction: column;
+    }
+    
+    .view-leaderboard-btn,
+    .manage-competition-btn {
+        width: 100%;
+        padding: 12px;
+        text-align: center;
+    }
+    
+    .invite-link-input {
+        flex-direction: column;
+    }
+    
+    .copy-btn {
+        width: 100%;
+        padding: 12px;
+    }
+    
+    .success-actions {
+        flex-direction: column;
+    }
+    
+    .close-success-btn,
+    .view-comp-btn {
+        width: 100%;
+        padding: 14px;
+    }
+    
+    .comp-button-dropdown {
+        right: 0;
+        left: auto;
+        min-width: 180px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .competition-modal-header {
+        padding: 12px;
+    }
+
+    .competition-modal-body {
+        padding: 12px;
+    }
+
+    .preview-content {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+}
+
+/* Specific fix for 375x560 screen (iPhone SE/6/7/8) */
+@media (orientation: portrait) and (max-width: 380px) and (max-height: 580px) {
+    .competition-modal-content {
+        max-height: 440px !important;
+    }
+
+    .competition-modal-header {
+        padding: 8px 12px !important;
+    }
+
+    .competition-modal-header h2 {
+        font-size: 1.1rem !important;
+    }
+
+    .competition-modal-body {
+        padding: 10px !important;
+    }
+
+    .global-competition-info {
+        padding: 15px 10px !important;
+    }
+
+    .global-competition-info p {
+        margin-bottom: 12px !important;
+        font-size: 0.95rem !important;
+    }
+
+    .no-competitions {
+        padding: 15px 10px !important;
+    }
+
+    .no-competitions p {
+        margin-bottom: 12px !important;
+        font-size: 0.95rem !important;
+    }
+
+    .view-global-btn,
+    .create-competition-btn {
+        padding: 10px 20px !important;
+        font-size: 0.9rem !important;
+        margin-top: 8px !important;
+    }
+
+    .competition-tabs {
+        gap: 0px !important;
+    }
+
+    .competition-tab {
+        padding: 10px 12px !important;
+        font-size: 0.9rem !important;
+    }
+}
+
+/* ================================
+   JOIN COMPETITION MODAL FIX - iPhone SE and Small Phones
+   ================================ */
+
+/* For iPhone SE (375x667) and similar small phones */
+@media screen and (min-width: 321px) and (max-width: 430px) and (min-height: 640px) and (max-height: 730px) {
+    /* Position join competition modals MUCH HIGHER */
+    .join-competition-modal,
+    .invite-auth-modal,
+    .already-joined-modal,
+    .join-success-modal,
+    .invite-error-modal {
+        align-items: flex-start !important;
+        padding-top: 5vh !important;
+    }
+
+    /* Make join competition modals MUCH TALLER */
+    .join-competition-modal .competition-modal-content,
+    .invite-auth-modal .competition-modal-content,
+    .already-joined-modal .competition-modal-content,
+    .join-success-modal .competition-modal-content,
+    .invite-error-modal .competition-modal-content {
+        max-height: 90vh !important;
+        height: auto !important;
+        width: 92% !important;
+        max-width: 370px !important;
+    }
+
+    /* Ensure modal body is not scrollable */
+    .join-competition-modal .competition-modal-body,
+    .invite-auth-modal .competition-modal-body,
+    .already-joined-modal .competition-modal-body,
+    .join-success-modal .competition-modal-body,
+    .invite-error-modal .competition-modal-body {
+        overflow-y: visible !important;
+        max-height: calc(90vh - 80px) !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+}
+
+/* ================================
+   PRINT STYLES
+   ================================ */
+
+@media print {
+    .competition-modal,
+    .comp-button-dropdown,
+    .competition-success-modal {
+        display: none !important;
+    }
+}

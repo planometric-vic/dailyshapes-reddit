@@ -1,0 +1,363 @@
+/* Collapsible Menu Styles for Daily Shapes v4.0 */
+/* Single menu button that expands to show all options */
+
+/* ================================
+   MENU SYSTEM VARIABLES
+   ================================ */
+
+:root {
+    /* Menu colors */
+    --menu-bg: rgba(255, 255, 255, 0.95);
+    --menu-overlay: rgba(0, 0, 0, 0.1);
+    --menu-border: #000000;
+    --menu-shadow: rgba(0, 0, 0, 0.3);
+    
+    /* Button states */
+    --btn-auth: #FFFFFF;
+    --btn-stats: #F5F5F5;
+    --btn-archive: #E0E0E0;
+    --btn-comp: #2563EB;
+    --btn-disabled: #CCCCCC;
+    
+    /* Animation timing */
+    --menu-duration: 0.3s;
+    --menu-ease: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ================================
+   HEADER LAYOUT OVERRIDE
+   ================================ */
+
+.main-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    position: relative;
+}
+
+.button-suite {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+/* ================================
+   MENU BUTTON (ALWAYS VISIBLE)
+   ================================ */
+
+.menu-button {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid var(--menu-border);
+    background: var(--nb-white);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 2px 2px 0px var(--menu-border);
+    position: relative;
+    z-index: 2000;
+    padding: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.menu-button:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px var(--menu-border);
+}
+
+.menu-button:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px var(--menu-border);
+}
+
+.menu-button svg {
+    width: 32px;
+    height: 32px;
+    fill: var(--menu-border);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.menu-button.expanded svg {
+    transform: scale(0.9);
+}
+
+/* ================================
+   EXPANDABLE MENU OVERLAY
+   ================================ */
+
+.menu-overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: var(--menu-bg);
+    border: 2px solid var(--menu-border);
+    border-radius: 30px;
+    box-shadow: 3px 3px 0px var(--menu-border);
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.8) translateX(20px);
+    transition: all var(--menu-duration) var(--menu-ease);
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    gap: 12px;
+    z-index: 1999;
+    min-height: 50px;
+}
+
+.menu-overlay.expanded {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1) translateX(0);
+}
+
+/* ================================
+   MENU BUTTONS
+   ================================ */
+
+.menu-option {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--menu-border);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 2px 2px 0px var(--menu-border);
+    opacity: 0;
+    transform: translateX(20px);
+    font-weight: bold;
+    position: relative;
+    padding: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.menu-option svg {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.menu-option:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px var(--menu-border);
+}
+
+.menu-option:hover svg {
+    transform: scale(1.05);
+}
+
+.menu-option:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px var(--menu-border);
+}
+
+/* Button specific colors */
+.menu-option.auth-btn {
+    background: var(--btn-auth);
+    color: black;
+}
+
+.menu-option.stats-btn {
+    background: var(--btn-stats);
+    color: black;
+}
+
+.menu-option.archive-btn {
+    background: var(--btn-archive);
+    color: black;
+}
+
+.menu-option.comp-btn {
+    background: var(--btn-comp);
+    color: black;
+}
+
+/* Disabled state */
+.menu-option.disabled {
+    background: var(--btn-disabled) !important;
+    color: #666666 !important;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.menu-option.disabled:hover {
+    transform: none;
+    box-shadow: 2px 2px 0px var(--menu-border);
+}
+
+.menu-option.disabled svg {
+    opacity: 0.6;
+}
+
+/* ================================
+   ANIMATION STATES
+   ================================ */
+
+/* Staggered animation for buttons appearing */
+.menu-overlay.expanded .menu-option:nth-child(1) {
+    animation: slideInLeft 0.3s ease forwards 0.1s;
+}
+
+.menu-overlay.expanded .menu-option:nth-child(2) {
+    animation: slideInLeft 0.3s ease forwards 0.15s;
+}
+
+.menu-overlay.expanded .menu-option:nth-child(3) {
+    animation: slideInLeft 0.3s ease forwards 0.2s;
+}
+
+.menu-overlay.expanded .menu-option:nth-child(4) {
+    animation: slideInLeft 0.3s ease forwards 0.25s;
+}
+
+@keyframes slideInLeft {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ================================
+   SELECTED BUTTON STATE
+   ================================ */
+
+.menu-button.has-selection {
+    /* When a button is selected, show it in the menu button */
+}
+
+.menu-button.auth-selected {
+    background: var(--btn-auth);
+    color: black;
+}
+
+.menu-button.stats-selected {
+    background: var(--btn-stats);
+    color: black;
+}
+
+.menu-button.archive-selected {
+    background: var(--btn-archive);
+    color: black;
+}
+
+.menu-button.comp-selected {
+    background: var(--btn-comp);
+    color: white;
+}
+
+/* ================================
+   TOOLTIPS
+   ================================ */
+
+.menu-option::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    pointer-events: none;
+    transition: transform 0.2s ease;
+    font-weight: bold;
+}
+
+.menu-option:hover::before {
+    transform: translateX(-50%) scale(1);
+}
+
+/* ================================
+   RESPONSIVE DESIGN
+   ================================ */
+
+@media screen and (max-width: 767px) {
+    .menu-button {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .menu-button svg {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .menu-option {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .menu-option svg {
+        width: 22px;
+        height: 22px;
+    }
+    
+    .menu-overlay {
+        gap: 8px;
+        padding: 6px;
+        border-radius: 25px;
+    }
+}
+
+@media screen and (max-width: 375px) {
+    .menu-button {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .menu-button svg {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .menu-option {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .menu-option svg {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .menu-overlay {
+        gap: 6px;
+        padding: 5px;
+        border-radius: 20px;
+    }
+}
+
+/* ================================
+   HIDE ORIGINAL BUTTONS
+   ================================ */
+
+.circle-button {
+    display: none !important;
+}
+
+/* ================================
+   DROPDOWN POSITIONING
+   ================================ */
+
+.account-dropdown,
+#compButtonDropdown,
+.comp-button-dropdown {
+    top: calc(100% + 10px) !important;
+    right: 0 !important;
+    z-index: 2001 !important;
+}

@@ -1,0 +1,910 @@
+/* Neobrutalist Styles for Daily Shapes v4.0 */
+/* Bold, high-contrast design with thick borders and strong shadows */
+
+/* ================================
+   NEOBRUTALIST DESIGN SYSTEM
+   ================================ */
+
+:root {
+    /* Minimal Color Palette */
+    --nb-black: #000000;
+    --nb-white: #FFFFFF;
+    --nb-gray-light: #F5F5F5;
+    --nb-gray-medium: #E0E0E0;
+    --nb-gray-dark: #666666;
+    --nb-accent: #2563EB;
+    --nb-blue: #E0E0E0;
+    --nb-red: #ff4444;
+    --nb-green: #44ff44;
+    
+    /* Shadows and borders */
+    --nb-shadow-sm: 2px 2px 0px var(--nb-black);
+    --nb-shadow-md: 3px 3px 0px var(--nb-black);
+    --nb-shadow-lg: 4px 4px 0px var(--nb-black);
+    --nb-border: 2px solid var(--nb-black);
+    --nb-border-thick: 3px solid var(--nb-black);
+    
+    /* Typography */
+    --nb-font-bold: 600;
+    --nb-font-black: 700;
+}
+
+/* ================================
+   GLOBAL OVERRIDES
+   ================================ */
+
+body {
+    font-family: 'Arial', sans-serif !important;
+    font-weight: var(--nb-font-bold);
+    background: var(--nb-white);
+    color: var(--nb-black);
+}
+
+/* ================================
+   HEADER NEOBRUTALIST STYLING
+   ================================ */
+
+.main-header {
+    background: var(--nb-white) !important;
+    border: none !important;
+    border-bottom: var(--nb-border) !important;
+    box-shadow: 0 2px 0px var(--nb-black) !important;
+    position: relative;
+    z-index: 100;
+    padding: 20px !important;
+}
+
+.app-title {
+    font-family: 'Arial', sans-serif !important;
+    font-weight: var(--nb-font-black) !important;
+    font-size: 2.2rem !important;
+    color: var(--nb-black) !important;
+    text-transform: none;
+    letter-spacing: 0px;
+    text-shadow: none;
+    margin: 0 !important;
+}
+
+/* ================================
+   CIRCULAR BUTTONS NEOBRUTALIST
+   ================================ */
+
+.circle-button {
+    border: var(--nb-border) !important;
+    box-shadow: var(--nb-shadow-md) !important;
+    transition: all 0.1s ease !important;
+    font-weight: var(--nb-font-bold) !important;
+    cursor: pointer;
+    position: relative;
+}
+
+.circle-button:hover {
+    transform: translate(-2px, -2px) !important;
+    box-shadow: 7px 7px 0px var(--nb-black) !important;
+}
+
+.circle-button:active {
+    transform: translate(2px, 2px) !important;
+    box-shadow: 3px 3px 0px var(--nb-black) !important;
+}
+
+/* Minimal Button Colors */
+.circle-button.auth-btn {
+    background: var(--nb-white) !important;
+    color: var(--nb-black) !important;
+    border-color: var(--nb-black) !important;
+}
+
+.circle-button.stats-btn {
+    background: var(--nb-gray-light) !important;
+    color: var(--nb-black) !important;
+    border-color: var(--nb-black) !important;
+}
+
+.circle-button.archive-btn {
+    background: var(--nb-gray-medium) !important;
+    color: var(--nb-black) !important;
+    border-color: var(--nb-black) !important;
+}
+
+.circle-button.comp-btn {
+    background: var(--nb-accent) !important;
+    color: var(--nb-white) !important;
+    border-color: var(--nb-black) !important;
+}
+
+/* SVG icons in buttons */
+.circle-button svg {
+    filter: drop-shadow(1px 1px 0px rgba(0,0,0,0.5));
+}
+
+/* ================================
+   GAME INFO ROW
+   ================================ */
+
+.header-row {
+    background: var(--nb-white) !important;
+    border-bottom: 1px solid var(--nb-gray-medium) !important;
+    padding: 15px 20px !important;
+    box-shadow: none !important;
+}
+
+.mechanic-label {
+    font-weight: var(--nb-font-bold) !important;
+    color: var(--nb-gray-dark) !important;
+    text-transform: none;
+    font-size: 0.9rem !important;
+}
+
+.mechanic-name {
+    font-weight: var(--nb-font-black) !important;
+    color: var(--nb-black) !important;
+    text-transform: none;
+    font-size: 1.1rem !important;
+}
+
+/* ================================
+   DROPDOWNS NEOBRUTALIST
+   ================================ */
+
+.account-dropdown,
+#compButtonDropdown,
+.comp-button-dropdown {
+    background: var(--nb-white) !important;
+    border: var(--nb-border) !important;
+    border-radius: 0 !important;
+    box-shadow: var(--nb-shadow-lg) !important;
+    font-weight: var(--nb-font-bold) !important;
+}
+
+.dropdown-item {
+    padding: 12px 16px !important;
+    border-bottom: 1px solid var(--nb-gray-medium) !important;
+    font-weight: var(--nb-font-bold) !important;
+    text-transform: none;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.dropdown-item:hover {
+    background: var(--nb-gray-light) !important;
+    transform: none;
+}
+
+.dropdown-item:last-child {
+    border-bottom: none !important;
+}
+
+/* ================================
+   MODALS NEOBRUTALIST
+   ================================ */
+
+.auth-modal,
+.competition-modal,
+.stats-overlay {
+    background: rgba(0, 0, 0, 0.8) !important;
+}
+
+.auth-modal-content,
+.competition-modal-content,
+.stats-window {
+    background: var(--nb-white) !important;
+    border: var(--nb-border-thick) !important;
+    border-radius: 0 !important;
+    box-shadow: var(--nb-shadow-lg) !important;
+    font-weight: var(--nb-font-bold) !important;
+}
+
+.auth-modal-header,
+.competition-modal-header,
+.stats-header {
+    background: var(--nb-white) !important;
+    color: var(--nb-black) !important;
+    border-bottom: none !important;
+    padding: 10px 20px !important;
+    font-weight: var(--nb-font-black) !important;
+}
+
+.success-modal-header {
+    border-top-left-radius: 10px !important;
+    border-top-right-radius: 10px !important;
+}
+
+.auth-modal-header h2,
+.competition-modal-header h2,
+.stats-header {
+    font-family: 'Arial Black', Arial, sans-serif !important;
+    font-weight: var(--nb-font-black) !important;
+    margin: 0 !important;
+    font-size: 1.2rem !important;
+}
+
+.auth-modal-close,
+.competition-modal-close,
+.stats-close {
+    background: var(--nb-white) !important;
+    color: var(--nb-black) !important;
+    border: var(--nb-border) !important;
+    box-shadow: var(--nb-shadow-sm) !important;
+    font-weight: var(--nb-font-bold) !important;
+    font-size: 1.2rem !important;
+    width: 40px !important;
+    height: 40px !important;
+    cursor: pointer;
+}
+
+.auth-modal-close:hover,
+.competition-modal-close:hover,
+.stats-close:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px var(--nb-black) !important;
+}
+
+/* ================================
+   FORMS NEOBRUTALIST
+   ================================ */
+
+.form-group {
+    margin-bottom: 8px !important;
+}
+
+.form-group label {
+    font-weight: var(--nb-font-bold) !important;
+    text-transform: uppercase;
+    color: var(--nb-black) !important;
+    font-size: 0.9rem !important;
+    margin-bottom: 8px !important;
+    display: block;
+}
+
+input[type="email"],
+input[type="text"],
+input[type="password"],
+input[type="date"],
+textarea,
+select {
+    border: var(--nb-border) !important;
+    border-radius: 0 !important;
+    padding: 12px 16px !important;
+    font-weight: var(--nb-font-bold) !important;
+    font-family: 'Arial Black', Arial, sans-serif !important;
+    font-size: 1rem !important;
+    background: var(--nb-white) !important;
+    color: var(--nb-black) !important;
+    box-shadow: inset 3px 3px 0px var(--nb-gray-light) !important;
+    width: 100% !important;
+    box-sizing: border-box;
+}
+
+input[type="email"]:focus,
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="date"]:focus,
+textarea:focus,
+select:focus {
+    outline: none !important;
+    box-shadow: inset 3px 3px 0px var(--nb-yellow), 0 0 0 3px var(--nb-black) !important;
+    background: var(--nb-gray-light) !important;
+}
+
+/* ================================
+   BUTTONS NEOBRUTALIST
+   ================================ */
+
+button,
+.auth-submit-button,
+.social-auth-button,
+.create-btn,
+.cancel-btn,
+.view-global-btn,
+.create-competition-btn {
+    border: var(--nb-border) !important;
+    border-radius: 0 !important;
+    padding: 12px 20px !important;
+    font-weight: var(--nb-font-bold) !important;
+    font-family: 'Arial Black', Arial, sans-serif !important;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    font-size: 0.9rem !important;
+    box-shadow: var(--nb-shadow-md) !important;
+}
+
+.auth-submit-button {
+    background: var(--nb-blue) !important;
+    color: var(--nb-white) !important;
+    width: 100% !important;
+}
+
+.social-auth-button {
+    background: var(--nb-white) !important;
+    color: var(--nb-black) !important;
+    margin-bottom: 10px !important;
+}
+
+.social-auth-button.google {
+    background: var(--nb-red) !important;
+    color: var(--nb-white) !important;
+}
+
+.social-auth-button.facebook {
+    background: var(--nb-blue) !important;
+    color: var(--nb-white) !important;
+}
+
+.social-auth-button.apple {
+    background: var(--nb-black) !important;
+    color: var(--nb-white) !important;
+}
+
+.create-btn {
+    background: var(--nb-green) !important;
+    color: var(--nb-black) !important;
+}
+
+.cancel-btn {
+    background: var(--nb-gray-light) !important;
+    color: var(--nb-black) !important;
+}
+
+.view-global-btn,
+.create-competition-btn {
+    background: var(--nb-purple) !important;
+    color: var(--nb-white) !important;
+}
+
+button:hover,
+.auth-submit-button:hover,
+.social-auth-button:hover,
+.create-btn:hover,
+.cancel-btn:hover,
+.view-global-btn:hover,
+.create-competition-btn:hover {
+    transform: translate(-2px, -2px) !important;
+    box-shadow: 7px 7px 0px var(--nb-black) !important;
+}
+
+button:active,
+.auth-submit-button:active,
+.social-auth-button:active,
+.create-btn:active,
+.cancel-btn:active,
+.view-global-btn:active,
+.create-competition-btn:active {
+    transform: translate(2px, 2px) !important;
+    box-shadow: 3px 3px 0px var(--nb-black) !important;
+}
+
+button:disabled {
+    background: var(--nb-gray-light) !important;
+    color: var(--nb-gray-dark) !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: var(--nb-shadow-sm) !important;
+}
+
+/* ================================
+   CHECKBOXES NEOBRUTALIST
+   ================================ */
+
+.checkbox-label {
+    display: flex !important;
+    align-items: center !important;
+    font-weight: var(--nb-font-bold) !important;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 20px !important;
+    height: 20px !important;
+    margin-right: 12px !important;
+    border: var(--nb-border) !important;
+    background: var(--nb-white) !important;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"]:checked {
+    background: var(--nb-green) !important;
+}
+
+/* ================================
+   VALIDATION MESSAGES
+   ================================ */
+
+.validation-message,
+.helper-text,
+.input-help {
+    font-weight: var(--nb-font-bold) !important;
+    font-size: 0.8rem !important;
+    text-transform: uppercase;
+    margin-top: 5px !important;
+}
+
+.validation-message.valid {
+    color: var(--nb-green) !important;
+}
+
+.validation-message.invalid {
+    color: var(--nb-red) !important;
+}
+
+.validation-message.checking {
+    color: var(--nb-orange) !important;
+}
+
+.helper-text,
+.input-help {
+    color: var(--nb-gray-dark) !important;
+}
+
+/* ================================
+   AUTH FEEDBACK
+   ================================ */
+
+.auth-feedback {
+    padding: 12px !important;
+    border: var(--nb-border) !important;
+    margin-bottom: 15px !important;
+    font-weight: var(--nb-font-bold) !important;
+    text-transform: uppercase;
+}
+
+.auth-feedback.success {
+    background: var(--nb-green) !important;
+    color: var(--nb-black) !important;
+}
+
+.auth-feedback.error {
+    background: var(--nb-red) !important;
+    color: var(--nb-white) !important;
+}
+
+/* ================================
+   DIVIDERS
+   ================================ */
+
+.auth-divider {
+    margin: 20px 0 !important;
+    text-align: center;
+    position: relative;
+}
+
+.auth-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--nb-black);
+}
+
+.auth-divider span {
+    background: var(--nb-white) !important;
+    padding: 0 15px;
+    font-weight: var(--nb-font-bold) !important;
+    color: var(--nb-black) !important;
+    position: relative;
+    z-index: 1;
+}
+
+/* ================================
+   STATS WINDOW SPECIFIC
+   ================================ */
+
+.stats-content {
+    padding: 20px !important;
+    font-weight: var(--nb-font-bold) !important;
+}
+
+/* ================================
+   RESPONSIVE NEOBRUTALIST
+   ================================ */
+
+@media screen and (max-width: 767px) {
+    .app-title {
+        font-size: 1.8rem !important;
+        letter-spacing: 1px !important;
+    }
+
+    .main-header {
+        padding: 15px !important;
+    }
+
+    .auth-modal-content,
+    .competition-modal-content {
+        margin: 10px !important;
+        max-width: calc(100vw - 20px) !important;
+        max-height: 80vh !important;
+    }
+
+    /* Position competition modal high up on screen for small devices */
+    #competitionModal.success-modal,
+    .competition-modal {
+        align-items: flex-start !important;
+        padding-top: 60px !important;
+    }
+}
+
+@media screen and (max-width: 767px) and (max-height: 600px) {
+    .auth-modal-content,
+    .competition-modal-content {
+        max-height: 75vh !important;
+    }
+}
+
+@media screen and (max-width: 767px) and (max-height: 580px) {
+    .auth-modal-content,
+    .competition-modal-content {
+        max-height: 440px !important;
+    }
+}
+
+@media screen and (max-width: 375px) {
+    .app-title {
+        font-size: 1.5rem !important;
+    }
+    
+    .circle-button {
+        box-shadow: 3px 3px 0px var(--nb-black) !important;
+    }
+    
+    .circle-button:hover {
+        box-shadow: 5px 5px 0px var(--nb-black) !important;
+    }
+}
+
+/* ================================
+   COMPETITION INTERFACE NEOBRUTALIST
+   ================================ */
+
+.competition-tabs {
+    display: flex;
+    border-bottom: var(--nb-border) !important;
+    background: var(--nb-gray-light) !important;
+}
+
+.competition-tab {
+    flex: 1;
+    padding: 15px 20px !important;
+    border: none !important;
+    border-right: var(--nb-border) !important;
+    background: var(--nb-white) !important;
+    color: var(--nb-black) !important;
+    font-weight: var(--nb-font-bold) !important;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.competition-tab:last-child {
+    border-right: none !important;
+}
+
+.competition-tab.active {
+    background: var(--nb-yellow) !important;
+    box-shadow: inset 0 -3px 0px var(--nb-black) !important;
+}
+
+.competition-tab:hover:not(.active) {
+    background: var(--nb-gray-light) !important;
+}
+
+.tab-count {
+    background: var(--nb-red) !important;
+    color: var(--nb-white) !important;
+    padding: 2px 8px !important;
+    border-radius: 0 !important;
+    font-size: 0.8rem !important;
+    margin-left: 8px !important;
+    border: 2px solid var(--nb-black) !important;
+}
+
+.competition-card {
+    border: var(--nb-border) !important;
+    margin-bottom: 15px !important;
+    background: var(--nb-white) !important;
+    box-shadow: var(--nb-shadow-md) !important;
+}
+
+.competition-card-header {
+    background: var(--nb-blue) !important;
+    color: var(--nb-white) !important;
+    padding: 15px !important;
+    border-bottom: var(--nb-border) !important;
+}
+
+.competition-card-header h4 {
+    margin: 0 !important;
+    font-weight: var(--nb-font-black) !important;
+    text-transform: uppercase;
+}
+
+.competition-status {
+    background: var(--nb-green) !important;
+    color: var(--nb-black) !important;
+    padding: 4px 12px !important;
+    border: 2px solid var(--nb-black) !important;
+    font-weight: var(--nb-font-bold) !important;
+    text-transform: uppercase;
+    font-size: 0.8rem !important;
+}
+
+.competition-card.ended .competition-status {
+    background: var(--nb-gray-light) !important;
+}
+
+.competition-card.upcoming .competition-status {
+    background: var(--nb-orange) !important;
+}
+
+.competition-card.completed .competition-status {
+    background: var(--nb-purple) !important;
+    color: var(--nb-white) !important;
+}
+
+.competition-card-body {
+    padding: 15px !important;
+}
+
+.competition-description {
+    font-weight: var(--nb-font-bold) !important;
+    margin-bottom: 10px !important;
+}
+
+.competition-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px !important;
+    font-weight: var(--nb-font-bold) !important;
+    font-size: 0.9rem !important;
+    text-transform: uppercase;
+}
+
+.competition-card-actions {
+    padding: 15px !important;
+    border-top: var(--nb-border) !important;
+    background: var(--nb-gray-light) !important;
+    display: flex;
+    gap: 10px;
+}
+
+.view-leaderboard-btn,
+.manage-competition-btn {
+    flex: 1;
+    background: var(--nb-cyan) !important;
+    color: var(--nb-black) !important;
+}
+
+.manage-competition-btn {
+    background: var(--nb-orange) !important;
+}
+
+.no-competitions {
+    text-align: center;
+    padding: 40px 20px !important;
+    border: var(--nb-border) !important;
+    background: var(--nb-gray-light) !important;
+}
+
+.no-competitions p {
+    font-weight: var(--nb-font-bold) !important;
+    text-transform: uppercase;
+    margin-bottom: 20px !important;
+}
+
+/* ================================
+   SUCCESS MODAL NEOBRUTALIST
+   ================================ */
+
+.competition-success-modal {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8) !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.success-modal-content {
+    background: var(--nb-white) !important;
+    border: var(--nb-border-thick) !important;
+    box-shadow: var(--nb-shadow-lg) !important;
+    max-width: 500px;
+    width: 90%;
+    height: 90vh;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden !important;
+    touch-action: none;
+}
+
+/* Override for competitionPromptModal - should fit content, not be 90vh */
+#competitionPromptModal .success-modal-content {
+    height: auto !important;
+    max-height: fit-content !important;
+    min-height: auto !important;
+    width: min(400px, 95%) !important;
+}
+
+#competitionPromptModal .success-modal-header {
+    padding: 14px 18px !important;
+}
+
+#competitionPromptModal .success-modal-body {
+    padding: 18px !important;
+}
+
+.success-header {
+    background: var(--nb-green) !important;
+    color: var(--nb-black) !important;
+    padding: 20px !important;
+    border-bottom: var(--nb-border) !important;
+    text-align: center;
+}
+
+.success-header h3 {
+    margin: 0 !important;
+    font-weight: var(--nb-font-black) !important;
+    text-transform: uppercase;
+    font-size: 1.5rem !important;
+}
+
+.success-body {
+    padding: 20px !important;
+}
+
+.invite-link-section {
+    margin: 20px 0 !important;
+}
+
+.invite-link-section label {
+    display: block;
+    margin-bottom: 8px !important;
+    font-weight: var(--nb-font-bold) !important;
+    text-transform: uppercase;
+}
+
+.invite-link-input {
+    display: flex;
+    gap: 0;
+}
+
+.invite-link-input input {
+    flex: 1 !important;
+    border-right: none !important;
+}
+
+.copy-btn {
+    background: var(--nb-yellow) !important;
+    color: var(--nb-black) !important;
+    border: var(--nb-border) !important;
+    border-left: none !important;
+    padding: 12px 16px !important;
+    font-weight: var(--nb-font-bold) !important;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.success-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px !important;
+}
+
+.close-success-btn {
+    flex: 1;
+    background: var(--nb-gray-light) !important;
+    color: var(--nb-black) !important;
+}
+
+.view-comp-btn {
+    flex: 1;
+    background: var(--nb-blue) !important;
+    color: var(--nb-white) !important;
+}
+
+/* ================================
+   PRESERVE CANVAS AREA
+   ================================ */
+
+.canvas-container,
+.canvas-container * {
+    /* Preserve all existing canvas styling */
+}
+
+.results-container,
+.results-table {
+    /* Let results table keep existing styling for now */
+}
+
+/* ================================
+   JOIN COMPETITION MODAL FIX - Small Phones
+   MUST BE AT END TO OVERRIDE ALL OTHER RULES
+   ================================ */
+
+/* For iPhone SE (375x667) and similar small phones (321-430px wide, 640-730px tall) */
+@media screen and (min-width: 321px) and (max-width: 430px) and (min-height: 640px) and (max-height: 730px) {
+    /* Position join competition modals MUCH HIGHER */
+    div.join-competition-modal.competition-modal,
+    div.invite-auth-modal.competition-modal,
+    div.already-joined-modal.competition-modal,
+    div.join-success-modal.competition-modal,
+    div.invite-error-modal.competition-modal {
+        align-items: flex-start !important;
+        padding-top: 3vh !important;
+        justify-content: flex-start !important;
+    }
+
+    /* Make join competition modals MUCH TALLER */
+    div.join-competition-modal.competition-modal div.competition-modal-content,
+    div.invite-auth-modal.competition-modal div.competition-modal-content,
+    div.already-joined-modal.competition-modal div.competition-modal-content,
+    div.join-success-modal.competition-modal div.competition-modal-content,
+    div.invite-error-modal.competition-modal div.competition-modal-content {
+        max-height: 90vh !important;
+        height: auto !important;
+        width: 92% !important;
+        max-width: 370px !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* Make modal body not scrollable */
+    div.join-competition-modal.competition-modal div.competition-modal-body,
+    div.invite-auth-modal.competition-modal div.competition-modal-body,
+    div.already-joined-modal.competition-modal div.competition-modal-body,
+    div.join-success-modal.competition-modal div.competition-modal-body,
+    div.invite-error-modal.competition-modal div.competition-modal-body {
+        overflow-y: visible !important;
+        flex: 1 !important;
+        min-height: 0 !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    /* Ensure header doesn't flex */
+    div.join-competition-modal.competition-modal div.competition-modal-header,
+    div.invite-auth-modal.competition-modal div.competition-modal-header,
+    div.already-joined-modal.competition-modal div.competition-modal-header,
+    div.join-success-modal.competition-modal div.competition-modal-header,
+    div.invite-error-modal.competition-modal div.competition-modal-header {
+        flex-shrink: 0 !important;
+    }
+
+    /* DO NOT affect the post-authentication success modal */
+    div#successConfirmationModal.success-modal {
+        align-items: center !important;
+        padding-top: 0 !important;
+    }
+
+    div#successConfirmationModal div.success-modal-content,
+    div#successConfirmationModal div#successConfirmationContent {
+        max-height: 300px !important;
+        min-height: 180px !important;
+    }
+
+    /* DO NOT make competitionPromptModal (Thanks for playing) 90vh tall */
+    div#competitionPromptModal.success-modal {
+        align-items: center !important;
+        padding: 20px !important;
+    }
+
+    div#competitionPromptModal div.success-modal-content {
+        height: auto !important;
+        max-height: fit-content !important;
+        min-height: auto !important;
+    }
+
+    div#competitionPromptModal div.success-modal-header {
+        padding: 14px 18px !important;
+    }
+
+    div#competitionPromptModal div.success-modal-body {
+        padding: 18px !important;
+    }
+}

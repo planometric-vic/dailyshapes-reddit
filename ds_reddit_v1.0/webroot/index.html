@@ -4,78 +4,572 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Daily Shapes</title>
-    <link rel="stylesheet" href="css/style.css">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="responsive.css">
+    <link rel="stylesheet" href="circular-button-styles.css">
+    <link rel="stylesheet" href="custom-competition-styles.css">
+    <link rel="stylesheet" href="neobrutalist-styles.css">
+    <link rel="stylesheet" href="collapsible-menu-styles.css">
+
+    <!-- Devvit WebView: no external CDNs allowed -->
+    <style>
+        /* Prevent any scrolling in the Reddit WebView iframe */
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+            -webkit-overflow-scrolling: touch;
+        }
+        /* Hide elements not needed in Reddit context */
+        #accountDropdown,
+        #authModal,
+        #forgotPasswordModal,
+        #changePasswordModal,
+        #recoveryCodeModal,
+        #successConfirmationModal,
+        #joinCompetitionModal,
+        #competitionPromptModal,
+        #competitionModal,
+        #userStatsModal,
+        #signInReminderModal,
+        #welcomeBackPopup {
+            display: none !important;
+        }
+        /* Reddit WebView specific adjustments */
+        .app-container {
+            padding-top: 4px;
+        }
+        .main-header {
+            padding: 4px 12px;
+        }
+        /* Hide practice button for now (no practice mode shapes in Reddit) */
+        #practiceBtn {
+            display: none !important;
+        }
+    </style>
 </head>
 <body>
-    <!-- Main Game Container -->
-    <div id="game-container">
 
-        <!-- Game Info Bar -->
-        <div class="game-info-bar">
-            <span class="game-title">DAILY SHAPES</span>
-            <span id="shape-label" class="game-day"></span>
+    <!-- Welcome Back Popup (hidden in Reddit, but kept for DOM reference) -->
+    <div id="welcomeBackPopup" class="welcome-popup" style="display: none;">
+        <div class="welcome-content" id="welcomeBackContent">
+            <div class="welcome-body" id="welcomeBackBody">
+                <div class="welcome-message" id="welcomeBackMessage">
+                    <p id="welcomeBackText"></p>
+                    <button id="continueBtn" class="continue-button">Continue</button>
+                </div>
+            </div>
         </div>
-
-        <!-- Progress Dots (3 shapes x 2 attempts = 6 dots) -->
-        <div class="progress-tracker">
-            <div class="progress-dot" title="Shape 1, Attempt 1"></div>
-            <div class="progress-dot" title="Shape 1, Attempt 2"></div>
-            <div class="progress-separator"></div>
-            <div class="progress-dot" title="Shape 2, Attempt 1"></div>
-            <div class="progress-dot" title="Shape 2, Attempt 2"></div>
-            <div class="progress-separator"></div>
-            <div class="progress-dot" title="Shape 3, Attempt 1"></div>
-            <div class="progress-dot" title="Shape 3, Attempt 2"></div>
-        </div>
-
-        <!-- Instruction Text -->
-        <div class="instruction-area">
-            <span id="instruction-text"></span>
-        </div>
-
-        <!-- Canvas -->
-        <div class="canvas-wrapper">
-            <canvas id="geoCanvas" width="380" height="380"></canvas>
-        </div>
-
-        <!-- Cut Result Display -->
-        <div id="cut-result"></div>
-
-        <!-- Progression Button Area -->
-        <div id="progression-area"></div>
     </div>
 
-    <!-- Overlays -->
-    <div id="welcome-overlay"></div>
-    <div id="completion-overlay"></div>
-    <div id="leaderboard-overlay"></div>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="main-header">
+            <h1 id="dateTitle" class="app-title" onclick="if (window.handleOption2Click) window.handleOption2Click()" role="button" tabindex="0"><strong>Daily Shapes</strong> <span class="date-light"></span></h1>
+            <script>
+                // Set the current date immediately
+                (function() {
+                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    const now = new Date();
+                    const month = months[now.getMonth()];
+                    const day = now.getDate();
+                    const dateSpan = document.querySelector('#dateTitle .date-light');
+                    if (dateSpan) {
+                        dateSpan.textContent = month + ' ' + day;
+                    }
+                })();
+            </script>
+            <div class="animated-menu-container">
+                <button id="animatedMenuButton" class="animated-menu-button">
+                    <svg id="hamburgerIcon" class="menu-icon hamburger-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round">
+                        <path d="M3 6h18M3 12h18M3 18h18"/>
+                    </svg>
+                </button>
+                <div id="menuDropdown" class="menu-dropdown" style="display: none; z-index: 99999 !important; position: absolute !important;">
+                    <div id="option1Btn" class="menu-item" data-action="account" style="font-weight: bold; color: #666666;">Account</div>
+                    <div id="option2Btn" class="menu-item" data-action="daily" style="font-weight: bold; color: #6496ff;">Today's Shapes</div>
+                    <div id="option3Btn" class="menu-item" data-action="competition" style="font-weight: bold; color: #666666;">Leaderboard</div>
+                    <div id="option4Btn" class="menu-item" data-action="practice" style="font-weight: bold; color: #666666;">Practice</div>
+                </div>
+            </div>
+        </div>
 
-    <!-- Scripts (load order matters) -->
-    <script src="js/devvit-bridge.js"></script>
-    <script src="js/scoring.js"></script>
-    <script src="js/shape-renderer.js"></script>
-    <script src="js/ui-manager.js"></script>
-    <script src="js/game-engine.js"></script>
+        <!-- Account Dropdown (hidden in Reddit but kept for DOM reference) -->
+        <div id="accountDropdown" class="account-dropdown" style="display: none;"></div>
 
-    <!-- Mechanics -->
-    <script src="js/mechanics/default.js"></script>
-    <script src="js/mechanics/horizontal-only.js"></script>
-    <script src="js/mechanics/diagonal-ascending.js"></script>
-    <script src="js/mechanics/circle-cut.js"></script>
-    <script src="js/mechanics/three-point-triangle.js"></script>
-    <script src="js/mechanics/rotating-square.js"></script>
-    <script src="js/mechanics/rotating-shape-vector.js"></script>
+        <!-- Challenge Info -->
+        <div class="mechanic-info" id="mechanicInfo"></div>
 
-    <!-- App Init -->
+        <!-- Instruction Area -->
+        <div id="instructionArea" class="instruction-area" style="display: flex; visibility: hidden;">
+            <div id="instructionText" class="instruction-text"></div>
+        </div>
+
+        <!-- Canvas Container -->
+        <div class="canvas-container">
+            <canvas id="geoCanvas" width="380" height="380"></canvas>
+
+            <!-- Loading animation (simplified - no KaTeX dependency) -->
+            <script>
+                (function() {
+                    const canvas = document.getElementById('geoCanvas');
+                    const canvasSize = 380;
+
+                    canvas.width = canvasSize;
+                    canvas.height = canvasSize;
+                    canvas.style.width = canvasSize + 'px';
+                    canvas.style.height = canvasSize + 'px';
+
+                    console.log('[Devvit] Canvas initialized to ' + canvasSize + 'x' + canvasSize);
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.imageSmoothingEnabled = false;
+
+                    // Force canvas container sizing
+                    const container = canvas.parentElement;
+                    if (container && container.classList.contains('canvas-container')) {
+                        const resizeContainer = () => {
+                            if (window.completionViewActive) return;
+                            const currentCanvasSize = 380;
+                            container.classList.remove('canvas-container');
+                            container.classList.add('canvas-container-fixed');
+                            container.style.cssText = `
+                                position: relative;
+                                width: ${currentCanvasSize}px !important;
+                                height: ${currentCanvasSize}px !important;
+                                min-width: ${currentCanvasSize}px !important;
+                                max-width: ${currentCanvasSize}px !important;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                margin-left: auto !important;
+                                margin-right: auto !important;
+                                overflow: visible !important;
+                            `;
+                        };
+                        resizeContainer();
+                        window.addEventListener('resize', resizeContainer);
+                    }
+
+                    // Loading animation
+                    let loadingAnimationActive = true;
+                    let loadingAnimationFrame = null;
+                    let rotationAngle = 0;
+                    let scalePhase = 0;
+                    let loadingStartTime = Date.now();
+                    let fadeOutOpacity = 1;
+                    let isFadingOut = false;
+
+                    const loadingMessages = [
+                        "Give us this day our Daily Shapes!",
+                        "Things are taking Shape!",
+                        "Shape up or ship out!",
+                        "What do we want? SHAPES!",
+                        "Let there be Shapes!"
+                    ];
+                    const loadingMessage = loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+
+                    const shapes = ['hexagon', 'circle', 'square', 'triangle'];
+                    const shapeToRender = shapes[Math.floor(Math.random() * shapes.length)];
+
+                    function drawShape(ctx, shape, size) {
+                        ctx.beginPath();
+                        switch(shape) {
+                            case 'square':
+                                const half = size / 2;
+                                ctx.moveTo(-half, -half);
+                                ctx.lineTo(half, -half);
+                                ctx.lineTo(half, half);
+                                ctx.lineTo(-half, half);
+                                ctx.closePath();
+                                break;
+                            case 'triangle':
+                                const height = size * Math.sqrt(3);
+                                const sideLength = size * 2;
+                                ctx.moveTo(0, -height * 0.5);
+                                ctx.lineTo(sideLength * 0.5, height * 0.5);
+                                ctx.lineTo(-sideLength * 0.5, height * 0.5);
+                                ctx.closePath();
+                                break;
+                            case 'circle':
+                                ctx.arc(0, 0, size, 0, Math.PI * 2);
+                                break;
+                            case 'hexagon':
+                                const angleStep = (Math.PI * 2) / 6;
+                                for (let i = 0; i <= 6; i++) {
+                                    const angle = i * angleStep - Math.PI / 2;
+                                    const x = size * Math.cos(angle);
+                                    const y = size * Math.sin(angle);
+                                    if (i === 0) ctx.moveTo(x, y);
+                                    else ctx.lineTo(x, y);
+                                }
+                                break;
+                        }
+                        ctx.stroke();
+                    }
+
+                    function animateLoading() {
+                        if (!loadingAnimationActive && !isFadingOut) return;
+
+                        const logicalSize = 380;
+                        ctx.clearRect(0, 0, logicalSize, logicalSize);
+
+                        const centerX = logicalSize / 2;
+                        const centerY = logicalSize / 2 - 20;
+                        const scale = 0.8 + Math.sin(scalePhase) * 0.2;
+                        const baseSize = logicalSize * 0.08;
+                        const size = baseSize * scale;
+
+                        ctx.save();
+                        ctx.translate(centerX, centerY);
+                        ctx.rotate(rotationAngle);
+                        ctx.globalAlpha = fadeOutOpacity;
+                        ctx.strokeStyle = '#000';
+                        ctx.lineWidth = 2.5;
+                        ctx.lineJoin = 'miter';
+
+                        drawShape(ctx, shapeToRender, size);
+
+                        ctx.restore();
+
+                        rotationAngle += 0.03;
+                        scalePhase += 0.05;
+
+                        if (isFadingOut) {
+                            fadeOutOpacity -= 0.04;
+                            const overlay = document.getElementById('loading-text-overlay');
+                            if (overlay) overlay.style.opacity = fadeOutOpacity;
+
+                            if (fadeOutOpacity <= 0) {
+                                loadingAnimationActive = false;
+                                isFadingOut = false;
+                                if (overlay) overlay.remove();
+                                ctx.clearRect(0, 0, logicalSize, logicalSize);
+
+                                const welcomeOverlay = document.getElementById('welcomeOverlay');
+                                const isWelcomeVisible = welcomeOverlay && welcomeOverlay.style.visibility === 'visible';
+                                const hasActiveGame = window.isRestoringGameState ||
+                                    (window.gameState && window.gameState !== 'initial') ||
+                                    (window.currentShapeNumber && window.currentShapeNumber > 0);
+
+                                if (!isWelcomeVisible && !hasActiveGame) {
+                                    canvas.style.display = 'none';
+                                } else if (hasActiveGame) {
+                                    canvas.style.display = 'block';
+                                }
+
+                                if (window._loadingAnimationCallback) {
+                                    const callback = window._loadingAnimationCallback;
+                                    window._loadingAnimationCallback = null;
+                                    callback();
+                                }
+                                return;
+                            }
+                        }
+                        loadingAnimationFrame = requestAnimationFrame(animateLoading);
+                    }
+
+                    // Create loading text overlay
+                    const loadingTextOverlay = document.createElement('div');
+                    loadingTextOverlay.id = 'loading-text-overlay';
+                    loadingTextOverlay.style.cssText = `
+                        position: absolute !important;
+                        top: 50% !important;
+                        left: 50% !important;
+                        transform: translate(-50%, -50%) !important;
+                        margin-top: 50px !important;
+                        font-family: Georgia, "Times New Roman", Times, serif !important;
+                        font-size: 20px !important;
+                        color: #000 !important;
+                        text-align: center !important;
+                        pointer-events: none !important;
+                        z-index: 100 !important;
+                        opacity: 1 !important;
+                        white-space: nowrap !important;
+                        max-width: 90% !important;
+                        overflow: hidden !important;
+                        text-overflow: ellipsis !important;
+                        line-height: 1.3 !important;
+                        font-style: italic !important;
+                        font-weight: normal !important;
+                    `;
+                    loadingTextOverlay.textContent = loadingMessage;
+
+                    const loadingContainer = canvas.parentElement;
+                    loadingContainer.style.position = 'relative';
+                    loadingContainer.appendChild(loadingTextOverlay);
+
+                    animateLoading();
+
+                    window.stopImmediateLoadingAnimation = function(callback) {
+                        const elapsed = Date.now() - loadingStartTime;
+                        const minTime = 2000;
+
+                        if (callback && !window._loadingAnimationCallback) {
+                            window._loadingAnimationCallback = callback;
+                        }
+
+                        if (elapsed < minTime) {
+                            setTimeout(() => {
+                                loadingAnimationActive = false;
+                                isFadingOut = true;
+                            }, minTime - elapsed);
+                        } else {
+                            loadingAnimationActive = false;
+                            isFadingOut = true;
+                        }
+                    };
+                })();
+            </script>
+
+            <!-- Practice Mode indicator -->
+            <div id="practiceModeIndicator" style="display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.9); border: 1px solid black; padding: 3px 8px; font-size: 12px; font-weight: bold; border-radius: 3px; z-index: 10;">Practice Mode</div>
+
+            <!-- Commentary Overlay -->
+            <div class="commentary-overlay" id="commentaryOverlay" style="display: none;">
+                <div class="commentary-text" id="commentaryText">Perfect cut!</div>
+            </div>
+
+            <!-- Canvas Button Overlay -->
+            <div class="canvas-button-overlay" id="canvasButtonOverlay" style="display: none;">
+                <div class="canvas-buttons-group"></div>
+            </div>
+
+            <!-- Countdown Timer Overlay -->
+            <div class="countdown-overlay" id="countdownOverlay" style="display: none;">
+                <div class="countdown-box">
+                    <div class="countdown-message" id="countdownDisplay"></div>
+                </div>
+            </div>
+
+            <!-- Swipe Indicators -->
+            <div class="swipe-indicators" id="swipeIndicators" style="display: none;">
+                <div class="swipe-arrow swipe-arrow-left" id="leftArrow" style="display: none;">
+                    <svg width="24" height="24" viewBox="0 0 24 24"><polygon points="18,4 6,12 18,20" /></svg>
+                </div>
+                <div class="swipe-arrow swipe-arrow-right" id="rightArrow" style="display: none;">
+                    <svg width="24" height="24" viewBox="0 0 24 24"><polygon points="6,4 18,12 6,20" /></svg>
+                </div>
+            </div>
+
+            <!-- Welcome Overlay -->
+            <div class="welcome-overlay" id="welcomeOverlay" style="visibility: hidden;">
+                <div class="welcome-content">
+                    <h2>WELCOME TO DAILY SHAPES!</h2>
+                    <p><strong>Your goal is to cut three unique shapes as close to 50/50 as possible each day.</strong> You get two attempts per shape.</p>
+                    <p>Your score is the sum of your smaller percentages from each cut, plus a 50-point bonus for any perfect 50/50 cut.</p>
+                    <p>Today's cutter: <strong id="todaysMechanic" style="color: #3b82f6;">Loading...</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Play Button -->
+        <div id="initialPlayButton" class="initial-play-container" style="visibility: hidden;">
+            <button id="playBtn" class="canvas-play-button">Play</button>
+            <button id="practiceBtn" class="canvas-play-button practice-button">Practice</button>
+        </div>
+
+        <!-- Progress Tracker -->
+        <div id="demoProgressDisplay" class="demo-progress-display" style="display: block; visibility: hidden;">
+            Shape 1 of 3 - Cut 1 of 2
+        </div>
+
+        <!-- Split/Percentage Display Area -->
+        <div id="fixedPercentageArea" class="fixed-percentage-area">
+            <div id="attemptDisplay" class="attempt-display" style="display: none; text-align: center;">
+                <div id="attemptText" class="attempt-text"></div>
+            </div>
+        </div>
+
+        <!-- Button Area -->
+        <div id="fixedButtonArea" class="fixed-button-area" style="visibility: hidden;"></div>
+
+        <!-- Practice Navigation -->
+        <div class="buttons-below-canvas" id="buttonsContainer">
+            <div id="practiceNavigation" class="practice-navigation" style="display: none;">
+                <button id="practiceLeftBtn" class="practice-nav-btn" title="Previous Shape"></button>
+                <button id="practiceRandomBtn" class="practice-nav-btn" title="Random Shape"></button>
+                <button id="practiceResetBtn" class="practice-nav-btn" title="Reset Shape"></button>
+                <button id="practiceRightBtn" class="practice-nav-btn" title="Next Shape"></button>
+            </div>
+        </div>
+
+        <!-- Results Container -->
+        <div class="results-container" id="resultsContainer" style="overflow: hidden; position: relative;"></div>
+    </div>
+
+    <!-- Stats Overlay (kept for DOM reference) -->
+    <div id="statsOverlay" class="stats-overlay" style="display: none;">
+        <div class="stats-window">
+            <div class="stats-header">
+                Daily Stats
+                <button class="stats-close" onclick="if(window.closeStatsWindow) closeStatsWindow()">&times;</button>
+            </div>
+            <div class="stats-content" id="statsContent"></div>
+        </div>
+    </div>
+
+    <!-- Minimal modal stubs (hidden, but keep IDs so game code doesn't crash) -->
+    <div id="authModal" class="auth-modal" style="display: none;"></div>
+    <div id="competitionModal" class="success-modal" style="display: none;">
+        <div class="success-modal-content">
+            <div id="competitionMainView">
+                <div class="success-modal-header">
+                    <h2>Leaderboard</h2>
+                    <button class="success-modal-close" onclick="if(window.closeCompetitionModal) closeCompetitionModal()">&times;</button>
+                </div>
+                <div class="success-modal-body"></div>
+            </div>
+            <div id="competitionActiveView" style="display: none;"></div>
+            <div id="competitionExpiredView" style="display: none;"></div>
+            <div id="competitionCreateView" style="display: none;"></div>
+            <div id="competitionLeaderboardView" style="display: none;">
+                <div class="success-modal-header">
+                    <h2 id="leaderboardCompetitionTitle">Leaderboard</h2>
+                    <button class="success-modal-close" onclick="if(window.closeCompetitionModal) closeCompetitionModal()">&times;</button>
+                </div>
+                <div class="success-modal-body">
+                    <div id="competitionLeaderboardContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="joinCompetitionModal" class="success-modal" style="display: none;">
+        <div class="success-modal-content">
+            <div class="success-modal-body">
+                <div id="joinCompetitionContent"></div>
+            </div>
+        </div>
+    </div>
+    <div id="userStatsModal" class="auth-modal" style="display: none;">
+        <div class="auth-modal-content">
+            <div class="stats-display" id="statsDisplay" style="display: none;">
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-value" id="perfectCuts">0</div></div>
+                    <div class="stat-card"><div class="stat-value" id="currentStreak">0</div></div>
+                    <div class="stat-card"><div class="stat-value" id="bestStreak">0</div></div>
+                    <div class="stat-card"><div class="stat-value" id="averageScore">0</div></div>
+                    <div class="stat-card"><div class="stat-value" id="totalScore">0</div></div>
+                    <div class="stat-card"><div class="stat-value" id="competitionsWon">0</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="changePasswordModal" class="auth-modal" style="display: none;"></div>
+    <div id="forgotPasswordModal" class="auth-modal" style="display: none;"></div>
+    <div id="recoveryCodeModal" class="auth-modal" style="display: none;"></div>
+    <div id="competitionPromptModal" class="success-modal" style="display: none;"></div>
+    <div id="successConfirmationModal" class="success-modal" style="display: none;"></div>
+    <div id="signInReminderModal" style="display: none;"></div>
+
+    <!-- ============================================================ -->
+    <!-- Script Loading Order (critical!) -->
+    <!-- ============================================================ -->
+
+    <!-- 1. Devvit bridge (sets up postMessage listener first) -->
+    <script src="devvit-bridge.js"></script>
+
+    <!-- 2. Devvit shims (must load BEFORE main.js - provides fake Supabase/Auth/etc.) -->
+    <script src="devvit-supabase-shim.js"></script>
+
+    <!-- 3. Stubs for missing competition/auth globals -->
     <script>
-        // Wait for Devvit bridge to provide init data, then start the game
-        window.addEventListener('devvit-init', (event) => {
-            console.log('[DailyShapes] Init data received from Devvit');
-            GameEngine.init(event.detail);
-        });
-
-        // Initialize the bridge (requests init data from Devvit backend)
-        DevvitBridge.init();
+        // Competition system stubs - these functions are referenced by main.js and other files
+        // but the actual competition system files (competitions.js, global-competition.js, etc.)
+        // are not loaded in the Reddit port.
+        window.CustomCompetitionManager = window.CustomCompetitionManager || {
+            initialize: function() {},
+            isInitialized: function() { return false; },
+            getActiveCompetitions: function() { return Promise.resolve([]); },
+            submitScore: function() { return Promise.resolve(); },
+        };
+        window.CompetitionSystem = window.CompetitionSystem || {
+            initialize: function() {},
+            submitScore: function() {},
+            getLeaderboard: function() { return Promise.resolve([]); },
+        };
+        window.GlobalCompetition = window.GlobalCompetition || {
+            submit: function() {},
+            getLeaderboard: function() { return Promise.resolve([]); },
+        };
+        // Auth functions that main.js may call
+        window.openAuthModal = window.openAuthModal || function() { console.log('[Devvit] Auth not needed on Reddit'); };
+        window.closeAuthModal = window.closeAuthModal || function() {};
+        window.handleSignup = window.handleSignup || function() {};
+        window.handleLogout = window.handleLogout || function() {};
+        window.showUserStats = window.showUserStats || function() {};
+        window.showChangePassword = window.showChangePassword || function() {};
+        window.closeUserStatsModal = window.closeUserStatsModal || function() {};
+        window.closeChangePasswordModal = window.closeChangePasswordModal || function() {};
+        window.closeForgotPasswordModal = window.closeForgotPasswordModal || function() {};
+        window.closeRecoveryCodeModal = window.closeRecoveryCodeModal || function() {};
+        window.closeSuccessModal = window.closeSuccessModal || function() {};
+        window.closeCompetitionPromptModal = window.closeCompetitionPromptModal || function() {};
+        window.openCreateCompetition = window.openCreateCompetition || function() {};
+        window.showActiveCompetitions = window.showActiveCompetitions || function() {};
+        window.showExpiredCompetitions = window.showExpiredCompetitions || function() {};
+        window.showCreateCompetition = window.showCreateCompetition || function() {};
+        window.showCompetitionMain = window.showCompetitionMain || function() {};
+        window.closeCompetitionModal = window.closeCompetitionModal || function() {};
+        window.closeJoinCompetitionModal = window.closeJoinCompetitionModal || function() {};
+        window.continueToOriginalDestination = window.continueToOriginalDestination || function() {};
+        window.closeStatsWindow = window.closeStatsWindow || function() {};
+        window.copyRecoveryCode = window.copyRecoveryCode || function() {};
+        // Supabase-dependent functions that should be no-ops
+        window.loadSupabaseShape = window.loadSupabaseShape || function() { return Promise.resolve(null); };
+        window.initializeSupabase = window.initializeSupabase || function() { return Promise.resolve(); };
+        window.checkSupabaseReady = window.checkSupabaseReady || function() { return true; };
+        // katex stub (loading animation references it)
+        window.katex = window.katex || { render: function() {} };
     </script>
+
+    <!-- 4. Refresh protection -->
+    <script src="simple-refresh.js"></script>
+
+    <!-- 5. Shape types -->
+    <script src="shape-types.js"></script>
+
+    <!-- 6. Mechanic Modules -->
+    <script src="mechanics/default-with-undo.js"></script>
+    <script src="mechanics/horizontal-only.js"></script>
+    <script src="mechanics/diagonal-ascending.js"></script>
+    <script src="mechanics/circle-cut.js"></script>
+    <script src="mechanics/rotating-square.js"></script>
+    <script src="mechanics/three-point-triangle.js"></script>
+    <script src="mechanics/rotating-shape-vector.js"></script>
+
+    <!-- 7. Error notification system -->
+    <script src="global-error-notifications.js"></script>
+
+    <!-- 8. Competition UI (references may exist in main.js) -->
+    <script src="competition-ui.js"></script>
+    <script src="local-competition-demo.js"></script>
+
+    <!-- 9. Practice mode -->
+    <script src="practice-mode.js"></script>
+
+    <!-- 10. Main game engine (core - depends on all above) -->
+    <script src="main.js"></script>
+
+    <!-- 11. Post-main systems -->
+    <script src="collapsible-menu.js"></script>
+    <script src="scoring-system.js"></script>
+    <script src="daily-game-core.js"></script>
+
+    <!-- 12. Completion view and countdown -->
+    <script src="countdown.js"></script>
+    <script src="complete-view.js"></script>
+
+    <!-- 13. Test interstitial (development) -->
+    <script src="test-interstitial.js"></script>
+
+    <!-- 14. Devvit game initializer (MUST be LAST - bootstraps game with Devvit data) -->
+    <script src="devvit-game-init.js"></script>
+
 </body>
 </html>

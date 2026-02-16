@@ -47,10 +47,10 @@ interface LeaderboardEntry {
 
 const MECHANIC_SCHEDULE: Record<number, string> = {
   0: 'RotatingShapeVectorMechanic', // Sunday
-  1: 'DefaultMechanic',             // Monday
+  1: 'DefaultWithUndoMechanic',     // Monday
   2: 'HorizontalOnlyMechanic',      // Tuesday
-  3: 'DiagonalAscendingMechanic',   // Wednesday
-  4: 'CircleCutMechanic',           // Thursday
+  3: 'CircleCutMechanic',           // Wednesday
+  4: 'DiagonalAscendingMechanic',   // Thursday
   5: 'ThreePointTriangleMechanic',  // Friday
   6: 'RotatingSquareMechanic',      // Saturday
 };
@@ -221,7 +221,7 @@ Devvit.addCustomPostType({
           // Load existing progress
           const existingProgress = await context.redis.get(
             redisKeys.progress(dayKey, username)
-          );
+          ) ?? null;
 
           // Load existing score
           const existingScoreStr = await context.redis.get(
@@ -255,7 +255,7 @@ Devvit.addCustomPostType({
           context.ui.webView.postMessage('game-webview', {
             type: 'INIT_RESPONSE',
             data: initData,
-          } as DevvitMessage);
+          } as any);
           break;
         }
 
@@ -303,7 +303,7 @@ Devvit.addCustomPostType({
           context.ui.webView.postMessage('game-webview', {
             type: 'SCORE_SAVED',
             data: { rank: rank !== undefined ? rank + 1 : -1, total: leaderboardSize },
-          } as DevvitMessage);
+          } as any);
           break;
         }
 
@@ -321,7 +321,7 @@ Devvit.addCustomPostType({
           context.ui.webView.postMessage('game-webview', {
             type: 'LEADERBOARD_RESPONSE',
             data: leaderboard,
-          } as DevvitMessage);
+          } as any);
           break;
         }
 
@@ -347,7 +347,7 @@ Devvit.addCustomPostType({
           context.ui.webView.postMessage('game-webview', {
             type: 'PROGRESS_RESPONSE',
             data: { progress },
-          } as DevvitMessage);
+          } as any);
           break;
         }
       }
