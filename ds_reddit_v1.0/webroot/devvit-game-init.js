@@ -163,13 +163,10 @@
         // Override loadSupabaseShape to also use Devvit shapes
         window.loadSupabaseShape = window.loadDemoShape;
 
-        // Stop the loading animation before starting the game
-        if (typeof window.stopImmediateLoadingAnimation === 'function') {
-            console.log('[Devvit Init] Stopping loading animation...');
-            window.stopImmediateLoadingAnimation(function() {
-                console.log('[Devvit Init] Loading animation finished');
-            });
-        }
+        // NOTE: Do NOT call stopImmediateLoadingAnimation() here!
+        // initializeDemoGame() calls it internally with showWelcomeScreen as the
+        // callback. If we call it first, the callback slot gets taken and
+        // showWelcomeScreen never runs.
 
         // Try to use the existing demo game initialization
         if (typeof initializeDemoGame === 'function') {
