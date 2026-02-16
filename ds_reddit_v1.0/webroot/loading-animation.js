@@ -1,13 +1,18 @@
 (function() {
     const canvas = document.getElementById('geoCanvas');
-    const canvasSize = 380;
+    const canvasSize = 380; // Internal resolution - do NOT change (pixel calculations depend on it)
+
+    // Calculate display size: shrink for small viewports (e.g. Reddit WebView 512px)
+    // Reserve ~180px for UI around canvas (instruction + progress + split + button)
+    var viewportHeight = window.innerHeight || 512;
+    var displaySize = Math.min(canvasSize, Math.max(260, viewportHeight - 180));
 
     canvas.width = canvasSize;
     canvas.height = canvasSize;
-    canvas.style.width = canvasSize + 'px';
-    canvas.style.height = canvasSize + 'px';
+    canvas.style.width = displaySize + 'px';
+    canvas.style.height = displaySize + 'px';
 
-    console.log('[Devvit] Canvas initialized to ' + canvasSize + 'x' + canvasSize);
+    console.log('[Devvit] Canvas initialized to ' + canvasSize + 'x' + canvasSize + ' (display: ' + displaySize + 'x' + displaySize + ')');
 
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
@@ -17,21 +22,24 @@
     if (container && container.classList.contains('canvas-container')) {
         const resizeContainer = () => {
             if (window.completionViewActive) return;
-            const currentCanvasSize = 380;
+            var vh = window.innerHeight || 512;
+            var ds = Math.min(canvasSize, Math.max(260, vh - 180));
             container.classList.remove('canvas-container');
             container.classList.add('canvas-container-fixed');
             container.style.cssText =
                 'position: relative;' +
-                'width: ' + currentCanvasSize + 'px !important;' +
-                'height: ' + currentCanvasSize + 'px !important;' +
-                'min-width: ' + currentCanvasSize + 'px !important;' +
-                'max-width: ' + currentCanvasSize + 'px !important;' +
+                'width: ' + ds + 'px !important;' +
+                'height: ' + ds + 'px !important;' +
+                'min-width: ' + ds + 'px !important;' +
+                'max-width: ' + ds + 'px !important;' +
                 'display: flex;' +
                 'justify-content: center;' +
                 'align-items: center;' +
                 'margin-left: auto !important;' +
                 'margin-right: auto !important;' +
                 'overflow: visible !important;';
+            canvas.style.width = ds + 'px';
+            canvas.style.height = ds + 'px';
         };
         resizeContainer();
         window.addEventListener('resize', resizeContainer);

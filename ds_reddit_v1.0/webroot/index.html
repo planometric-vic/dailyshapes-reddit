@@ -56,12 +56,12 @@
         #practiceBtn {
             display: none !important;
         }
-        /* Reposition play button inside canvas area for Reddit's height-constrained viewport.
-           The loading animation forces the canvas container to 380px, which with the play button
-           below it exceeds the 512px WebView height. Pull the button up into the canvas area. */
+        /* Position play button below canvas with minimal gap.
+           Canvas is now responsive to viewport height, so negative margin
+           is only needed as a small overlap to keep things compact. */
         #initialPlayButton,
         #initialPlayButton.initial-play-container {
-            margin-top: -55px !important;
+            margin-top: -10px !important;
             position: relative !important;
             z-index: 25 !important;
             transform: none !important;
@@ -73,6 +73,40 @@
             display: inline-block !important;
             margin-left: auto !important;
             margin-right: auto !important;
+        }
+        /* Compact layout: tighten spacing so everything fits in 512px WebView */
+        .instruction-area {
+            height: 24px !important;
+            min-height: 24px !important;
+            max-height: 24px !important;
+            margin-bottom: 0 !important;
+            padding: 0 8px !important;
+        }
+        .canvas-container, .canvas-container-fixed {
+            margin-bottom: 2px !important;
+        }
+        .demo-progress-display, #demoProgressDisplay {
+            margin: 0 !important;
+            padding: 2px 0 !important;
+            font-size: 13px !important;
+        }
+        .fixed-percentage-area {
+            min-height: 40px !important;
+            margin: 0 !important;
+        }
+        .split-display-large {
+            font-size: 34px !important;
+            min-height: 40px !important;
+        }
+        .fixed-button-area {
+            min-height: 40px !important;
+            margin: 2px 0 0 0 !important;
+        }
+        /* Override desktop rules that add 40px of wasted space to button */
+        .fixed-button-area .progression-button,
+        #fixedButtonArea .progression-button {
+            margin-top: 0 !important;
+            transform: none !important;
         }
     </style>
 </head>
