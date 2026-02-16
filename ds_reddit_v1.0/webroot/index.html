@@ -44,7 +44,8 @@
             padding-top: 0;
         }
         /* Hide header - Reddit post title replaces it */
-        .main-header {
+        .main-header,
+        .mechanic-info {
             display: none !important;
         }
         /* Hide practice button for now (no practice mode shapes in Reddit).
@@ -56,16 +57,86 @@
         #practiceBtn {
             display: none !important;
         }
-        /* Position play button below canvas with minimal gap.
-           Canvas is now responsive to viewport height, so negative margin
-           is only needed as a small overlap to keep things compact. */
-        #initialPlayButton,
-        #initialPlayButton.initial-play-container {
-            margin-top: -10px !important;
-            position: relative !important;
-            z-index: 25 !important;
-            transform: none !important;
-            text-align: center !important;
+        /* ============================================
+           DESKTOP: Side-by-side layout (canvas left, UI right)
+           ============================================ */
+        @media (min-width: 600px) {
+            .app-container {
+                display: grid !important;
+                /* Left column: canvas (auto-sized), Right column: UI panel */
+                grid-template-columns: auto 1fr;
+                /* Rows: 1=instruction, 2=spacer, 3=progress, 4=split, 5=button, 6=spacer, 7=play/other */
+                grid-template-rows: auto 1fr auto auto auto 1fr auto;
+                gap: 0 20px !important;
+                max-width: 100% !important;
+                padding: 4px 12px !important;
+                align-items: start !important;
+            }
+            /* Row 1: instruction spans full width */
+            .instruction-area {
+                grid-column: 1 / -1 !important;
+                grid-row: 1 !important;
+                height: 24px !important;
+                min-height: 24px !important;
+                max-height: 24px !important;
+                margin: 0 !important;
+                padding: 0 8px !important;
+            }
+            /* Canvas spans left column, rows 2-7 (full height of right panel) */
+            .canvas-container, .canvas-container-fixed {
+                grid-column: 1 !important;
+                grid-row: 2 / 8 !important;
+                margin: 0 !important;
+                align-self: start !important;
+            }
+            /* Play button below canvas on left side */
+            #initialPlayButton, #initialPlayButton.initial-play-container {
+                grid-column: 1 !important;
+                grid-row: 8 !important;
+                margin-top: -6px !important;
+                position: relative !important;
+                z-index: 25 !important;
+                transform: none !important;
+                text-align: center !important;
+            }
+            /* Right column items - centered vertically against canvas */
+            #demoProgressDisplay, .demo-progress-display {
+                grid-column: 2 !important;
+                grid-row: 3 !important;
+                align-self: end !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                font-size: 14px !important;
+                text-align: center !important;
+            }
+            .fixed-percentage-area, #fixedPercentageArea {
+                grid-column: 2 !important;
+                grid-row: 4 !important;
+                align-self: center !important;
+                min-height: auto !important;
+                margin: 8px 0 !important;
+            }
+            .split-display-large {
+                font-size: 40px !important;
+                min-height: auto !important;
+            }
+            .fixed-button-area, #fixedButtonArea {
+                grid-column: 2 !important;
+                grid-row: 5 !important;
+                align-self: start !important;
+                min-height: auto !important;
+                margin: 0 !important;
+            }
+            .fixed-button-area .progression-button,
+            #fixedButtonArea .progression-button {
+                margin-top: 0 !important;
+                transform: none !important;
+            }
+            /* Hide elements not needed in grid */
+            .mechanic-info, .buttons-below-canvas, .results-container {
+                grid-column: 2 !important;
+                grid-row: 7 !important;
+            }
         }
         /* Center the single Play button (Practice is hidden) */
         #initialPlayButton #playBtn,
@@ -74,39 +145,51 @@
             margin-left: auto !important;
             margin-right: auto !important;
         }
-        /* Compact layout: tighten spacing so everything fits in 512px WebView */
-        .instruction-area {
-            height: 24px !important;
-            min-height: 24px !important;
-            max-height: 24px !important;
-            margin-bottom: 0 !important;
-            padding: 0 8px !important;
-        }
-        .canvas-container, .canvas-container-fixed {
-            margin-bottom: 2px !important;
-        }
-        .demo-progress-display, #demoProgressDisplay {
-            margin: 0 !important;
-            padding: 2px 0 !important;
-            font-size: 13px !important;
-        }
-        .fixed-percentage-area {
-            min-height: 40px !important;
-            margin: 0 !important;
-        }
-        .split-display-large {
-            font-size: 34px !important;
-            min-height: 40px !important;
-        }
-        .fixed-button-area {
-            min-height: 40px !important;
-            margin: 2px 0 0 0 !important;
-        }
-        /* Override desktop rules that add 40px of wasted space to button */
-        .fixed-button-area .progression-button,
-        #fixedButtonArea .progression-button {
-            margin-top: 0 !important;
-            transform: none !important;
+
+        /* ============================================
+           MOBILE: Stacked layout (compact vertical)
+           ============================================ */
+        @media (max-width: 599px) {
+            #initialPlayButton,
+            #initialPlayButton.initial-play-container {
+                margin-top: -10px !important;
+                position: relative !important;
+                z-index: 25 !important;
+                transform: none !important;
+                text-align: center !important;
+            }
+            .instruction-area {
+                height: 24px !important;
+                min-height: 24px !important;
+                max-height: 24px !important;
+                margin-bottom: 0 !important;
+                padding: 0 8px !important;
+            }
+            .canvas-container, .canvas-container-fixed {
+                margin-bottom: 2px !important;
+            }
+            .demo-progress-display, #demoProgressDisplay {
+                margin: 0 !important;
+                padding: 2px 0 !important;
+                font-size: 13px !important;
+            }
+            .fixed-percentage-area {
+                min-height: 40px !important;
+                margin: 0 !important;
+            }
+            .split-display-large {
+                font-size: 34px !important;
+                min-height: 40px !important;
+            }
+            .fixed-button-area {
+                min-height: 40px !important;
+                margin: 2px 0 0 0 !important;
+            }
+            .fixed-button-area .progression-button,
+            #fixedButtonArea .progression-button {
+                margin-top: 0 !important;
+                transform: none !important;
+            }
         }
     </style>
 </head>

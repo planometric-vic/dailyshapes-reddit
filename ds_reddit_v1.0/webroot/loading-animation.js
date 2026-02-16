@@ -2,17 +2,27 @@
     const canvas = document.getElementById('geoCanvas');
     const canvasSize = 380; // Internal resolution - do NOT change (pixel calculations depend on it)
 
-    // Calculate display size: shrink for small viewports (e.g. Reddit WebView 512px)
-    // Reserve ~180px for UI around canvas (instruction + progress + split + button)
+    // Calculate display size based on layout mode:
+    // Desktop (wide viewport): side-by-side layout, canvas can use full height
+    // Mobile (narrow viewport): stacked layout, reserve space for UI below canvas
+    var viewportWidth = window.innerWidth || 380;
     var viewportHeight = window.innerHeight || 512;
-    var displaySize = Math.min(canvasSize, Math.max(260, viewportHeight - 180));
+    var isSideBySide = viewportWidth >= 600;
+    var displaySize;
+    if (isSideBySide) {
+        // Side-by-side: UI is beside the canvas, only reserve for instruction area above
+        displaySize = Math.min(canvasSize, Math.max(260, viewportHeight - 30));
+    } else {
+        // Stacked: reserve ~180px for UI below canvas
+        displaySize = Math.min(canvasSize, Math.max(260, viewportHeight - 180));
+    }
 
     canvas.width = canvasSize;
     canvas.height = canvasSize;
     canvas.style.width = displaySize + 'px';
     canvas.style.height = displaySize + 'px';
 
-    console.log('[Devvit] Canvas initialized to ' + canvasSize + 'x' + canvasSize + ' (display: ' + displaySize + 'x' + displaySize + ')');
+    console.log('[Devvit] Canvas initialized to ' + canvasSize + 'x' + canvasSize + ' (display: ' + displaySize + 'x' + displaySize + ', layout: ' + (isSideBySide ? 'side-by-side' : 'stacked') + ')');
 
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
@@ -22,10 +32,17 @@
     if (container && container.classList.contains('canvas-container')) {
         const resizeContainer = () => {
             if (window.completionViewActive) return;
+            var vw = window.innerWidth || 380;
             var vh = window.innerHeight || 512;
-            var ds = Math.min(canvasSize, Math.max(260, vh - 180));
+            var sbs = vw >= 600;
+            var ds = sbs
+                ? Math.min(canvasSize, Math.max(260, vh - 30))
+                : Math.min(canvasSize, Math.max(260, vh - 180));
             container.classList.remove('canvas-container');
             container.classList.add('canvas-container-fixed');
+            var marginStyle = sbs
+                ? 'margin-left: 0 !important; margin-right: 0 !important;'
+                : 'margin-left: auto !important; margin-right: auto !important;';
             container.style.cssText =
                 'position: relative;' +
                 'width: ' + ds + 'px !important;' +
@@ -35,8 +52,7 @@
                 'display: flex;' +
                 'justify-content: center;' +
                 'align-items: center;' +
-                'margin-left: auto !important;' +
-                'margin-right: auto !important;' +
+                marginStyle +
                 'overflow: visible !important;';
             canvas.style.width = ds + 'px';
             canvas.style.height = ds + 'px';
