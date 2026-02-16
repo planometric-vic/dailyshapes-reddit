@@ -99,27 +99,27 @@
                 align-items: start !important;
                 align-content: center !important; /* vertical center grid tracks in viewport */
             }
-            /* Instruction overlays canvas top (same grid area) */
+            /* Instruction text sits above the canvas */
             .instruction-area {
                 grid-column: 1 !important;
                 grid-row: 1 / 6 !important;
                 align-self: start !important;
+                transform: translateY(calc(-100% - 6px)) !important;
                 z-index: 20 !important;
                 height: auto !important;
                 min-height: auto !important;
                 max-height: none !important;
                 margin: 0 !important;
-                padding: 6px 12px !important;
-                background: rgba(255, 255, 255, 0.92) !important;
-                border: 1px solid #000 !important;
-                border-radius: 6px !important;
+                padding: 2px 0 !important;
+                background: transparent !important;
+                border: none !important;
+                border-radius: 0 !important;
                 pointer-events: none !important;
-                width: fit-content !important;
+                width: 100% !important;
                 justify-self: center !important;
-                margin-top: 6px !important;
             }
             .instruction-text {
-                font-size: 12px !important;
+                font-size: 14px !important;
                 text-align: center !important;
                 white-space: nowrap !important;
             }
@@ -152,7 +152,7 @@
                 grid-row: 1 / 6 !important;
                 align-self: end !important;
                 justify-self: center !important;
-                transform: translateY(calc(100% + 4px)) !important; /* sit just below canvas */
+                transform: translateY(calc(100% + 12px)) !important; /* sit below canvas with breathing room */
                 margin: 0 !important;
                 padding: 0 !important;
                 font-size: 11px !important;
@@ -170,6 +170,10 @@
                 font-size: 32px !important;
                 min-height: auto !important;
             }
+            /* Lock split display child spans so JS inline font-size can't cause resize flicker */
+            .split-display-large span {
+                font-size: 32px !important;
+            }
             .fixed-button-area, #fixedButtonArea {
                 grid-column: 2 !important;
                 grid-row: 3 !important;
@@ -183,12 +187,14 @@
                 transform: none !important;
             }
             /* Leaderboard: hidden during gameplay, shown after completion.
-               Aligned with canvas top when visible. */
+               Fills the right column, stretching to match canvas height. */
             .weekly-leaderboard {
                 grid-column: 2 !important;
                 grid-row: 1 / 6 !important;
-                align-self: start !important;
+                align-self: stretch !important;
                 display: none;
+                max-width: none !important;
+                border: 2px solid #000;
             }
             /* Hide practice nav / results in grid */
             .buttons-below-canvas, .results-container {
@@ -198,14 +204,24 @@
                 max-height: 0 !important;
             }
         }
-        /* Commentary overlay: on top of canvas, centered horizontally at top */
+        /* Commentary overlay: above the canvas, centered horizontally */
         .commentary-overlay {
             position: absolute !important;
-            top: 6px !important;
-            bottom: auto !important;
+            bottom: calc(100% + 6px) !important;
+            top: auto !important;
             left: 50% !important;
             transform: translateX(-50%) !important;
             z-index: 20 !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .commentary-text {
+            font-size: 15px !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 2px 8px !important;
         }
         /* Center the single Play button (Practice is hidden) */
         #initialPlayButton #playBtn,
@@ -251,6 +267,9 @@
                 font-size: 34px !important;
                 min-height: 40px !important;
             }
+            .split-display-large span {
+                font-size: 34px !important;
+            }
             .fixed-button-area {
                 min-height: 40px !important;
                 margin: 2px 0 0 0 !important;
@@ -267,7 +286,9 @@
         .weekly-leaderboard {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             width: 100%;
-            max-width: 220px;
+            max-width: none;
+            display: flex;
+            flex-direction: column;
         }
         .lb-header {
             font-size: 13px;
@@ -279,7 +300,7 @@
             margin-bottom: 0;
         }
         .lb-table {
-            max-height: 300px;
+            flex: 1;
             overflow-y: auto;
         }
         .lb-row {
@@ -288,6 +309,10 @@
             padding: 2px 8px;
             font-size: 12px;
             border-bottom: 1px solid #e0e0e0;
+        }
+        .lb-row-empty {
+            color: transparent;
+            user-select: none;
         }
         .lb-row-first {
             font-weight: 700;
@@ -329,7 +354,6 @@
             background: #000;
             margin: 2px 0;
         }
-        /* lb-empty removed - empty tables just show no rows */
         .lb-subtitle {
             font-size: 9px;
             font-weight: 600;
@@ -342,6 +366,7 @@
             gap: 3px;
             padding: 4px 6px 3px;
             border-top: 2px solid #000;
+            flex-shrink: 0;
         }
         .lb-tab {
             flex: 1;

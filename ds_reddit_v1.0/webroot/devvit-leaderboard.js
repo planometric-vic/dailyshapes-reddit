@@ -24,24 +24,27 @@
         cuts:   { title: 'PERFECT CUTS', subtitle: '', label: 'Perfect' }
     };
 
+    var MIN_ROWS = 10; // fixed row count so all tabs look identical
+
     function renderTable(tabKey) {
         var t = tabs[tabKey];
         var html = '';
+        var rowCount = 0;
 
-        if (t.data.length > 0) {
-            for (var i = 0; i < t.data.length; i++) {
-                var entry = t.data[i];
-                var isUser = entry.username === currentUsername;
-                var cls = 'lb-row' + (isUser ? ' lb-row-user' : '') + (i === 0 ? ' lb-row-first' : '');
-                html += '<div class="' + cls + '">';
-                html += '<span class="lb-rank">' + entry.rank + '</span>';
-                html += '<span class="lb-name">' + escapeHtml(truncName(entry.username)) + '</span>';
-                html += '<span class="lb-score">' + Math.round(entry.score) + '</span>';
-                html += '</div>';
-            }
+        // Data rows
+        for (var i = 0; i < t.data.length; i++) {
+            var entry = t.data[i];
+            var isUser = entry.username === currentUsername;
+            var cls = 'lb-row' + (isUser ? ' lb-row-user' : '') + (i === 0 ? ' lb-row-first' : '');
+            html += '<div class="' + cls + '">';
+            html += '<span class="lb-rank">' + entry.rank + '</span>';
+            html += '<span class="lb-name">' + escapeHtml(truncName(entry.username)) + '</span>';
+            html += '<span class="lb-score">' + Math.round(entry.score) + '</span>';
+            html += '</div>';
+            rowCount++;
         }
 
-        // User row at bottom if not in top 20
+        // User row at bottom if not in top entries
         var userInTop = false;
         for (var j = 0; j < t.data.length; j++) {
             if (t.data[j].username === currentUsername) {
@@ -57,12 +60,23 @@
             html += '<span class="lb-name">' + escapeHtml(truncName(currentUsername)) + '</span>';
             html += '<span class="lb-score">' + Math.round(t.userScore) + '</span>';
             html += '</div>';
+            rowCount++;
         } else if (!userInTop && currentUsername) {
             html += '<div class="lb-separator"></div>';
             html += '<div class="lb-row lb-row-user lb-row-norank">';
             html += '<span class="lb-rank">-</span>';
             html += '<span class="lb-name">' + escapeHtml(truncName(currentUsername)) + '</span>';
             html += '<span class="lb-score">0</span>';
+            html += '</div>';
+            rowCount++;
+        }
+
+        // Pad with empty rows so every tab has the same height
+        for (var k = rowCount; k < MIN_ROWS; k++) {
+            html += '<div class="lb-row lb-row-empty">';
+            html += '<span class="lb-rank">&nbsp;</span>';
+            html += '<span class="lb-name">&nbsp;</span>';
+            html += '<span class="lb-score">&nbsp;</span>';
             html += '</div>';
         }
 
@@ -71,17 +85,17 @@
 
     function render() {
         var cfg = tabConfig[activeTab];
+        // Header — always include subtitle div (even if empty) for consistent height
         var html = '<div class="lb-header">' + cfg.title;
-        if (cfg.subtitle) {
-            html += '<div class="lb-subtitle">' + cfg.subtitle + '</div>';
-        }
+        html += '<div class="lb-subtitle">' + (cfg.subtitle || '&nbsp;') + '</div>';
         html += '</div>';
 
+        // Table body (padded to MIN_ROWS)
         html += '<div class="lb-table">';
         html += renderTable(activeTab);
         html += '</div>';
 
-        // Tab buttons
+        // Tab buttons — always at the bottom
         html += '<div class="lb-tabs">';
         var tabKeys = ['weekly', 'wins', 'cuts'];
         for (var i = 0; i < tabKeys.length; i++) {
@@ -139,7 +153,7 @@
         },
         show: function() {
             render();
-            container.style.display = 'block';
+            container.style.display = 'flex';
             // Hide game controls since we're in the completion view
             var els = ['demoProgressDisplay', 'fixedPercentageArea', 'fixedButtonArea'];
             for (var i = 0; i < els.length; i++) {
