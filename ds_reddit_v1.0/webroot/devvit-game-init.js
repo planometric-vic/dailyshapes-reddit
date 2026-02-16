@@ -221,6 +221,13 @@
             }
         };
 
+        // Remove Share Score / Competitions buttons from completion view.
+        // complete-view.js creates #post-canvas-actions after animation.
+        // CSS hides it, but also override the creator function as no-op.
+        window.createPostCanvasActions = function() {
+            console.log('[Devvit] createPostCanvasActions suppressed');
+        };
+
         // local-competition-demo.js overwrites CompetitionManager on DOMContentLoaded,
         // removing parseJoinLink/clearJoinLink. Patch it back after a delay.
         setTimeout(function() {

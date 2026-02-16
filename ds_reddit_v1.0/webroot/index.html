@@ -68,6 +68,10 @@
         #practiceBtn {
             display: none !important;
         }
+        /* Hide post-canvas action buttons (Share Score, Competitions) */
+        #post-canvas-actions {
+            display: none !important;
+        }
         /* ============================================
            DESKTOP: Side-by-side layout (canvas left, UI right)
            ============================================ */
@@ -75,27 +79,40 @@
             .app-container {
                 display: grid !important;
                 grid-template-columns: auto 1fr;
-                /* Rows: instruction | spacer | progress | split | button | spacer */
-                grid-template-rows: auto 1fr auto auto auto 1fr;
+                grid-template-rows: 1fr auto auto auto 1fr;
                 gap: 0 16px !important;
                 max-width: 100% !important;
                 padding: 4px 16px 4px 24px !important;
                 align-items: start !important;
             }
-            /* Row 1: instruction spans full width */
+            /* Instruction overlays canvas top (same grid area) */
             .instruction-area {
-                grid-column: 1 / -1 !important;
-                grid-row: 1 !important;
-                height: 24px !important;
-                min-height: 24px !important;
-                max-height: 24px !important;
+                grid-column: 1 !important;
+                grid-row: 1 / 6 !important;
+                align-self: start !important;
+                z-index: 20 !important;
+                height: auto !important;
+                min-height: auto !important;
+                max-height: none !important;
                 margin: 0 !important;
-                padding: 0 8px !important;
+                padding: 6px 12px !important;
+                background: rgba(255, 255, 255, 0.92) !important;
+                border: 1px solid #000 !important;
+                border-radius: 6px !important;
+                pointer-events: none !important;
+                width: fit-content !important;
+                justify-self: center !important;
+                margin-top: 6px !important;
             }
-            /* Canvas in left column, spanning rows 2-6, vertically centered */
+            .instruction-text {
+                font-size: 12px !important;
+                text-align: center !important;
+                white-space: nowrap !important;
+            }
+            /* Canvas in left column, spanning all rows, vertically centered */
             .canvas-container, .canvas-container-fixed {
                 grid-column: 1 !important;
-                grid-row: 2 / 7 !important;
+                grid-row: 1 / 6 !important;
                 margin: 0 !important;
                 align-self: center !important;
                 position: relative !important;
@@ -103,26 +120,27 @@
             /* Play button below canvas */
             #initialPlayButton, #initialPlayButton.initial-play-container {
                 grid-column: 1 !important;
-                grid-row: 7 !important;
+                grid-row: 6 !important;
                 margin-top: -6px !important;
                 position: relative !important;
                 z-index: 25 !important;
                 transform: none !important;
                 text-align: center !important;
             }
-            /* Right panel: each item in its own row, vertically centered via 1fr spacers */
+            /* Right panel: vertically centered via 1fr spacer rows */
             #demoProgressDisplay, .demo-progress-display {
                 grid-column: 2 !important;
-                grid-row: 3 !important;
+                grid-row: 2 !important;
                 align-self: end !important;
                 margin: 0 !important;
-                padding: 0 0 4px 0 !important;
-                font-size: 13px !important;
+                padding: 0 0 2px 0 !important;
+                font-size: 11px !important;
                 text-align: center !important;
+                white-space: nowrap !important;
             }
             .fixed-percentage-area, #fixedPercentageArea {
                 grid-column: 2 !important;
-                grid-row: 4 !important;
+                grid-row: 3 !important;
                 align-self: start !important;
                 min-height: auto !important;
                 margin: 0 !important;
@@ -133,37 +151,40 @@
             }
             .fixed-button-area, #fixedButtonArea {
                 grid-column: 2 !important;
-                grid-row: 5 !important;
+                grid-row: 4 !important;
                 align-self: start !important;
                 min-height: auto !important;
-                margin: 0 !important;
+                margin: 16px 0 0 0 !important;
             }
             .fixed-button-area .progression-button,
             #fixedButtonArea .progression-button {
                 margin-top: 0 !important;
                 transform: none !important;
             }
-            /* Leaderboard: hidden during gameplay, shown after completion */
+            /* Leaderboard: hidden during gameplay, shown after completion.
+               Top-aligned with canvas top when visible. */
             .weekly-leaderboard {
                 grid-column: 2 !important;
-                grid-row: 2 / 7 !important;
-                align-self: center !important;
+                grid-row: 1 / 6 !important;
+                align-self: start !important;
                 display: none;
             }
             /* Hide practice nav / results in grid */
             .buttons-below-canvas, .results-container {
                 grid-column: 2 !important;
-                grid-row: 7 !important;
+                grid-row: 6 !important;
                 overflow: hidden !important;
                 max-height: 0 !important;
             }
         }
-        /* Commentary overlay: ensure it stays on the canvas */
+        /* Commentary overlay: on top of canvas, centered horizontally at top */
         .commentary-overlay {
             position: absolute !important;
+            top: 6px !important;
+            bottom: auto !important;
             left: 50% !important;
             transform: translateX(-50%) !important;
-            z-index: 15 !important;
+            z-index: 20 !important;
         }
         /* Center the single Play button (Practice is hidden) */
         #initialPlayButton #playBtn,
@@ -293,6 +314,37 @@
             color: #888;
             text-align: center;
             font-style: italic;
+        }
+        .lb-subtitle {
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: #666;
+            margin-top: 1px;
+        }
+        .lb-tabs {
+            display: flex;
+            gap: 4px;
+            padding: 6px 8px 4px;
+            border-top: 2px solid #000;
+        }
+        .lb-tab {
+            flex: 1;
+            padding: 4px 0;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 2px solid #000;
+            border-radius: 4px;
+            background: #fff;
+            color: #333;
+            cursor: pointer;
+            text-align: center;
+        }
+        .lb-tab-active {
+            background: #000;
+            color: #fff;
         }
         .lb-table::-webkit-scrollbar {
             width: 4px;

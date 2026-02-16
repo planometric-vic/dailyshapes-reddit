@@ -21,6 +21,12 @@ interface InitData {
   weekKey: string;
   userWeeklyScore: number;
   userWeeklyRank: number;
+  weeklyWins: LeaderboardEntry[];
+  userWeeklyWins: number;
+  userWeeklyWinsRank: number;
+  perfectCuts: LeaderboardEntry[];
+  userPerfectCuts: number;
+  userPerfectCutsRank: number;
   postTitle: string;
 }
 
@@ -96,9 +102,57 @@ const redisKeys = {
   userScore: (dayKey: string, username: string) => `scores:${dayKey}:${username}`,
   leaderboard: (dayKey: string) => `leaderboard:${dayKey}`,
   weeklyLeaderboard: (weekKey: string) => `weekly:${weekKey}`,
+  weeklyWinner: (weekKey: string) => `weekly_winner:${weekKey}`,
+  weeklyWins: 'weekly_wins',       // sorted set: member=username, score=win_count
+  perfectCuts: 'perfect_cuts',     // sorted set: member=username, score=cut_count
   progress: (dayKey: string, username: string) => `progress:${dayKey}:${username}`,
   userStats: (username: string) => `stats:${username}`,
 };
+
+/** Get the previous week's key (Monday before current Monday, UTC) */
+function getPreviousWeekKey(): string {
+  const now = new Date();
+  const day = now.getUTCDay();
+  const diff = day === 0 ? 6 : day - 1;
+  const thisMonday = new Date(now);
+  thisMonday.setUTCDate(thisMonday.getUTCDate() - diff);
+  const prevMonday = new Date(thisMonday);
+  prevMonday.setUTCDate(prevMonday.getUTCDate() - 7);
+  const yy = String(prevMonday.getUTCFullYear()).slice(-2);
+  const mm = String(prevMonday.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(prevMonday.getUTCDate()).padStart(2, '0');
+  return `${yy}${mm}${dd}`;
+}
+
+/** Count perfect cuts from a shapeScores object (attempt score >= 100 = perfect) */
+function countPerfectCuts(scores: any): number {
+  let count = 0;
+  if (!scores) return 0;
+  for (let i = 1; i <= 3; i++) {
+    const shape = scores[`shape${i}`];
+    if (shape) {
+      if ((shape.attempt1 || 0) >= 100) count++;
+      if ((shape.attempt2 || 0) >= 100) count++;
+    }
+  }
+  return count;
+}
+
+/** Helper to fetch a leaderboard sorted set (top N, reverse order) with user stats */
+async function fetchLeaderboard(
+  redis: any, key: string, username: string, limit = 20
+): Promise<{ entries: LeaderboardEntry[]; userScore: number; userRank: number }> {
+  const raw = await redis.zRange(key, 0, limit - 1, { reverse: true, by: 'rank' });
+  const entries: LeaderboardEntry[] = raw.map((entry: any, idx: number) => ({
+    username: entry.member,
+    score: entry.score,
+    rank: idx + 1,
+  }));
+  const userScore = await redis.zScore(key, username) ?? 0;
+  const userRankRaw = await redis.zRank(key, username);
+  const userRank = userRankRaw !== undefined ? userRankRaw + 1 : -1;
+  return { entries, userScore, userRank };
+}
 
 // ============================================================
 // MENU ACTIONS & FORMS
@@ -276,6 +330,28 @@ Devvit.addSchedulerJob({
     });
 
     console.log(`Daily Shapes #${dayNum} post created for ${dayKey}`);
+
+    // On Monday, determine previous week's competition winner
+    if (dow === 1) {
+      const prevWeekKey = getPreviousWeekKey();
+      const winnerKey = redisKeys.weeklyWinner(prevWeekKey);
+      const existingWinner = await context.redis.get(winnerKey);
+      if (!existingWinner) {
+        const topScorers = await context.redis.zRange(
+          redisKeys.weeklyLeaderboard(prevWeekKey), 0, 0, { reverse: true, by: 'rank' }
+        );
+        if (topScorers.length > 0) {
+          const winner = topScorers[0].member;
+          await context.redis.set(winnerKey, winner);
+          const currentWins = await context.redis.zScore(redisKeys.weeklyWins, winner) ?? 0;
+          await context.redis.zAdd(redisKeys.weeklyWins, {
+            member: winner,
+            score: currentWins + 1,
+          });
+          console.log(`Weekly winner for ${prevWeekKey}: ${winner} (now ${currentWins + 1} wins)`);
+        }
+      }
+    }
   },
 });
 
@@ -324,22 +400,11 @@ Devvit.addCustomPostType({
             rank: idx + 1,
           }));
 
-          // Weekly leaderboard (Mon-Sun)
+          // All leaderboards
           const weekKey = getWeekKey();
-          const rawWeekly = await context.redis.zRange(
-            redisKeys.weeklyLeaderboard(weekKey), 0, 19, { reverse: true, by: 'rank' }
-          );
-          const weeklyLeaderboard: LeaderboardEntry[] = rawWeekly.map((entry, idx) => ({
-            username: entry.member,
-            score: entry.score,
-            rank: idx + 1,
-          }));
-          const userWeeklyScore = await context.redis.zScore(
-            redisKeys.weeklyLeaderboard(weekKey), username
-          ) ?? 0;
-          const userWeeklyRank = await context.redis.zRank(
-            redisKeys.weeklyLeaderboard(weekKey), username
-          );
+          const weekly = await fetchLeaderboard(context.redis, redisKeys.weeklyLeaderboard(weekKey), username);
+          const wins = await fetchLeaderboard(context.redis, redisKeys.weeklyWins, username);
+          const cuts = await fetchLeaderboard(context.redis, redisKeys.perfectCuts, username);
 
           context.ui.webView.postMessage('game-webview', {
             type: 'INIT_RESPONSE',
@@ -353,10 +418,16 @@ Devvit.addCustomPostType({
               existingProgress,
               existingScore,
               leaderboard,
-              weeklyLeaderboard,
+              weeklyLeaderboard: weekly.entries,
               weekKey,
-              userWeeklyScore,
-              userWeeklyRank: userWeeklyRank !== undefined ? userWeeklyRank + 1 : -1,
+              userWeeklyScore: weekly.userScore,
+              userWeeklyRank: weekly.userRank,
+              weeklyWins: wins.entries,
+              userWeeklyWins: wins.userScore,
+              userWeeklyWinsRank: wins.userRank,
+              perfectCuts: cuts.entries,
+              userPerfectCuts: cuts.userScore,
+              userPerfectCutsRank: cuts.userRank,
               postTitle: `Daily Shapes #${dayNum}`,
             } as InitData,
           } as any);
@@ -381,30 +452,38 @@ Devvit.addCustomPostType({
             score: newWeeklyTotal,
           });
 
+          // Track perfect cuts (all-time)
+          const perfects = countPerfectCuts(scores);
+          if (perfects > 0) {
+            const currentPerfects = await context.redis.zScore(redisKeys.perfectCuts, username) ?? 0;
+            await context.redis.zAdd(redisKeys.perfectCuts, {
+              member: username,
+              score: currentPerfects + perfects,
+            });
+          }
+
           // Update user stats
           const statsKey = redisKeys.userStats(username);
           await context.redis.hIncrBy(statsKey, 'totalGames', 1);
           await context.redis.hIncrBy(statsKey, 'totalScore', total);
 
-          // Get updated weekly leaderboard to send back
-          const rawWeekly = await context.redis.zRange(
-            redisKeys.weeklyLeaderboard(weekKey), 0, 19, { reverse: true, by: 'rank' }
-          );
-          const weeklyLeaderboard: LeaderboardEntry[] = rawWeekly.map((entry, idx) => ({
-            username: entry.member,
-            score: entry.score,
-            rank: idx + 1,
-          }));
-          const userWeeklyRank = await context.redis.zRank(
-            redisKeys.weeklyLeaderboard(weekKey), username
-          );
+          // Fetch all updated leaderboards to send back
+          const weeklyLb = await fetchLeaderboard(context.redis, redisKeys.weeklyLeaderboard(weekKey), username);
+          const winsLb = await fetchLeaderboard(context.redis, redisKeys.weeklyWins, username);
+          const cutsLb = await fetchLeaderboard(context.redis, redisKeys.perfectCuts, username);
 
           context.ui.webView.postMessage('game-webview', {
             type: 'SCORE_SAVED',
             data: {
-              weeklyLeaderboard,
-              userWeeklyScore: newWeeklyTotal,
-              userWeeklyRank: userWeeklyRank !== undefined ? userWeeklyRank + 1 : -1,
+              weeklyLeaderboard: weeklyLb.entries,
+              userWeeklyScore: weeklyLb.userScore,
+              userWeeklyRank: weeklyLb.userRank,
+              weeklyWins: winsLb.entries,
+              userWeeklyWins: winsLb.userScore,
+              userWeeklyWinsRank: winsLb.userRank,
+              perfectCuts: cutsLb.entries,
+              userPerfectCuts: cutsLb.userScore,
+              userPerfectCutsRank: cutsLb.userRank,
             },
           } as any);
           break;
@@ -430,27 +509,22 @@ Devvit.addCustomPostType({
 
         case 'GET_WEEKLY_LEADERBOARD': {
           const weekKey = getWeekKey();
-          const rawWeekly = await context.redis.zRange(
-            redisKeys.weeklyLeaderboard(weekKey), 0, 19, { reverse: true, by: 'rank' }
-          );
-          const weeklyLb: LeaderboardEntry[] = rawWeekly.map((entry, idx) => ({
-            username: entry.member,
-            score: entry.score,
-            rank: idx + 1,
-          }));
-          const userWScore = await context.redis.zScore(
-            redisKeys.weeklyLeaderboard(weekKey), username
-          ) ?? 0;
-          const userWRank = await context.redis.zRank(
-            redisKeys.weeklyLeaderboard(weekKey), username
-          );
+          const wkly = await fetchLeaderboard(context.redis, redisKeys.weeklyLeaderboard(weekKey), username);
+          const wns = await fetchLeaderboard(context.redis, redisKeys.weeklyWins, username);
+          const cts = await fetchLeaderboard(context.redis, redisKeys.perfectCuts, username);
 
           context.ui.webView.postMessage('game-webview', {
             type: 'WEEKLY_LEADERBOARD_RESPONSE',
             data: {
-              weeklyLeaderboard: weeklyLb,
-              userWeeklyScore: userWScore,
-              userWeeklyRank: userWRank !== undefined ? userWRank + 1 : -1,
+              weeklyLeaderboard: wkly.entries,
+              userWeeklyScore: wkly.userScore,
+              userWeeklyRank: wkly.userRank,
+              weeklyWins: wns.entries,
+              userWeeklyWins: wns.userScore,
+              userWeeklyWinsRank: wns.userRank,
+              perfectCuts: cts.entries,
+              userPerfectCuts: cts.userScore,
+              userPerfectCutsRank: cts.userRank,
               weekKey,
             },
           } as any);
