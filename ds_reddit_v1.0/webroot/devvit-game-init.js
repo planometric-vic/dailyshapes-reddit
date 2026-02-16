@@ -208,6 +208,19 @@
         window.startDailyCountdown = function() { return function() {}; };
         window.startNextGameCountdown = function() {};
 
+        // Override competition prompt to show weekly leaderboard instead.
+        // complete-view.js calls showCompetitionPromptModal() ~2s after
+        // the radar animation finishes and the score is totalled.
+        // It's gated by hasShownCompetitionPromptToday() which checks localStorage,
+        // so clear the flag so our override always fires.
+        localStorage.removeItem('dailyShapes_lastCompetitionPromptDate');
+        window.showCompetitionPromptModal = function() {
+            console.log('[Devvit] Showing weekly leaderboard (post-game)');
+            if (window.WeeklyLeaderboard) {
+                window.WeeklyLeaderboard.show();
+            }
+        };
+
         // local-competition-demo.js overwrites CompetitionManager on DOMContentLoaded,
         // removing parseJoinLink/clearJoinLink. Patch it back after a delay.
         setTimeout(function() {

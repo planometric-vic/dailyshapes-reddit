@@ -73,12 +73,28 @@
 
     // Public API
     window.WeeklyLeaderboard = {
+        /** Store data and re-render (but don't change visibility) */
         update: function(data) {
             if (data.username) currentUsername = data.username;
             if (data.weeklyLeaderboard) leaderboardData = data.weeklyLeaderboard;
             if (data.userWeeklyScore !== undefined) userScore = data.userWeeklyScore;
             if (data.userWeeklyRank !== undefined) userRank = data.userWeeklyRank;
             render();
+        },
+        /** Show the leaderboard (after game completion) */
+        show: function() {
+            render();
+            container.style.display = 'block';
+            // Hide game controls since we're in the completion view
+            var els = ['demoProgressDisplay', 'fixedPercentageArea', 'fixedButtonArea'];
+            for (var i = 0; i < els.length; i++) {
+                var el = document.getElementById(els[i]);
+                if (el) el.style.display = 'none';
+            }
+        },
+        /** Hide the leaderboard (during gameplay) */
+        hide: function() {
+            container.style.display = 'none';
         },
         refresh: function() {
             if (window.DevvitBridge) {
@@ -94,22 +110,24 @@
         }
     };
 
-    // Listen for init data
+    // Listen for init data - store but don't show (leaderboard hidden during gameplay)
     window.addEventListener('devvit-init', function(e) {
         var d = e.detail;
         currentUsername = d.username || '';
         leaderboardData = d.weeklyLeaderboard || [];
         userScore = d.userWeeklyScore || 0;
         userRank = d.userWeeklyRank || -1;
+        // Pre-render content but keep container hidden
         render();
     });
 
-    // Listen for score saved (includes updated leaderboard)
+    // Listen for score saved (includes updated leaderboard data)
     window.addEventListener('devvit-score-saved', function(e) {
         var d = e.detail;
         if (d.weeklyLeaderboard) leaderboardData = d.weeklyLeaderboard;
         if (d.userWeeklyScore !== undefined) userScore = d.userWeeklyScore;
         if (d.userWeeklyRank !== undefined) userRank = d.userWeeklyRank;
+        // Update data but don't show - wait for game completion
         render();
     });
 
@@ -121,7 +139,4 @@
         if (d.userWeeklyRank !== undefined) userRank = d.userWeeklyRank;
         render();
     });
-
-    // Initial empty render
-    render();
 })();

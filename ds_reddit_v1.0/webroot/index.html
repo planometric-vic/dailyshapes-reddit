@@ -69,14 +69,14 @@
             display: none !important;
         }
         /* ============================================
-           DESKTOP: Side-by-side layout (canvas left, leaderboard right)
+           DESKTOP: Side-by-side layout (canvas left, UI right)
            ============================================ */
         @media (min-width: 600px) {
             .app-container {
                 display: grid !important;
                 grid-template-columns: auto 1fr;
-                /* Row 1: instruction (above both), Row 2: canvas+leaderboard */
-                grid-template-rows: auto 1fr;
+                /* Rows: instruction | spacer | progress | split | button | spacer */
+                grid-template-rows: auto 1fr auto auto auto 1fr;
                 gap: 0 16px !important;
                 max-width: 100% !important;
                 padding: 4px 16px 4px 24px !important;
@@ -92,39 +92,40 @@
                 margin: 0 !important;
                 padding: 0 8px !important;
             }
-            /* Canvas in left column, vertically centered */
+            /* Canvas in left column, spanning rows 2-6, vertically centered */
             .canvas-container, .canvas-container-fixed {
                 grid-column: 1 !important;
-                grid-row: 2 !important;
+                grid-row: 2 / 7 !important;
                 margin: 0 !important;
                 align-self: center !important;
+                position: relative !important;
             }
             /* Play button below canvas */
             #initialPlayButton, #initialPlayButton.initial-play-container {
                 grid-column: 1 !important;
-                grid-row: 3 !important;
+                grid-row: 7 !important;
                 margin-top: -6px !important;
                 position: relative !important;
                 z-index: 25 !important;
                 transform: none !important;
                 text-align: center !important;
             }
-            /* Right panel: stack progress, split, button, then leaderboard */
+            /* Right panel: each item in its own row, vertically centered via 1fr spacers */
             #demoProgressDisplay, .demo-progress-display {
                 grid-column: 2 !important;
-                grid-row: 2 !important;
-                align-self: start !important;
+                grid-row: 3 !important;
+                align-self: end !important;
                 margin: 0 !important;
-                padding: 4px 0 0 0 !important;
+                padding: 0 0 4px 0 !important;
                 font-size: 13px !important;
                 text-align: center !important;
             }
             .fixed-percentage-area, #fixedPercentageArea {
                 grid-column: 2 !important;
-                grid-row: 2 !important;
+                grid-row: 4 !important;
                 align-self: start !important;
                 min-height: auto !important;
-                margin: 22px 0 0 0 !important;
+                margin: 0 !important;
             }
             .split-display-large {
                 font-size: 32px !important;
@@ -132,30 +133,37 @@
             }
             .fixed-button-area, #fixedButtonArea {
                 grid-column: 2 !important;
-                grid-row: 2 !important;
+                grid-row: 5 !important;
                 align-self: start !important;
                 min-height: auto !important;
-                margin: 70px 0 0 0 !important;
+                margin: 0 !important;
             }
             .fixed-button-area .progression-button,
             #fixedButtonArea .progression-button {
                 margin-top: 0 !important;
                 transform: none !important;
             }
-            /* Leaderboard fills right column below the controls */
+            /* Leaderboard: hidden during gameplay, shown after completion */
             .weekly-leaderboard {
                 grid-column: 2 !important;
-                grid-row: 2 !important;
-                align-self: start !important;
-                margin-top: 115px !important;
+                grid-row: 2 / 7 !important;
+                align-self: center !important;
+                display: none;
             }
             /* Hide practice nav / results in grid */
             .buttons-below-canvas, .results-container {
                 grid-column: 2 !important;
-                grid-row: 3 !important;
+                grid-row: 7 !important;
                 overflow: hidden !important;
                 max-height: 0 !important;
             }
+        }
+        /* Commentary overlay: ensure it stays on the canvas */
+        .commentary-overlay {
+            position: absolute !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            z-index: 15 !important;
         }
         /* Center the single Play button (Practice is hidden) */
         #initialPlayButton #playBtn,
@@ -186,6 +194,7 @@
             }
             .canvas-container, .canvas-container-fixed {
                 margin-bottom: 2px !important;
+                position: relative !important;
             }
             .demo-progress-display, #demoProgressDisplay {
                 margin: 0 !important;
