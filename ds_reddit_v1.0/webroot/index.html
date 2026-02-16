@@ -51,6 +51,24 @@
         #practiceBtn {
             display: none !important;
         }
+        /* Reposition play button inside canvas area for Reddit's height-constrained viewport.
+           The loading animation forces the canvas container to 380px, which with the play button
+           below it exceeds the 512px WebView height. Pull the button up into the canvas area. */
+        #initialPlayButton,
+        #initialPlayButton.initial-play-container {
+            margin-top: -55px !important;
+            position: relative !important;
+            z-index: 25 !important;
+            transform: none !important;
+            text-align: center !important;
+        }
+        /* Center the single Play button (Practice is hidden) */
+        #initialPlayButton #playBtn,
+        #initialPlayButton .canvas-play-button#playBtn {
+            display: inline-block !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
     </style>
 </head>
 <body>
