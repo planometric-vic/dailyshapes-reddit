@@ -1,4 +1,4 @@
-import { Devvit, useState, useForm } from '@devvit/public-api';
+import { Devvit, useState } from '@devvit/public-api';
 
 // Enable Redis plugin
 Devvit.configure({ redditAPI: true, redis: true });
@@ -141,66 +141,32 @@ Devvit.addMenuItem({
   },
 });
 
-/** Shape upload form - paste GeoJSON for 3 daily shapes */
-const uploadShapesForm = Devvit.createForm(
-  () => ({
-    title: 'Upload Daily Shapes',
-    description: `Paste GeoJSON for each shape. Day key format: YYMMDD (e.g., ${getTodayKey()} for today). Shapes use 380x380 coordinate space.`,
-    fields: [
-      { name: 'dayKey', label: 'Day Key (YYMMDD)', type: 'string', defaultValue: getTodayKey() },
-      { name: 'shape1', label: 'Shape 1 GeoJSON (YYMMDD-01)', type: 'paragraph' },
-      { name: 'shape2', label: 'Shape 2 GeoJSON (YYMMDD-02)', type: 'paragraph' },
-      { name: 'shape3', label: 'Shape 3 GeoJSON (YYMMDD-03)', type: 'paragraph' },
-    ],
-  }),
-  async (event, context) => {
-    const { dayKey, shape1, shape2, shape3 } = event.values;
-
-    if (!dayKey || !dayKey.match(/^\d{6}$/)) {
-      context.ui.showToast({ text: 'Invalid day key. Use YYMMDD format (e.g., 260216).' });
-      return;
-    }
-
-    const shapes = [shape1, shape2, shape3];
-    let uploaded = 0;
-
-    for (let i = 0; i < 3; i++) {
-      const raw = shapes[i]?.trim();
-      if (!raw) continue;
-
-      try {
-        // Validate it's parseable JSON with features
-        const parsed = JSON.parse(raw);
-        if (!parsed.features && !parsed.type) {
-          context.ui.showToast({ text: `Shape ${i + 1}: Invalid GeoJSON (no features or type property)` });
-          return;
-        }
-        // Store the raw GeoJSON string
-        await context.redis.set(redisKeys.shape(dayKey, i), raw);
-        uploaded++;
-      } catch (e) {
-        context.ui.showToast({ text: `Shape ${i + 1}: Invalid JSON - ${e}` });
-        return;
-      }
-    }
-
-    context.ui.showToast({
-      text: `Uploaded ${uploaded}/3 shapes for day ${dayKey}`,
-    });
-  }
-);
-
-/** Admin action to upload shapes for a day */
+/** Admin action to open the Shape Manager (drag-and-drop batch upload) */
 Devvit.addMenuItem({
-  label: 'Upload Shapes (Daily Shapes)',
+  label: 'Shape Manager (Daily Shapes)',
   location: 'subreddit',
   forUserType: 'moderator',
   onPress: async (_event, context) => {
-    context.ui.showForm(uploadShapesForm);
+    const subreddit = await context.reddit.getCurrentSubreddit();
+    const post = await context.reddit.submitPost({
+      title: 'Daily Shapes - Shape Manager (Admin)',
+      subredditName: subreddit.name,
+      preview: (
+        <vstack alignment="center middle" padding="large" backgroundColor="#1a1a2e">
+          <text size="xxlarge" weight="bold" color="white">Shape Manager</text>
+          <spacer size="medium" />
+          <text size="large" color="#e0e0e0">Loading admin tool...</text>
+        </vstack>
+      ),
+    });
+    // Mark this post as an admin post so render() serves admin.html
+    await context.redis.set(`post-type:${post.id}`, 'admin');
+    context.ui.showToast({ text: 'Shape Manager post created!' });
+    context.ui.navigateTo(post);
   },
 });
 
-/** Admin action to check what shapes are stored for today */
+/** Admin action to check what shapes are stored for a day */
 Devvit.addMenuItem({
   label: 'Check Today\'s Shapes (Daily Shapes)',
   location: 'subreddit',
@@ -277,8 +243,60 @@ Devvit.addCustomPostType({
   height: 'tall',
   render: (context) => {
     const [launched, setLaunched] = useState(false);
+    const postId = context.postId ?? '';
 
-    const onMessage = async (msg: WebViewMessage) => {
+    // Check if this is an admin post (title stored in post itself)
+    const [isAdmin] = useState(async () => {
+      if (!postId) return false;
+      const flag = await context.redis.get(`post-type:${postId}`);
+      return flag === 'admin';
+    });
+
+    // ---- ADMIN WebView message handler ----
+    const onAdminMessage = async (msg: any) => {
+      switch (msg.type) {
+        case 'ADMIN_INIT_REQUEST': {
+          context.ui.webView.postMessage('admin-webview', {
+            type: 'ADMIN_INIT_RESPONSE',
+            data: { todayKey: getTodayKey() },
+          } as any);
+          break;
+        }
+
+        case 'UPLOAD_SHAPE': {
+          const { dayKey, shapeIndex, content, msgId } = msg.data;
+          try {
+            if (!dayKey || !dayKey.match(/^\d{6}$/)) {
+              throw new Error('Invalid day key');
+            }
+            if (shapeIndex < 0 || shapeIndex > 2) {
+              throw new Error('Shape index must be 0-2');
+            }
+            // Validate JSON
+            const parsed = JSON.parse(content);
+            if (!parsed.features && !parsed.type) {
+              throw new Error('Invalid GeoJSON');
+            }
+            // Store in Redis
+            await context.redis.set(redisKeys.shape(dayKey, shapeIndex), content);
+
+            context.ui.webView.postMessage('admin-webview', {
+              type: 'UPLOAD_SHAPE_RESULT',
+              data: { msgId, success: true },
+            } as any);
+          } catch (e: any) {
+            context.ui.webView.postMessage('admin-webview', {
+              type: 'UPLOAD_SHAPE_RESULT',
+              data: { msgId, success: false, error: e.message || String(e) },
+            } as any);
+          }
+          break;
+        }
+      }
+    };
+
+    // ---- GAME WebView message handler ----
+    const onGameMessage = async (msg: any) => {
       const username = (await context.reddit.getCurrentUser())?.username ?? 'anonymous';
 
       switch (msg.type) {
@@ -339,20 +357,17 @@ Devvit.addCustomPostType({
         case 'SUBMIT_SCORE': {
           const { dayKey, scores, total } = msg.data;
 
-          // Save individual score
           await context.redis.set(
             redisKeys.userScore(dayKey, username),
             String(total)
           );
 
-          // Add to daily leaderboard
           await context.redis.zAdd(redisKeys.leaderboard(dayKey), {
             member: username,
             score: total,
           });
 
-          // Add to monthly competition
-          const yearMonth = dayKey.substring(0, 4); // YYMM
+          const yearMonth = dayKey.substring(0, 4);
           const currentMonthly = await context.redis.zScore(
             redisKeys.competition(yearMonth),
             username
@@ -362,12 +377,10 @@ Devvit.addCustomPostType({
             score: (currentMonthly ?? 0) + total,
           });
 
-          // Update user stats
           const statsKey = redisKeys.userStats(username);
           await context.redis.hIncrBy(statsKey, 'totalGames', 1);
           await context.redis.hIncrBy(statsKey, 'totalScore', total);
 
-          // Get rank
           const rank = await context.redis.zRank(
             redisKeys.leaderboard(dayKey),
             username
@@ -408,7 +421,6 @@ Devvit.addCustomPostType({
             redisKeys.progress(dayKey, username),
             progress
           );
-          // Expire after 48 hours
           await context.redis.expire(
             redisKeys.progress(dayKey, username),
             172800
@@ -430,6 +442,21 @@ Devvit.addCustomPostType({
       }
     };
 
+    // ---- ADMIN MODE ----
+    if (isAdmin) {
+      return (
+        <vstack height="100%" width="100%">
+          <webview
+            id="admin-webview"
+            url="admin.html"
+            onMessage={onAdminMessage}
+            grow
+          />
+        </vstack>
+      );
+    }
+
+    // ---- GAME MODE ----
     if (!launched) {
       return (
         <vstack
@@ -470,7 +497,7 @@ Devvit.addCustomPostType({
         <webview
           id="game-webview"
           url="index.html"
-          onMessage={onMessage as (msg: any) => void | Promise<void>}
+          onMessage={onGameMessage}
           grow
         />
       </vstack>
