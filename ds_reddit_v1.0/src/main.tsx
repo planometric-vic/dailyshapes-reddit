@@ -127,7 +127,7 @@ Devvit.addMenuItem({
 const batchUploadForm = Devvit.createForm(
   () => ({
     title: 'Upload Shapes (Batch)',
-    description: 'Paste the JSON payload from prepare-upload.js. Format: { "YYMMDD": { "0": "geojson", "1": "geojson", "2": "geojson" }, ... }',
+    description: 'Paste the JSON payload from prepare-upload.cjs. Format: { "YYMMDD": [geojson0, geojson1, geojson2], ... }',
     fields: [
       { name: 'payload', label: 'Shape data (JSON)', type: 'paragraph' },
     ],
@@ -139,7 +139,7 @@ const batchUploadForm = Devvit.createForm(
       return;
     }
 
-    let batch: Record<string, Record<string, string>>;
+    let batch: Record<string, any>;
     try {
       batch = JSON.parse(raw);
     } catch (e) {
@@ -157,15 +157,23 @@ const batchUploadForm = Devvit.createForm(
         continue;
       }
       const dayShapes = batch[dayKey];
-      for (const indexStr of Object.keys(dayShapes)) {
-        const index = parseInt(indexStr, 10);
-        if (index < 0 || index > 2) { errors++; continue; }
+      // Support both array format [obj0, obj1, obj2] and object format {"0": ..., "1": ..., "2": ...}
+      const shapeArray = Array.isArray(dayShapes)
+        ? dayShapes
+        : [dayShapes['0'] ?? dayShapes[0], dayShapes['1'] ?? dayShapes[1], dayShapes['2'] ?? dayShapes[2]];
 
-        const content = dayShapes[indexStr];
+      for (let i = 0; i < shapeArray.length; i++) {
+        if (i > 2) break;
+        const shape = shapeArray[i];
+        if (!shape) continue;
+
         try {
-          const parsed = JSON.parse(content);
-          if (!parsed.features && !parsed.type) { errors++; continue; }
-          await context.redis.set(redisKeys.shape(dayKey, index), content);
+          // shape may be an object (new format) or a string (old format)
+          const obj = typeof shape === 'string' ? JSON.parse(shape) : shape;
+          if (!obj.features && !obj.type) { errors++; continue; }
+          // Store as JSON string in Redis
+          const json = typeof shape === 'string' ? shape : JSON.stringify(shape);
+          await context.redis.set(redisKeys.shape(dayKey, i), json);
           uploaded++;
         } catch {
           errors++;

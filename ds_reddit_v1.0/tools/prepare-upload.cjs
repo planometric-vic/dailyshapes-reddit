@@ -1,26 +1,24 @@
 #!/usr/bin/env node
 
 /**
- * prepare-upload.js
+ * prepare-upload.cjs
  *
- * Reads .geojson shape files from a folder and copies them to your clipboard
- * as a JSON payload ready to paste into the Daily Shapes upload form on Reddit.
+ * Reads .geojson shape files from a folder, minifies them, and outputs
+ * batch payloads ready to paste into the Daily Shapes upload form on Reddit.
  *
  * Usage:
- *   node prepare-upload.js <folder-path>
- *   node prepare-upload.js C:\Users\benka\Documents\Daily Shapes\shapes
+ *   node tools/prepare-upload.cjs <folder-path>
+ *   node tools/prepare-upload.cjs <folder-path> --max-days 3
  *
  * File naming: YYMMDD-01.geojson, YYMMDD-02.geojson, YYMMDD-03.geojson
  *
- * The script will:
- *   1. Scan the folder for matching .geojson files
- *   2. Group them by day key (YYMMDD)
- *   3. Validate each file is valid GeoJSON
- *   4. Package them into a JSON payload
- *   5. Copy to clipboard (or save to a .txt file if clipboard fails)
+ * The script:
+ *   1. Scans the folder for matching .geojson files
+ *   2. Minifies each (rounds coords to integers, strips whitespace)
+ *   3. Packages into batch JSON payloads (no double-encoding)
+ *   4. Copies to clipboard or saves to files
  *
- * Then go to your subreddit, use the "Upload Shapes (Daily Shapes)" menu action,
- * and paste the payload into the form.
+ * Then: subreddit menu > "Upload Shapes (Daily Shapes)" > paste > submit.
  */
 
 const fs = require('fs');
@@ -33,19 +31,19 @@ const { execSync } = require('child_process');
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-    console.log('Usage: node prepare-upload.js <folder-path> [--max-days N]');
+    console.log('Usage: node tools/prepare-upload.cjs <folder-path> [--max-days N]');
     console.log('');
     console.log('Examples:');
-    console.log('  node prepare-upload.js ./shapes');
-    console.log('  node prepare-upload.js "C:\\Users\\benka\\Documents\\Daily Shapes\\shapes"');
-    console.log('  node prepare-upload.js ./shapes --max-days 5');
+    console.log('  node tools/prepare-upload.cjs ./shapes');
+    console.log('  node tools/prepare-upload.cjs "G:\\My Drive\\Shapes\\geojson"');
+    console.log('  node tools/prepare-upload.cjs ./shapes --max-days 2');
     console.log('');
-    console.log('Reads YYMMDD-01.geojson files and prepares them for the Reddit upload form.');
+    console.log('Reads YYMMDD-01.geojson files, minifies, and prepares for Reddit upload.');
     process.exit(1);
 }
 
 const folderPath = args[0];
-let maxDays = 7; // Default: 7 days per batch to keep payload size reasonable
+let maxDays = 3; // Default: 3 days per batch (~150-250 KB after minification)
 
 const maxDaysIdx = args.indexOf('--max-days');
 if (maxDaysIdx !== -1 && args[maxDaysIdx + 1]) {
@@ -58,22 +56,53 @@ if (!fs.existsSync(folderPath)) {
 }
 
 // ============================================================
+// Minify GeoJSON - round coordinates to integers (380x380 canvas)
+// ============================================================
+
+function minifyGeoJSON(geojson) {
+    // Deep-walk the object and round any coordinate arrays
+    function roundCoords(obj) {
+        if (Array.isArray(obj)) {
+            // If it's a coordinate pair [x, y], round to 1 decimal
+            if (obj.length >= 2 && typeof obj[0] === 'number' && typeof obj[1] === 'number') {
+                // Check if this looks like a coordinate (not a ring of coordinates)
+                if (obj.length <= 3 && !Array.isArray(obj[0])) {
+                    return obj.map(v => Math.round(v * 10) / 10);
+                }
+            }
+            return obj.map(roundCoords);
+        }
+        if (obj && typeof obj === 'object') {
+            const result = {};
+            for (const key of Object.keys(obj)) {
+                result[key] = roundCoords(obj[key]);
+            }
+            return result;
+        }
+        return obj;
+    }
+
+    return roundCoords(geojson);
+}
+
+// ============================================================
 // Scan for .geojson files
 // ============================================================
 
 const filePattern = /^(\d{6})-0?(\d)\.(geojson|json)$/i;
 const entries = fs.readdirSync(folderPath);
 
-const shapes = {}; // dayKey -> { 0: content, 1: content, 2: content }
+const shapes = {}; // dayKey -> [geojsonObj0, geojsonObj1, geojsonObj2]
 let fileCount = 0;
 let errorCount = 0;
+let originalSize = 0;
 
 for (const filename of entries) {
     const match = filename.match(filePattern);
     if (!match) continue;
 
     const dayKey = match[1];
-    const shapeIndex = parseInt(match[2], 10) - 1; // Convert to 0-based
+    const shapeIndex = parseInt(match[2], 10) - 1; // 0-based
 
     if (shapeIndex < 0 || shapeIndex > 2) {
         console.warn(`  Skipped ${filename} - shape index out of range (1-3)`);
@@ -82,8 +111,8 @@ for (const filename of entries) {
 
     const filePath = path.join(folderPath, filename);
     const content = fs.readFileSync(filePath, 'utf-8');
+    originalSize += content.length;
 
-    // Validate JSON
     try {
         const parsed = JSON.parse(content);
         if (!parsed.features && !parsed.type) {
@@ -91,19 +120,21 @@ for (const filename of entries) {
             errorCount++;
             continue;
         }
+
+        // Minify: round coordinates, will be serialized without whitespace
+        const minified = minifyGeoJSON(parsed);
+
+        if (!shapes[dayKey]) shapes[dayKey] = [null, null, null];
+        shapes[dayKey][shapeIndex] = minified;
+        fileCount++;
     } catch (e) {
         console.warn(`  Error: ${filename} - invalid JSON: ${e.message}`);
         errorCount++;
-        continue;
     }
-
-    if (!shapes[dayKey]) shapes[dayKey] = {};
-    shapes[dayKey][shapeIndex] = content;
-    fileCount++;
 }
 
 // ============================================================
-// Report what was found
+// Report
 // ============================================================
 
 const dayKeys = Object.keys(shapes).sort();
@@ -115,18 +146,12 @@ if (dayKeys.length === 0) {
     process.exit(1);
 }
 
-console.log(`Found ${fileCount} shape files across ${dayKeys.length} days:`);
-for (const dk of dayKeys) {
-    const indices = Object.keys(shapes[dk]).sort();
-    const complete = indices.length === 3 ? 'complete' : `${indices.length}/3`;
-    console.log(`  ${dk}: shapes ${indices.map(i => parseInt(i) + 1).join(', ')} (${complete})`);
-}
-if (errorCount > 0) {
-    console.log(`  ${errorCount} file(s) skipped due to errors`);
-}
+console.log(`Found ${fileCount} shapes across ${dayKeys.length} days.`);
+if (errorCount > 0) console.log(`  ${errorCount} file(s) skipped due to errors.`);
 
 // ============================================================
-// Build batches
+// Build batches - store GeoJSON objects directly (no double-encoding)
+// Batch format: { "YYMMDD": [geojson0, geojson1, geojson2], ... }
 // ============================================================
 
 const batches = [];
@@ -139,46 +164,46 @@ for (let i = 0; i < dayKeys.length; i += maxDays) {
     batches.push(batch);
 }
 
+let totalMinified = 0;
 console.log('');
 
 if (batches.length === 1) {
-    // Single batch - copy to clipboard
     const payload = JSON.stringify(batches[0]);
-    const outputFile = path.join(folderPath, '_upload-payload.txt');
+    totalMinified = payload.length;
 
     try {
-        // Try clipboard (Windows)
         if (process.platform === 'win32') {
             execSync('clip', { input: payload });
             console.log(`Copied to clipboard! (${(payload.length / 1024).toFixed(1)} KB)`);
-            console.log('');
-            console.log('Next steps:');
-            console.log('  1. Go to your subreddit on Reddit');
-            console.log('  2. Three-dot menu > "Upload Shapes (Daily Shapes)"');
-            console.log('  3. Paste into the text field');
-            console.log('  4. Submit');
         } else {
-            // Fallback: save to file
+            const outputFile = path.join(folderPath, '_upload-payload.txt');
             fs.writeFileSync(outputFile, payload);
             console.log(`Saved to: ${outputFile} (${(payload.length / 1024).toFixed(1)} KB)`);
-            console.log('Copy the contents and paste into the upload form.');
         }
     } catch (e) {
-        // Fallback: save to file
+        const outputFile = path.join(folderPath, '_upload-payload.txt');
         fs.writeFileSync(outputFile, payload);
         console.log(`Saved to: ${outputFile} (${(payload.length / 1024).toFixed(1)} KB)`);
-        console.log('Copy the contents and paste into the upload form.');
     }
+
+    console.log('');
+    console.log('Next steps:');
+    console.log('  1. Go to your subreddit on Reddit');
+    console.log('  2. Three-dot menu > "Upload Shapes (Daily Shapes)"');
+    console.log('  3. Paste into the text field and submit');
 } else {
-    // Multiple batches
-    console.log(`Shapes split into ${batches.length} batches (${maxDays} days each):`);
+    console.log(`Split into ${batches.length} batches (${maxDays} days each):`);
     for (let b = 0; b < batches.length; b++) {
         const payload = JSON.stringify(batches[b]);
+        totalMinified += payload.length;
         const batchDays = Object.keys(batches[b]).sort();
         const outputFile = path.join(folderPath, `_upload-batch-${b + 1}.txt`);
         fs.writeFileSync(outputFile, payload);
-        console.log(`  Batch ${b + 1}: days ${batchDays[0]}-${batchDays[batchDays.length - 1]} -> ${outputFile} (${(payload.length / 1024).toFixed(1)} KB)`);
+        console.log(`  Batch ${b + 1}: days ${batchDays[0]}-${batchDays[batchDays.length - 1]} (${(payload.length / 1024).toFixed(1)} KB) -> ${outputFile}`);
     }
     console.log('');
-    console.log('Paste each batch file into the upload form one at a time.');
+    console.log('Paste each batch into the upload form one at a time.');
 }
+
+console.log('');
+console.log(`Size: ${(originalSize / 1024).toFixed(0)} KB original -> ${(totalMinified / 1024).toFixed(0)} KB minified (${Math.round((1 - totalMinified / originalSize) * 100)}% reduction)`);
