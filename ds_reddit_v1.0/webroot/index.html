@@ -144,13 +144,17 @@
                 text-align: center !important;
                 width: auto !important; /* content-sized, not canvas-width */
             }
-            /* Right panel */
+            /* Progress display: under the canvas, centered horizontally.
+               Overlaps the canvas grid area so it doesn't add a new row
+               or cause any grid recalculation when it appears. */
             #demoProgressDisplay, .demo-progress-display {
-                grid-column: 2 !important;
-                grid-row: 1 !important;
-                align-self: start !important;
+                grid-column: 1 !important;
+                grid-row: 1 / 6 !important;
+                align-self: end !important;
+                justify-self: center !important;
+                transform: translateY(calc(100% + 4px)) !important; /* sit just below canvas */
                 margin: 0 !important;
-                padding: 0 0 2px 0 !important;
+                padding: 0 !important;
                 font-size: 11px !important;
                 text-align: center !important;
                 white-space: nowrap !important;
