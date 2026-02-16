@@ -28,9 +28,7 @@
         var t = tabs[tabKey];
         var html = '';
 
-        if (t.data.length === 0) {
-            html += '<div class="lb-empty">No scores yet</div>';
-        } else {
+        if (t.data.length > 0) {
             for (var i = 0; i < t.data.length; i++) {
                 var entry = t.data[i];
                 var isUser = entry.username === currentUsername;

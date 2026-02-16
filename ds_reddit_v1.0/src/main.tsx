@@ -1,4 +1,4 @@
-import { Devvit, useState } from '@devvit/public-api';
+import { Devvit } from '@devvit/public-api';
 
 // Enable Redis plugin
 Devvit.configure({ redditAPI: true, redis: true });
@@ -364,8 +364,6 @@ Devvit.addCustomPostType({
   description: 'A daily puzzle game - cut shapes into perfect halves!',
   height: 'tall',
   render: (context) => {
-    const [launched, setLaunched] = useState(false);
-
     const onMessage = async (msg: any) => {
       const username = (await context.reddit.getCurrentUser())?.username ?? 'anonymous';
 
@@ -549,41 +547,6 @@ Devvit.addCustomPostType({
         }
       }
     };
-
-    if (!launched) {
-      return (
-        <vstack
-          alignment="center middle"
-          height="100%"
-          backgroundColor="#1a1a2e"
-          gap="large"
-          padding="large"
-        >
-          <vstack alignment="center middle" gap="small">
-            <text size="xxlarge" weight="bold" color="white">
-              DAILY SHAPES
-            </text>
-            <text size="medium" color="#b0b0b0">
-              Cut shapes into perfect halves
-            </text>
-          </vstack>
-
-          <vstack alignment="center middle" gap="small">
-            <text size="small" color="#808080">
-              3 shapes. 2 attempts each. How close to 50/50 can you cut?
-            </text>
-          </vstack>
-
-          <button
-            appearance="primary"
-            size="large"
-            onPress={() => setLaunched(true)}
-          >
-            PLAY
-          </button>
-        </vstack>
-      );
-    }
 
     return (
       <vstack height="100%" width="100%">
