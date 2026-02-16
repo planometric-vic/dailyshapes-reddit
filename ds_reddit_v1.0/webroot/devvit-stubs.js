@@ -16,6 +16,13 @@ window.GlobalCompetition = window.GlobalCompetition || {
     submit: function() {},
     getLeaderboard: function() { return Promise.resolve([]); },
 };
+window.CompetitionManager = window.CompetitionManager || {
+    initialize: function() {},
+    parseJoinLink: function() { return null; },
+    joinCompetition: function() { return Promise.resolve({}); },
+    autoJoinGlobalCompetition: function() { return Promise.resolve(); },
+    getActiveCompetitions: function() { return Promise.resolve([]); },
+};
 // Auth functions that main.js may call
 window.openAuthModal = window.openAuthModal || function() { console.log('[Devvit] Auth not needed on Reddit'); };
 window.closeAuthModal = window.closeAuthModal || function() {};

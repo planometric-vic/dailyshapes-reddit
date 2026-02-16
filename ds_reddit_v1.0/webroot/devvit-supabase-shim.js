@@ -203,6 +203,15 @@ window.addEventListener('devvit-init', (event) => {
     // Mark config as ready
     window.SupabaseConfig._ready = true;
 
+    // Tell main.js DOMContentLoaded that "Supabase" is active so it skips
+    // the redundant second initializeDemoGame() call. devvit-game-init.js
+    // handles initialization instead.
+    window.supabaseIntegrationActive = true;
+    window.initializeSupabaseGameMode = window.initializeSupabaseGameMode || function() {
+        console.log('[Devvit Shim] Skipping Supabase game mode init (Devvit handles this)');
+        return Promise.resolve();
+    };
+
     // Set global game mode flags
     window.isDemoMode = true; // Use demo mode flow (no Supabase dependency)
     window.isDailyMode = false;

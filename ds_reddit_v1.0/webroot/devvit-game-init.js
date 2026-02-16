@@ -89,6 +89,10 @@
         window.isPracticeMode = false;
         window.isSupabaseMode = false;
 
+        // Prevent main.js DOMContentLoaded from running a second initializeDemoGame
+        // (main.js checks this flag and skips demo init if Supabase is "active")
+        window._devvitInitRunning = true;
+
         // Set day of week (1-7, where 7=Sunday, matching original main.js)
         const dow = initData.dayOfWeek; // 0=Sun, 6=Sat
         window.currentDay = dow === 0 ? 7 : dow; // Convert to 1-7
@@ -162,6 +166,14 @@
 
         // Override loadSupabaseShape to also use Devvit shapes
         window.loadSupabaseShape = window.loadDemoShape;
+
+        // Stop the loading animation before starting the game
+        if (typeof window.stopImmediateLoadingAnimation === 'function') {
+            console.log('[Devvit Init] Stopping loading animation...');
+            window.stopImmediateLoadingAnimation(function() {
+                console.log('[Devvit Init] Loading animation finished');
+            });
+        }
 
         // Try to use the existing demo game initialization
         if (typeof initializeDemoGame === 'function') {
