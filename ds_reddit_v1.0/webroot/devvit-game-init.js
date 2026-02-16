@@ -5,6 +5,10 @@
  *
  * This file MUST be loaded AFTER main.js and all mechanics.
  * It overrides the Supabase-dependent initialization with Devvit-compatible logic.
+ *
+ * Shape loading priority:
+ *   1. Redis shapes (sent in INIT_RESPONSE from backend)
+ *   2. Bundled shapes in webroot/assets/shapes/YYMMDD-01.geojson etc.
  */
 
 (function() {
@@ -22,6 +26,31 @@
         5: 'ThreePointTriangleMechanic',  // Friday
         6: 'RotatingSquareMechanic',      // Saturday
     };
+
+    /**
+     * Try loading bundled shapes from webroot/assets/shapes/
+     * Uses your naming format: YYMMDD-01.geojson, YYMMDD-02.geojson, YYMMDD-03.geojson
+     */
+    async function loadBundledShapes(dayKey) {
+        const shapes = [];
+        for (let i = 1; i <= 3; i++) {
+            const filename = `${dayKey}-0${i}.geojson`;
+            const url = `assets/shapes/${filename}`;
+            try {
+                const response = await fetch(url);
+                if (response.ok) {
+                    const geojson = await response.json();
+                    shapes.push(geojson);
+                    console.log(`[Devvit Init] Loaded bundled shape: ${filename}`);
+                } else {
+                    console.log(`[Devvit Init] Bundled shape not found: ${filename} (${response.status})`);
+                }
+            } catch (e) {
+                console.log(`[Devvit Init] Could not load bundled shape: ${filename}`, e);
+            }
+        }
+        return shapes;
+    }
 
     // Wait for Devvit init data, then bootstrap the game
     window.addEventListener('devvit-init', async (event) => {
@@ -68,8 +97,8 @@
         const mechanicName = initData.mechanic || dayMechanics[dow] || 'DefaultWithUndoMechanic';
         console.log('[Devvit Init] Mechanic:', mechanicName, 'Day:', window.currentDay);
 
-        // Parse shapes from init data
-        const shapes = (initData.shapes || []).map(s => {
+        // Parse shapes from init data (Redis)
+        let shapes = (initData.shapes || []).map(s => {
             try {
                 return typeof s === 'string' ? JSON.parse(s) : s;
             } catch (e) {
@@ -78,8 +107,14 @@
             }
         }).filter(Boolean);
 
+        // Fallback: try loading bundled shapes from webroot
         if (shapes.length === 0) {
-            console.error('[Devvit Init] No shapes received! Check that shapes are loaded into Redis.');
+            console.log('[Devvit Init] No Redis shapes, trying bundled shapes...');
+            shapes = await loadBundledShapes(initData.dayKey);
+        }
+
+        if (shapes.length === 0) {
+            console.error('[Devvit Init] No shapes found in Redis or bundled files!');
             showNoShapesMessage();
             return;
         }
@@ -88,6 +123,13 @@
 
         // Store shapes for the demo flow to access
         window.devvitParsedShapes = shapes;
+        // Also store total shape count for the game flow
+        window.devvitTotalShapes = shapes.length;
+
+        // Ensure currentShapeNumber is set (1-based, needed for getDailyCutShadingColor)
+        if (!window.currentShapeNumber) {
+            window.currentShapeNumber = 1;
+        }
 
         // Override the demo shape loader to return our Devvit shapes
         window.loadDemoShape = function(dayNumber, shapeNumber) {
@@ -99,6 +141,9 @@
                 console.error('[Devvit Init] Shape not found:', shapeIndex);
                 return Promise.reject('Shape not found');
             }
+
+            // Update currentShapeNumber so getDailyCutShadingColor() returns correct color
+            window.currentShapeNumber = shapeNumber;
 
             // Parse and set the shape
             if (typeof parseGeometry === 'function') {
@@ -136,6 +181,9 @@
 
     function manualInit(mechanicName, firstShape) {
         console.log('[Devvit Init] Manual initialization with', mechanicName);
+
+        // Ensure shape number is set for correct coloring
+        window.currentShapeNumber = 1;
 
         // Parse the first shape
         if (typeof parseGeometry === 'function' && firstShape) {
@@ -182,15 +230,35 @@
     }
 
     function showNoShapesMessage() {
-        const container = document.getElementById('game-container') || document.body;
-        const msg = document.createElement('div');
-        msg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;font-family:Arial,sans-serif;padding:20px;';
-        msg.innerHTML = `
-            <h2 style="margin-bottom:10px;">No shapes loaded</h2>
-            <p style="color:#666;">Today's shapes haven't been uploaded to Redis yet.<br>
-            A moderator needs to upload shapes for today.</p>
-        `;
-        container.appendChild(msg);
+        // Stop loading animation if running
+        if (typeof window.stopImmediateLoadingAnimation === 'function') {
+            window.stopImmediateLoadingAnimation(function() {
+                displayMessage();
+            });
+        } else {
+            displayMessage();
+        }
+
+        function displayMessage() {
+            const canvas = document.getElementById('geoCanvas');
+            if (canvas) {
+                canvas.style.display = 'block';
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, 380, 380);
+
+                // Draw a friendly "no shapes" message on the canvas
+                ctx.fillStyle = '#333';
+                ctx.font = 'bold 20px Arial, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('No shapes loaded yet', 190, 170);
+
+                ctx.fillStyle = '#666';
+                ctx.font = '14px Arial, sans-serif';
+                ctx.fillText('A moderator needs to upload', 190, 200);
+                ctx.fillText("today's shapes to start the game.", 190, 220);
+            }
+        }
     }
 
     // Initialize the bridge

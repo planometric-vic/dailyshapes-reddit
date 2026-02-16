@@ -1,4 +1,4 @@
-import { Devvit, useState } from '@devvit/public-api';
+import { Devvit, useState, useForm } from '@devvit/public-api';
 
 // Enable Redis plugin
 Devvit.configure({ redditAPI: true, redis: true });
@@ -141,14 +141,91 @@ Devvit.addMenuItem({
   },
 });
 
+/** Shape upload form - paste GeoJSON for 3 daily shapes */
+const uploadShapesForm = Devvit.createForm(
+  () => ({
+    title: 'Upload Daily Shapes',
+    description: `Paste GeoJSON for each shape. Day key format: YYMMDD (e.g., ${getTodayKey()} for today). Shapes use 380x380 coordinate space.`,
+    fields: [
+      { name: 'dayKey', label: 'Day Key (YYMMDD)', type: 'string', defaultValue: getTodayKey() },
+      { name: 'shape1', label: 'Shape 1 GeoJSON (YYMMDD-01)', type: 'paragraph' },
+      { name: 'shape2', label: 'Shape 2 GeoJSON (YYMMDD-02)', type: 'paragraph' },
+      { name: 'shape3', label: 'Shape 3 GeoJSON (YYMMDD-03)', type: 'paragraph' },
+    ],
+  }),
+  async (event, context) => {
+    const { dayKey, shape1, shape2, shape3 } = event.values;
+
+    if (!dayKey || !dayKey.match(/^\d{6}$/)) {
+      context.ui.showToast({ text: 'Invalid day key. Use YYMMDD format (e.g., 260216).' });
+      return;
+    }
+
+    const shapes = [shape1, shape2, shape3];
+    let uploaded = 0;
+
+    for (let i = 0; i < 3; i++) {
+      const raw = shapes[i]?.trim();
+      if (!raw) continue;
+
+      try {
+        // Validate it's parseable JSON with features
+        const parsed = JSON.parse(raw);
+        if (!parsed.features && !parsed.type) {
+          context.ui.showToast({ text: `Shape ${i + 1}: Invalid GeoJSON (no features or type property)` });
+          return;
+        }
+        // Store the raw GeoJSON string
+        await context.redis.set(redisKeys.shape(dayKey, i), raw);
+        uploaded++;
+      } catch (e) {
+        context.ui.showToast({ text: `Shape ${i + 1}: Invalid JSON - ${e}` });
+        return;
+      }
+    }
+
+    context.ui.showToast({
+      text: `Uploaded ${uploaded}/3 shapes for day ${dayKey}`,
+    });
+  }
+);
+
 /** Admin action to upload shapes for a day */
 Devvit.addMenuItem({
   label: 'Upload Shapes (Daily Shapes)',
   location: 'subreddit',
   forUserType: 'moderator',
   onPress: async (_event, context) => {
+    context.ui.showForm(uploadShapesForm);
+  },
+});
+
+/** Admin action to check what shapes are stored for today */
+Devvit.addMenuItem({
+  label: 'Check Today\'s Shapes (Daily Shapes)',
+  location: 'subreddit',
+  forUserType: 'moderator',
+  onPress: async (_event, context) => {
+    const dayKey = getTodayKey();
+    const results: string[] = [];
+
+    for (let i = 0; i < 3; i++) {
+      const data = await context.redis.get(redisKeys.shape(dayKey, i));
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          const featureCount = parsed.features?.length ?? 0;
+          results.push(`Shape ${i + 1}: ${featureCount} feature(s), ${data.length} bytes`);
+        } catch {
+          results.push(`Shape ${i + 1}: stored (${data.length} bytes, parse error)`);
+        }
+      } else {
+        results.push(`Shape ${i + 1}: NOT UPLOADED`);
+      }
+    }
+
     context.ui.showToast({
-      text: 'Use the scheduled job or API to upload shapes. See README for instructions.',
+      text: `Day ${dayKey}: ${results.join(' | ')}`,
     });
   },
 });
