@@ -10,8 +10,8 @@
 
     var currentUsername = '';
     var activeTab = 'weekly';
-    var ROW_HEIGHT = 21; // estimated px per row (padding 4 + font ~16 + border 1)
-    var computedMaxRows = 10; // will be recalculated on show()
+    var ROW_HEIGHT = 19; // estimated px per row (padding 4 + font ~14 + border 1)
+    var computedMaxRows = 11; // will be recalculated on show()
 
     // Data for each tab
     var tabs = {
@@ -40,7 +40,7 @@
     var weekDateRange = getWeekDateRange();
 
     var tabConfig = {
-        weekly: { title: 'WEEKLY COMP (MONDAY \u2013 SUNDAY)', subtitle: weekDateRange, label: 'Scores' },
+        weekly: { title: 'WEEKLY COMP (MON-SUN)', subtitle: weekDateRange, label: 'Scores' },
         wins:   { title: 'GAMES WON', subtitle: weekDateRange, label: 'Wins' },
         cuts:   { title: 'PERFECT CUTS', subtitle: weekDateRange, label: 'Perfect Cuts' }
     };
@@ -61,6 +61,26 @@
         var t = tabs[tabKey];
         var html = '';
         var maxRows = computedMaxRows;
+
+        // For wins and cuts tabs: determine shared row count (max of both data lengths)
+        // and show empty rows if no data, but always match each other's row count
+        var isStatTab = (tabKey === 'wins' || tabKey === 'cuts');
+        if (isStatTab) {
+            var winsLen = tabs.wins.data.length;
+            var cutsLen = tabs.cuts.data.length;
+            var sharedDataLen = Math.max(winsLen, cutsLen);
+            // If neither tab has data, both show all empty rows
+            if (sharedDataLen === 0) {
+                for (var e = 0; e < maxRows; e++) {
+                    html += '<div class="lb-row lb-row-empty">';
+                    html += '<span class="lb-rank">&nbsp;</span>';
+                    html += '<span class="lb-name">&nbsp;</span>';
+                    html += '<span class="lb-score">&nbsp;</span>';
+                    html += '</div>';
+                }
+                return html;
+            }
+        }
 
         // Check if user is already in the data
         var userInTop = false;
@@ -84,6 +104,20 @@
             dataToShow = Math.min(t.data.length, maxRows);
         }
 
+        // For stat tabs, ensure both tabs render the same total row count
+        var targetRows = maxRows;
+        if (isStatTab) {
+            var winsRows = tabs.wins.data.length;
+            var cutsRows = tabs.cuts.data.length;
+            var maxDataRows = Math.max(winsRows, cutsRows);
+            // Both tabs use the same target: max data rows + user row if needed, capped at maxRows
+            if (needsUserRow) {
+                targetRows = Math.min(Math.max(maxDataRows + 1, 2), maxRows);
+            } else {
+                targetRows = Math.min(Math.max(maxDataRows, 1), maxRows);
+            }
+        }
+
         var rowCount = 0;
 
         // Data rows
@@ -102,7 +136,7 @@
         // User row at bottom if not in top entries
         if (!userInTop && currentUsername && t.userRank > 0) {
             // Pad with empty rows to push user to the bottom
-            for (var k = rowCount; k < maxRows - 1; k++) {
+            for (var k = rowCount; k < targetRows - 1; k++) {
                 html += '<div class="lb-row lb-row-empty">';
                 html += '<span class="lb-rank">&nbsp;</span>';
                 html += '<span class="lb-name">&nbsp;</span>';
@@ -117,9 +151,9 @@
             html += '<span class="lb-score">' + Math.round(t.userScore) + '</span>';
             html += '</div>';
             rowCount++;
-        } else if (!userInTop && currentUsername) {
-            // User with no rank yet
-            for (var k2 = rowCount; k2 < maxRows - 1; k2++) {
+        } else if (!userInTop && currentUsername && !isStatTab) {
+            // User with no rank yet (only for weekly scores tab, not wins/cuts)
+            for (var k2 = rowCount; k2 < targetRows - 1; k2++) {
                 html += '<div class="lb-row lb-row-empty">';
                 html += '<span class="lb-rank">&nbsp;</span>';
                 html += '<span class="lb-name">&nbsp;</span>';
@@ -136,7 +170,7 @@
             rowCount++;
         } else {
             // User is in top or no user - pad remaining with empty rows
-            for (var k3 = rowCount; k3 < maxRows; k3++) {
+            for (var k3 = rowCount; k3 < targetRows; k3++) {
                 html += '<div class="lb-row lb-row-empty">';
                 html += '<span class="lb-rank">&nbsp;</span>';
                 html += '<span class="lb-name">&nbsp;</span>';
