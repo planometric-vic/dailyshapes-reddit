@@ -1880,6 +1880,13 @@ async function initializeDemoGame() {
                 welcomeOverlay.style.visibility = 'hidden';
             }
             hideInitialWelcomeButtons();
+
+            // CRITICAL: When restoring a game, mark shape animation as complete
+            // so setInteractionEnabled(true) won't be blocked by the animation gate.
+            // Without this, refreshing after "Next Shape" (before cutting) leaves
+            // the canvas inactive because isShapeAnimationComplete defaults to false.
+            isShapeAnimationComplete = true;
+            console.log('✅ Restoration: set isShapeAnimationComplete = true');
         }
         
         // Create initial UI (but stay in initial state)

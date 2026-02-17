@@ -355,6 +355,36 @@
         // through the existing restoration pipeline.
         if (hasRedisProgress) {
             console.log('[Devvit Init] Redis progress was injected into localStorage — SimpleRefresh will handle visual restoration');
+
+            // Safety net: after initializeDemoGame finishes, ensure the canvas
+            // is interactive if the game state says we should be cutting.
+            // main.js sets isShapeAnimationComplete=true during restore, but
+            // interaction may still fail if mechanic listeners weren't re-bound.
+            setTimeout(function() {
+                var gs = window.gameState;
+                var shouldActivate = (gs === 'cutting' || gs === 'playing');
+                console.log('[Devvit Init] Post-restore activation check:', {
+                    gameState: gs, shouldActivate: shouldActivate,
+                    isInteractionEnabled: window.isInteractionEnabled
+                });
+
+                if (shouldActivate && !window.isInteractionEnabled) {
+                    // Force-enable interaction bypassing the animation gate
+                    window.isInteractionEnabled = true;
+
+                    var canvasEl = document.getElementById('geoCanvas');
+                    if (canvasEl) {
+                        canvasEl.style.pointerEvents = 'auto';
+                        canvasEl.style.cursor = 'crosshair';
+                    }
+
+                    if (typeof setupMechanicsEventListeners === 'function') {
+                        setupMechanicsEventListeners();
+                    }
+
+                    console.log('[Devvit Init] Canvas force-activated for restored game');
+                }
+            }, 600);
         }
 
         applyOverrides();
