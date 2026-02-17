@@ -50,10 +50,9 @@
         // Measure actual header and tabs heights from the rendered DOM
         var header = container.querySelector('.lb-header');
         var tabsEl = container.querySelector('.lb-tabs');
-        var headerHeight = header ? header.getBoundingClientRect().height + 3 : 46; // +3 for border-bottom
+        var headerHeight = header ? header.getBoundingClientRect().height : 40;
         var tabsHeight = tabsEl ? tabsEl.getBoundingClientRect().height : 30;
-        // Subtract 4px for container border (2px top + 2px bottom, box-sizing: border-box)
-        var availableHeight = containerHeight - headerHeight - tabsHeight - 4;
+        var availableHeight = containerHeight - headerHeight - tabsHeight;
         if (availableHeight < ROW_HEIGHT) return 3; // minimum
         return Math.floor(availableHeight / ROW_HEIGHT);
     }
