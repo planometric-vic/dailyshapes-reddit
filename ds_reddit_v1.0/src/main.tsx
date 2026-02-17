@@ -16,6 +16,7 @@ interface InitData {
   mechanic: string;       // Mechanic name for today
   existingProgress: string | null;
   existingScore: number | null;
+  existingShapeScores: Record<string, any> | null;
   leaderboard: LeaderboardEntry[];
   weeklyLeaderboard: LeaderboardEntry[];
   weekKey: string;
@@ -127,6 +128,7 @@ const redisKeys = {
   weeklyWinner: (weekKey: string) => `weekly_winner:${weekKey}`,
   weeklyWins: 'weekly_wins',       // sorted set: member=username, score=win_count
   perfectCuts: 'perfect_cuts',     // sorted set: member=username, score=cut_count
+  userShapeScores: (dayKey: string, username: string) => `shapescores:${dayKey}:${username}`,
   progress: (dayKey: string, username: string) => `progress:${dayKey}:${username}`,
   userStats: (username: string) => `stats:${username}`,
 };
@@ -494,6 +496,14 @@ Devvit.addCustomPostType({
           );
           const existingScore = existingScoreStr ? parseInt(existingScoreStr, 10) : null;
 
+          // Retrieve per-shape scores for radar graph on revisit
+          const existingShapeScoresStr = existingScore != null
+            ? await context.redis.get(redisKeys.userShapeScores(dayKey, username))
+            : null;
+          const existingShapeScores = existingShapeScoresStr
+            ? JSON.parse(existingShapeScoresStr)
+            : null;
+
           const rawLeaderboard = await context.redis.zRange(
             redisKeys.leaderboard(dayKey), 0, 9, { reverse: true, by: 'rank' }
           );
@@ -520,6 +530,7 @@ Devvit.addCustomPostType({
               mechanic,
               existingProgress,
               existingScore,
+              existingShapeScores,
               leaderboard,
               weeklyLeaderboard: weekly.entries,
               weekKey,
@@ -554,6 +565,14 @@ Devvit.addCustomPostType({
           // Store daily score
           await context.redis.set(redisKeys.userScore(dayKey, username), String(total));
           await context.redis.zAdd(redisKeys.leaderboard(dayKey), { member: username, score: total });
+
+          // Store per-shape scores for radar graph on revisit
+          if (scores) {
+            await context.redis.set(
+              redisKeys.userShapeScores(dayKey, username),
+              JSON.stringify(scores)
+            );
+          }
 
           // Update weekly leaderboard (accumulate scores Mon-Sun)
           const weekKey = getWeekKey();

@@ -125,21 +125,21 @@
 
     /**
      * Show "already played" locked screen when existingScore is found.
-     * Draws on the canvas and shows the leaderboard.
+     * Renders the radar graph (if shape scores available) and shows the leaderboard.
      */
-    function showAlreadyPlayedScreen(score) {
-        console.log('[Devvit Init] User already played today, score:', score);
+    function showAlreadyPlayedScreen(score, shapeScores) {
+        console.log('[Devvit Init] User already played today, score:', score, 'shapeScores:', shapeScores);
 
         // Stop loading animation
         if (typeof window.stopImmediateLoadingAnimation === 'function') {
             window.stopImmediateLoadingAnimation(function() {
-                drawLockedScreen(score);
+                drawLockedScreen(score, shapeScores);
             });
         } else {
-            drawLockedScreen(score);
+            drawLockedScreen(score, shapeScores);
         }
 
-        function drawLockedScreen(score) {
+        function drawLockedScreen(score, shapeScores) {
             // Hide welcome/play UI
             var welcomeOverlay = document.getElementById('welcomeOverlay');
             if (welcomeOverlay) welcomeOverlay.style.display = 'none';
@@ -147,27 +147,6 @@
             if (playBtn) playBtn.style.display = 'none';
             var progressDisplay = document.getElementById('demoProgressDisplay');
             if (progressDisplay) progressDisplay.style.display = 'none';
-
-            var canvasEl = document.getElementById('geoCanvas');
-            if (canvasEl) {
-                canvasEl.style.display = 'block';
-                var ctx = canvasEl.getContext('2d');
-                ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-
-                // Draw completion message
-                ctx.fillStyle = '#333';
-                ctx.font = 'bold 22px Arial, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText("Today's game complete!", canvasEl.width / 2, canvasEl.height / 2 - 30);
-
-                ctx.fillStyle = '#666';
-                ctx.font = '16px Arial, sans-serif';
-                ctx.fillText('Your score: ' + score, canvasEl.width / 2, canvasEl.height / 2 + 10);
-
-                ctx.font = '13px Arial, sans-serif';
-                ctx.fillText('Come back tomorrow for a new game', canvasEl.width / 2, canvasEl.height / 2 + 45);
-            }
 
             // Set game state to locked
             window.gameState = 'locked';
@@ -177,13 +156,82 @@
                 window.dailyGameState.isGameComplete = true;
             }
 
-            // Show weekly leaderboard
-            setTimeout(function() {
-                if (window.WeeklyLeaderboard) {
-                    window.WeeklyLeaderboard.show();
+            // Mark animation as already shown so completeView renders static radar
+            var today = new Date();
+            var dateStr = today.getFullYear() + '-' +
+                String(today.getMonth() + 1).padStart(2, '0') + '-' +
+                String(today.getDate()).padStart(2, '0');
+            localStorage.setItem('dailyShapes_lastAnimationDate', dateStr);
+
+            // Try to render the radar graph via completeView
+            if (shapeScores && window.completeView) {
+                var model = buildModelFromShapeScores(shapeScores);
+                console.log('[Devvit Init] Rendering radar graph for already-played game, model:', model);
+                window.completeView.show(model);
+            } else {
+                // Fallback: draw simple text if no shape scores available
+                var canvasEl = document.getElementById('geoCanvas');
+                if (canvasEl) {
+                    canvasEl.style.display = 'block';
+                    var ctx = canvasEl.getContext('2d');
+                    ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+                    ctx.fillStyle = '#333';
+                    ctx.font = 'bold 22px Arial, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText("Today's game complete!", canvasEl.width / 2, canvasEl.height / 2 - 30);
+
+                    ctx.fillStyle = '#666';
+                    ctx.font = '16px Arial, sans-serif';
+                    ctx.fillText('Your score: ' + score, canvasEl.width / 2, canvasEl.height / 2 + 10);
+
+                    ctx.font = '13px Arial, sans-serif';
+                    ctx.fillText('Come back tomorrow for a new game', canvasEl.width / 2, canvasEl.height / 2 + 45);
                 }
-            }, 300);
+
+                // Show weekly leaderboard
+                setTimeout(function() {
+                    if (window.WeeklyLeaderboard) {
+                        window.WeeklyLeaderboard.show();
+                    }
+                }, 300);
+            }
         }
+    }
+
+    /**
+     * Build a completeView model from per-shape scores stored in Redis.
+     * Shape scores format: { shape1: { attempt1: 50 }, shape2: { attempt1: 37 }, ... }
+     */
+    function buildModelFromShapeScores(shapeScores) {
+        var shapes = [];
+        for (var i = 1; i <= 10; i++) {
+            var key = 'shape' + i;
+            var shape = shapeScores[key];
+            if (shape) {
+                var scoreVal = typeof shape === 'number' ? shape : (shape.attempt1 || 0);
+                // Reconstruct leftPct/rightPct from score (score = smaller percentage)
+                shapes.push({
+                    name: 'Shape ' + i,
+                    shapeNumber: i,
+                    attempts: [{
+                        n: 1,
+                        leftPct: scoreVal,
+                        rightPct: 100 - scoreVal,
+                        scorePct: scoreVal
+                    }]
+                });
+            }
+        }
+        return {
+            dayNumber: window.currentDay || 1,
+            avgScorePct: 0,
+            shapes: shapes,
+            bestCut: null,
+            avgScore: 0,
+            shapeSplits: shapes
+        };
     }
 
     // Wait for Devvit init data, then bootstrap the game
@@ -239,7 +287,7 @@
         if (initData.existingScore !== null && initData.existingScore !== undefined) {
             console.log('[Devvit Init] GATE 1: User already scored today:', initData.existingScore);
             applyOverrides();
-            showAlreadyPlayedScreen(initData.existingScore);
+            showAlreadyPlayedScreen(initData.existingScore, initData.existingShapeScores);
             return;
         }
 

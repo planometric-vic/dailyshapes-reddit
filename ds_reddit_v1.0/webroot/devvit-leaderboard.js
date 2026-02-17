@@ -11,7 +11,7 @@
     var currentUsername = '';
     var activeTab = 'weekly';
     var ROW_HEIGHT = 19; // estimated px per row (padding 4 + font ~14 + border 1)
-    var computedMaxRows = 11; // will be recalculated on show()
+    var computedMaxRows = 12; // will be recalculated on show()
 
     // Data for each tab
     var tabs = {
@@ -54,7 +54,8 @@
         var tabsHeight = tabsEl ? tabsEl.getBoundingClientRect().height : 30;
         var availableHeight = containerHeight - headerHeight - tabsHeight;
         if (availableHeight < ROW_HEIGHT) return 3; // minimum
-        return Math.floor(availableHeight / ROW_HEIGHT);
+        // +1 row: rows flex-grow to fill the table, so we can fit one more
+        return Math.floor(availableHeight / ROW_HEIGHT) + 1;
     }
 
     function renderTable(tabKey) {
