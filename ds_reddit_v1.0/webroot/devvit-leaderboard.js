@@ -282,12 +282,18 @@
                     document.body.appendChild(backdrop);
                 }
             } else {
-                // Desktop: explicitly match leaderboard height to canvas element height
+                // Desktop: explicitly match leaderboard position and height to canvas element
                 // so their tops and bottoms align perfectly.
                 requestAnimationFrame(function() {
                     var canvasEl = document.getElementById('geoCanvas');
                     if (canvasEl) {
                         var canvasRect = canvasEl.getBoundingClientRect();
+                        var containerRect = container.getBoundingClientRect();
+                        // Shift leaderboard up/down so its top aligns with canvas top
+                        var topOffset = canvasRect.top - containerRect.top;
+                        if (topOffset !== 0) {
+                            container.style.marginTop = topOffset + 'px';
+                        }
                         container.style.height = canvasRect.height + 'px';
                     }
                     var actualHeight = container.offsetHeight;
