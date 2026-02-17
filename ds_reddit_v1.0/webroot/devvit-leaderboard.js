@@ -185,6 +185,13 @@
             render();
             container.style.display = 'flex';
 
+            // Hide game controls first so layout settles correctly
+            var els = ['demoProgressDisplay', 'fixedPercentageArea', 'fixedButtonArea'];
+            for (var i = 0; i < els.length; i++) {
+                var el = document.getElementById(els[i]);
+                if (el) el.style.display = 'none';
+            }
+
             if (window.innerWidth < 600) {
                 // Mobile: show as modal popup
                 container.classList.add('lb-modal-mode');
@@ -197,23 +204,31 @@
                     document.body.appendChild(backdrop);
                 }
             } else {
-                // Desktop: match leaderboard height to canvas
-                var canvas = document.getElementById('geoCanvas');
-                if (canvas) {
-                    container.style.height = canvas.offsetHeight + 'px';
+                // Desktop: match leaderboard height to canvas container
+                var canvasContainer = document.querySelector('.canvas-container');
+                if (canvasContainer) {
+                    container.style.height = canvasContainer.offsetHeight + 'px';
                 }
-            }
-
-            // Hide game controls since we're in the completion view
-            var els = ['demoProgressDisplay', 'fixedPercentageArea', 'fixedButtonArea'];
-            for (var i = 0; i < els.length; i++) {
-                var el = document.getElementById(els[i]);
-                if (el) el.style.display = 'none';
+                // Align leaderboard top with canvas top after layout settles
+                requestAnimationFrame(function() {
+                    var cc = document.querySelector('.canvas-container');
+                    if (cc && container) {
+                        var canvasRect = cc.getBoundingClientRect();
+                        var lbRect = container.getBoundingClientRect();
+                        var topDiff = lbRect.top - canvasRect.top;
+                        if (Math.abs(topDiff) > 1) {
+                            container.style.marginTop = (-topDiff) + 'px';
+                        }
+                        // Also correct height after margin adjustment
+                        container.style.height = cc.offsetHeight + 'px';
+                    }
+                });
             }
         },
         hide: function() {
             container.style.display = 'none';
             container.style.height = '';
+            container.style.marginTop = '';
             container.classList.remove('lb-modal-mode');
             var backdrop = document.querySelector('.lb-backdrop');
             if (backdrop) backdrop.remove();
