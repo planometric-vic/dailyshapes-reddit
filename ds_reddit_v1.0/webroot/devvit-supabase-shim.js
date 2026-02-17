@@ -94,7 +94,7 @@ window.AuthService = {
         }
         const dayKey = window.DevvitBridge.initData.dayKey;
         let total = 0;
-        for (let i = 1; i <= 3; i++) {
+        for (let i = 1; i <= 10; i++) {
             const shape = shapeScores && shapeScores['shape' + i];
             if (shape) {
                 total += (shape.attempt1 || 0) + (shape.attempt2 || 0);

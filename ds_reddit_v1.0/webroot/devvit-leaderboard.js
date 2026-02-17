@@ -10,6 +10,8 @@
 
     var currentUsername = '';
     var activeTab = 'weekly';
+    var ROW_HEIGHT = 21; // estimated px per row (padding 4 + font ~16 + border 1)
+    var computedMaxRows = 10; // will be recalculated on show()
 
     // Data for each tab
     var tabs = {
@@ -43,15 +45,48 @@
         cuts:   { title: 'PERFECT CUTS', subtitle: weekDateRange, label: 'Perfect Cuts' }
     };
 
-    var MIN_ROWS = 10; // fixed row count so all tabs look identical
+    /** Calculate how many rows fit in the available table space */
+    function calculateMaxRows(containerHeight) {
+        // Header: ~40px (padding 6+6 + title font 13 + subtitle 9 + border 3 + margins)
+        // Tabs: ~30px (padding 4+3 + button height ~20 + border 2)
+        var headerHeight = 40;
+        var tabsHeight = 30;
+        var availableHeight = containerHeight - headerHeight - tabsHeight;
+        if (availableHeight < ROW_HEIGHT) return 3; // minimum
+        return Math.floor(availableHeight / ROW_HEIGHT);
+    }
 
     function renderTable(tabKey) {
         var t = tabs[tabKey];
         var html = '';
+        var maxRows = computedMaxRows;
+
+        // Check if user is already in the data
+        var userInTop = false;
+        var userDataIndex = -1;
+        for (var j = 0; j < t.data.length; j++) {
+            if (t.data[j].username === currentUsername) {
+                userInTop = true;
+                userDataIndex = j;
+                break;
+            }
+        }
+
+        // Determine how many data rows to show
+        var needsUserRow = !userInTop && currentUsername;
+        // Reserve one slot for user row + separator if user not in top
+        var dataSlots = needsUserRow ? Math.max(1, maxRows - 1) : maxRows;
+        var dataToShow = Math.min(t.data.length, dataSlots);
+
+        // If user IS in the data but beyond visible range, expand to include them
+        if (userInTop && userDataIndex >= dataSlots) {
+            dataToShow = Math.min(t.data.length, maxRows);
+        }
+
         var rowCount = 0;
 
         // Data rows
-        for (var i = 0; i < t.data.length; i++) {
+        for (var i = 0; i < dataToShow; i++) {
             var entry = t.data[i];
             var isUser = entry.username === currentUsername;
             var cls = 'lb-row' + (isUser ? ' lb-row-user' : '') + (i === 0 ? ' lb-row-first' : '');
@@ -64,16 +99,16 @@
         }
 
         // User row at bottom if not in top entries
-        var userInTop = false;
-        for (var j = 0; j < t.data.length; j++) {
-            if (t.data[j].username === currentUsername) {
-                userInTop = true;
-                break;
-            }
-        }
-
         if (!userInTop && currentUsername && t.userRank > 0) {
-            // Only show separator when there are data rows above
+            // Pad with empty rows to push user to the bottom
+            for (var k = rowCount; k < maxRows - 1; k++) {
+                html += '<div class="lb-row lb-row-empty">';
+                html += '<span class="lb-rank">&nbsp;</span>';
+                html += '<span class="lb-name">&nbsp;</span>';
+                html += '<span class="lb-score">&nbsp;</span>';
+                html += '</div>';
+                rowCount++;
+            }
             if (t.data.length > 0) html += '<div class="lb-separator"></div>';
             html += '<div class="lb-row lb-row-user">';
             html += '<span class="lb-rank">' + t.userRank + '</span>';
@@ -82,7 +117,15 @@
             html += '</div>';
             rowCount++;
         } else if (!userInTop && currentUsername) {
-            // Only show separator when there are data rows above
+            // User with no rank yet
+            for (var k2 = rowCount; k2 < maxRows - 1; k2++) {
+                html += '<div class="lb-row lb-row-empty">';
+                html += '<span class="lb-rank">&nbsp;</span>';
+                html += '<span class="lb-name">&nbsp;</span>';
+                html += '<span class="lb-score">&nbsp;</span>';
+                html += '</div>';
+                rowCount++;
+            }
             if (t.data.length > 0) html += '<div class="lb-separator"></div>';
             html += '<div class="lb-row lb-row-user lb-row-norank">';
             html += '<span class="lb-rank">-</span>';
@@ -90,15 +133,15 @@
             html += '<span class="lb-score">0</span>';
             html += '</div>';
             rowCount++;
-        }
-
-        // Pad with empty rows so every tab has the same height
-        for (var k = rowCount; k < MIN_ROWS; k++) {
-            html += '<div class="lb-row lb-row-empty">';
-            html += '<span class="lb-rank">&nbsp;</span>';
-            html += '<span class="lb-name">&nbsp;</span>';
-            html += '<span class="lb-score">&nbsp;</span>';
-            html += '</div>';
+        } else {
+            // User is in top or no user - pad remaining with empty rows
+            for (var k3 = rowCount; k3 < maxRows; k3++) {
+                html += '<div class="lb-row lb-row-empty">';
+                html += '<span class="lb-rank">&nbsp;</span>';
+                html += '<span class="lb-name">&nbsp;</span>';
+                html += '<span class="lb-score">&nbsp;</span>';
+                html += '</div>';
+            }
         }
 
         return html;
@@ -112,7 +155,7 @@
         html += '<div class="lb-subtitle">' + cfg.subtitle + '</div>';
         html += '</div>';
 
-        // Table body (padded to MIN_ROWS)
+        // Table body
         html += '<div class="lb-table">';
         html += renderTable(activeTab);
         html += '</div>';
@@ -175,6 +218,15 @@
         if (d.userPerfectCutsRank !== undefined) tabs.cuts.userRank = d.userPerfectCutsRank;
     }
 
+    /** Measure actual row height from a rendered row element */
+    function measureRowHeight() {
+        var row = container.querySelector('.lb-row');
+        if (row) {
+            var h = row.getBoundingClientRect().height;
+            if (h > 0) ROW_HEIGHT = h;
+        }
+    }
+
     // Public API
     window.WeeklyLeaderboard = {
         update: function(data) {
@@ -182,6 +234,7 @@
             render();
         },
         show: function() {
+            // Initial render with default row count
             render();
             container.style.display = 'flex';
 
@@ -207,8 +260,19 @@
                 // Desktop: match leaderboard height to canvas container
                 var canvasContainer = document.querySelector('.canvas-container');
                 if (canvasContainer) {
-                    container.style.height = canvasContainer.offsetHeight + 'px';
+                    var canvasHeight = canvasContainer.offsetHeight;
+                    container.style.height = canvasHeight + 'px';
+
+                    // Measure actual row height from first render
+                    measureRowHeight();
+
+                    // Calculate how many rows fit
+                    computedMaxRows = calculateMaxRows(canvasHeight);
+
+                    // Re-render with correct row count
+                    render();
                 }
+
                 // Align leaderboard top with canvas top after layout settles
                 requestAnimationFrame(function() {
                     var cc = document.querySelector('.canvas-container');

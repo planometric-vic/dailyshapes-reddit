@@ -124,9 +124,10 @@ function getPreviousWeekKey(): string {
   return `${yy}${mm}${dd}`;
 }
 
-/** Count perfect cuts from a shapeScores object (score >= 100 = perfect).
- *  Supports both new format { shape1: 100, shape2: 85, ... } and
- *  legacy format { shape1: { attempt1: 100, attempt2: 85 }, ... }. */
+/** Count perfect cuts from a shapeScores object (score === 50 = perfect).
+ *  A perfect 50/50 cut returns score 50 (the smaller percentage).
+ *  Supports both new format { shape1: 50, shape2: 45, ... } and
+ *  legacy format { shape1: { attempt1: 50, attempt2: 45 }, ... }. */
 function countPerfectCuts(scores: any): number {
   let count = 0;
   if (!scores) return 0;
@@ -135,11 +136,11 @@ function countPerfectCuts(scores: any): number {
     if (shape == null) continue;
     if (typeof shape === 'number') {
       // New format: single score per shape
-      if (shape >= 100) count++;
+      if (shape >= 50) count++;
     } else {
       // Legacy format: { attempt1, attempt2 }
-      if ((shape.attempt1 || 0) >= 100) count++;
-      if ((shape.attempt2 || 0) >= 100) count++;
+      if ((shape.attempt1 || 0) >= 50) count++;
+      if ((shape.attempt2 || 0) >= 50) count++;
     }
   }
   return count;

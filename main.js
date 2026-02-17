@@ -30,19 +30,8 @@ function getDailyCutShadingColor() {
         return { r: 97, g: 96, b: 95 }; // Dark grey for practice mode
     }
 
-    // Daily mode: color varies by shape number
-    const shapeNum = window.currentShapeNumber || 1;
-
-    switch(shapeNum) {
-        case 1:
-            return { r: 237, g: 174, b: 73 };  // #EDAE49 - Orange/gold for shape 1
-        case 2:
-            return { r: 209, g: 73, b: 91 };   // #D1495B - Red for shape 2
-        case 3:
-            return { r: 0, g: 121, b: 140 };   // #00798C - Teal for shape 3
-        default:
-            return { r: 100, g: 150, b: 255 }; // #6496FF - Default blue (fallback)
-    }
+    // Daily mode: always use teal #00798C
+    return { r: 0, g: 121, b: 140 };  // #00798C - Teal
 }
 
 // Make it globally available for mechanics files
@@ -4006,12 +3995,7 @@ function updateProgressUI() {
     // Color "Shape X" based on the shape number (daily mode only)
     if (!window.isPracticeMode && window.isDailyMode) {
         // Get the color for the current shape
-        const shapeColors = {
-            1: '#EDAE49', // Orange/gold
-            2: '#D1495B', // Red
-            3: '#00798C'  // Teal
-        };
-        const shapeColor = shapeColors[currentShapeNumber] || '#EDAE49';
+        const shapeColor = '#00798C';
 
         // Create colored HTML for "Shape X" portion
         progressDisplay.innerHTML = `<span style="color: ${shapeColor};">Shape ${currentShapeNumber}</span> of 3 - Cut ${currentAttemptNumber} of 2`;
@@ -4925,13 +4909,8 @@ function displayCutResult(leftPercentage, rightPercentage) {
     const resultDiv = document.createElement('div');
     resultDiv.className = 'attempt-result';
 
-    // Determine colors - use shape-based colors
-    const shapeColors = {
-        1: '#EDAE49', // Orange/gold
-        2: '#D1495B', // Red
-        3: '#00798C'  // Teal
-    };
-    const leftColor = shapeColors[currentShapeNumber] || '#EDAE49';
+    // Determine colors - always use teal for cut shading
+    const leftColor = '#00798C';
     const rightColor = '#999999';  // Grey - matches separator color
 
     resultDiv.innerHTML = `
@@ -4972,13 +4951,8 @@ function restoreCutResultDisplay(attempts) {
     const resultDiv = document.createElement('div');
     resultDiv.className = 'attempt-result';
 
-    // Determine colors - use shape-based colors
-    const shapeColors = {
-        1: '#EDAE49', // Orange/gold
-        2: '#D1495B', // Red
-        3: '#00798C'  // Teal
-    };
-    const leftColor = shapeColors[currentShapeNumber] || '#EDAE49';
+    // Determine colors - always use teal for cut shading
+    const leftColor = '#00798C';
     const rightColor = '#999999';  // Grey - matches separator color
 
     resultDiv.innerHTML = `
@@ -20069,13 +20043,8 @@ function showPercentageResults(leftPercentage, rightPercentage) {
     const resultDiv = document.createElement('div');
     resultDiv.className = 'attempt-result';
 
-    // Match the exact colors from normal gameplay - use shape-based colors
-    const shapeColors = {
-        1: '#EDAE49', // Orange/gold
-        2: '#D1495B', // Red
-        3: '#00798C'  // Teal
-    };
-    const leftColor = shapeColors[currentShapeNumber] || '#EDAE49';
+    // Match the exact colors from normal gameplay - always use teal
+    const leftColor = '#00798C';
     const greyColor = '#666666'; // Darker grey for better visibility
 
     // Use the EXACT same HTML structure and styling as normal gameplay
