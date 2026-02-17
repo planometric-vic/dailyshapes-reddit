@@ -328,6 +328,81 @@ Devvit.addMenuItem({
   },
 });
 
+/** Mod tool: Reset a user's scores and remove them from leaderboards */
+const resetUserForm = Devvit.createForm(
+  () => ({
+    title: 'Reset User Scores',
+    description: 'Remove a user from all leaderboards and delete their scores. This cannot be undone.',
+    fields: [
+      { name: 'username', label: 'Reddit username (without u/)', type: 'string' },
+      {
+        name: 'scope',
+        label: 'What to reset',
+        type: 'select',
+        options: [
+          { label: 'Everything (all leaderboards + today\'s score)', value: 'all' },
+          { label: 'Today\'s score only', value: 'today' },
+          { label: 'Weekly leaderboard only', value: 'weekly' },
+          { label: 'All-time stats only (wins + perfect cuts)', value: 'alltime' },
+        ],
+        defaultValue: ['all'],
+      },
+    ],
+  }),
+  async (event, context) => {
+    const username = event.values.username?.trim();
+    if (!username) {
+      context.ui.showToast({ text: 'Please enter a username.' });
+      return;
+    }
+    const scope = event.values.scope?.[0] || 'all';
+    const dayKey = getTodayKey();
+    const weekKey = getWeekKey();
+    const actions: string[] = [];
+
+    try {
+      if (scope === 'all' || scope === 'today') {
+        // Remove today's daily score
+        await context.redis.del(redisKeys.userScore(dayKey, username));
+        await context.redis.zRem(redisKeys.leaderboard(dayKey), [username]);
+        // Remove progress
+        await context.redis.del(redisKeys.progress(dayKey, username));
+        actions.push('today\'s score');
+      }
+
+      if (scope === 'all' || scope === 'weekly') {
+        // Remove from weekly leaderboard
+        await context.redis.zRem(redisKeys.weeklyLeaderboard(weekKey), [username]);
+        actions.push('weekly leaderboard');
+      }
+
+      if (scope === 'all' || scope === 'alltime') {
+        // Remove from all-time sorted sets
+        await context.redis.zRem(redisKeys.weeklyWins, [username]);
+        await context.redis.zRem(redisKeys.perfectCuts, [username]);
+        // Delete user stats hash
+        await context.redis.del(redisKeys.userStats(username));
+        actions.push('all-time stats');
+      }
+
+      context.ui.showToast({
+        text: `Reset ${username}: ${actions.join(', ')}`,
+      });
+    } catch (e) {
+      context.ui.showToast({ text: `Error resetting ${username}: ${e}` });
+    }
+  }
+);
+
+Devvit.addMenuItem({
+  label: 'Reset User Scores (Daily Shapes)',
+  location: 'subreddit',
+  forUserType: 'moderator',
+  onPress: async (_event, context) => {
+    context.ui.showForm(resetUserForm);
+  },
+});
+
 // ============================================================
 // SCHEDULED JOBS
 // ============================================================
