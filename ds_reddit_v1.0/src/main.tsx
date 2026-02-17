@@ -12,7 +12,7 @@ interface InitData {
   dayKey: string;
   dayNumber: number;
   dayOfWeek: number;
-  shapes: string[];       // GeoJSON strings for today's 3 shapes
+  shapes: string[];       // GeoJSON strings for today's 10 shapes
   mechanic: string;       // Mechanic name for today
   existingProgress: string | null;
   existingScore: number | null;
@@ -124,13 +124,20 @@ function getPreviousWeekKey(): string {
   return `${yy}${mm}${dd}`;
 }
 
-/** Count perfect cuts from a shapeScores object (attempt score >= 100 = perfect) */
+/** Count perfect cuts from a shapeScores object (score >= 100 = perfect).
+ *  Supports both new format { shape1: 100, shape2: 85, ... } and
+ *  legacy format { shape1: { attempt1: 100, attempt2: 85 }, ... }. */
 function countPerfectCuts(scores: any): number {
   let count = 0;
   if (!scores) return 0;
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 1; i <= 10; i++) {
     const shape = scores[`shape${i}`];
-    if (shape) {
+    if (shape == null) continue;
+    if (typeof shape === 'number') {
+      // New format: single score per shape
+      if (shape >= 100) count++;
+    } else {
+      // Legacy format: { attempt1, attempt2 }
       if ((shape.attempt1 || 0) >= 100) count++;
       if ((shape.attempt2 || 0) >= 100) count++;
     }
@@ -199,7 +206,7 @@ Devvit.addMenuItem({
 const batchUploadForm = Devvit.createForm(
   () => ({
     title: 'Upload Shapes (Batch)',
-    description: 'Paste the JSON payload from prepare-upload.cjs. Format: { "YYMMDD": [geojson0, geojson1, geojson2], ... }',
+    description: 'Paste the JSON payload from prepare-upload.cjs. Format: { "YYMMDD": [geojson0, ..., geojson9], ... }',
     fields: [
       { name: 'payload', label: 'Shape data (JSON)', type: 'paragraph' },
     ],
@@ -229,13 +236,13 @@ const batchUploadForm = Devvit.createForm(
         continue;
       }
       const dayShapes = batch[dayKey];
-      // Support both array format [obj0, obj1, obj2] and object format {"0": ..., "1": ..., "2": ...}
+      // Support both array format [obj0, ..., obj9] and object format {"0": ..., ...}
       const shapeArray = Array.isArray(dayShapes)
         ? dayShapes
-        : [dayShapes['0'] ?? dayShapes[0], dayShapes['1'] ?? dayShapes[1], dayShapes['2'] ?? dayShapes[2]];
+        : Array.from({ length: 10 }, (_, i) => dayShapes[String(i)] ?? dayShapes[i]);
 
       for (let i = 0; i < shapeArray.length; i++) {
-        if (i > 2) break;
+        if (i > 9) break;
         const shape = shapeArray[i];
         if (!shape) continue;
 
@@ -277,18 +284,18 @@ Devvit.addMenuItem({
     const dayKey = getTodayKey();
     const results: string[] = [];
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 10; i++) {
       const data = await context.redis.get(redisKeys.shape(dayKey, i));
       if (data) {
         try {
           const parsed = JSON.parse(data);
           const featureCount = parsed.features?.length ?? 0;
-          results.push(`Shape ${i + 1}: ${featureCount} feature(s), ${data.length} bytes`);
+          results.push(`S${i + 1}: ${featureCount}f`);
         } catch {
-          results.push(`Shape ${i + 1}: stored (${data.length} bytes, parse error)`);
+          results.push(`S${i + 1}: err`);
         }
       } else {
-        results.push(`Shape ${i + 1}: MISSING`);
+        results.push(`S${i + 1}: -`);
       }
     }
 
@@ -375,7 +382,7 @@ Devvit.addCustomPostType({
           const mechanic = MECHANIC_SCHEDULE[dow] || 'DefaultWithUndoMechanic';
 
           const shapes: string[] = [];
-          for (let i = 0; i < 3; i++) {
+          for (let i = 0; i < 10; i++) {
             const shapeData = await context.redis.get(redisKeys.shape(dayKey, i));
             if (shapeData) shapes.push(shapeData);
           }

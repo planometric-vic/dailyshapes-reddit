@@ -105,8 +105,8 @@
                 ctx.arc(0, 0, size, 0, Math.PI * 2);
                 break;
             case 'hexagon':
-                var angleStep = (Math.PI * 2) / 6;
-                for (var i = 0; i <= 6; i++) {
+                var angleStep = (Math.PI * 2) / 10;
+                for (var i = 0; i <= 10; i++) {
                     var angle = i * angleStep - Math.PI / 2;
                     var x = size * Math.cos(angle);
                     var y = size * Math.sin(angle);

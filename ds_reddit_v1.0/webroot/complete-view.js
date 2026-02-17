@@ -6,6 +6,11 @@ const completeView = (() => {
     let bound = false;
     let isActive = false;
 
+    // Radar graph constants (shared by animateRadarGraph and renderCompletionOverlay)
+    const NUM_SPOKES = 10;
+    const SPOKE_ANGLE = (Math.PI * 2) / NUM_SPOKES;
+    const RADAR_COLOR = '#00798C';
+
     // Get current date for tracking animation per day
     function getCurrentDate() {
         const now = new Date();
@@ -543,42 +548,26 @@ const completeView = (() => {
 
         // Extract scores from model
         const scores = [];
-        const attemptPercentages = []; // Store left/right percentages for bonus check
+        const attemptPercentages = [];
         if (model.shapes && model.shapes.length > 0) {
             model.shapes.forEach(shape => {
                 if (shape.attempts && shape.attempts.length > 0) {
                     shape.attempts.forEach(attempt => {
-                        console.log('🔍 Attempt data:', attempt);
-
-                        // Check for all possible field name formats
                         const leftPct = attempt.leftPct || attempt.leftPercentage || attempt.leftPercent || 0;
                         const rightPct = attempt.rightPct || attempt.rightPercentage || attempt.rightPercent || 0;
-
-                        // Use the smaller percentage from the cut (the actual accuracy)
                         const smallerPct = Math.min(leftPct, rightPct);
-                        const displayScore = Math.round(smallerPct);
-
-                        console.log(`   Left: ${leftPct.toFixed(1)}, Right: ${rightPct.toFixed(1)}, Using: ${displayScore}`);
-                        scores.push(displayScore);
+                        scores.push(Math.round(smallerPct));
                         attemptPercentages.push({ left: leftPct, right: rightPct });
                     });
                 }
             });
         }
-        while (scores.length < 6) {
+        while (scores.length < NUM_SPOKES) {
             scores.push(0);
             attemptPercentages.push({ left: 0, right: 0 });
         }
 
-        console.log('📊 Radar graph scores (actual cut percentages):', scores);
-        console.log('📊 Attempt percentages:', attemptPercentages.map((p, i) => `[${i}] ${p.left.toFixed(1)}/${p.right.toFixed(1)}`));
-        console.log('📊 Bonuses (score = 50):', scores.map((s, i) => s === 50 ? i : null).filter(i => i !== null));
-
-        const shapeColors = [
-            '#EDAE49', '#EDAE49', // Shape 1
-            '#D1495B', '#D1495B', // Shape 2
-            '#00798C', '#00798C'  // Shape 3
-        ];
+        console.log('📊 Radar graph scores:', scores);
 
         const baseFontSize = Math.max(cssWidth * 0.045, 14);
         const titleSize = Math.round(baseFontSize * 1.2);
@@ -674,7 +663,7 @@ const completeView = (() => {
             if (phase === 1) {
                 // Find the current triangle to animate (first one where score isn't visible yet)
                 let currentTriangleIndex = -1;
-                for (let i = 0; i < 6; i++) {
+                for (let i = 0; i < NUM_SPOKES; i++) {
                     if (!scoreAnimations[i].scoreVisible) {
                         currentTriangleIndex = i;
                         break;
@@ -703,11 +692,11 @@ const completeView = (() => {
                             scoreAnimations[currentTriangleIndex].bonusVisible = true;
 
                             // Trigger confetti at bonus location
-                            const angle = (Math.PI / 3) * currentTriangleIndex - (Math.PI / 2);
+                            const angle = SPOKE_ANGLE * currentTriangleIndex - (Math.PI / 2);
                             const textDistance = hexRadius + cellSize * 0.8;
                             const baseX = centerX + textDistance * Math.cos(angle);
                             const baseY = centerY + textDistance * Math.sin(angle);
-                            const isRightSide = currentTriangleIndex <= 3;
+                            const isRightSide = currentTriangleIndex < NUM_SPOKES / 2;
                             const bonusX = baseX + (isRightSide ? cellSize * 1.2 : -cellSize * 1.2);
 
                             // Convert canvas coordinates to screen coordinates
@@ -754,8 +743,8 @@ const completeView = (() => {
                                 displayedScore = targetScore;
                                 isTabulatingScore = false;
                                 console.log(`Score ${currentTriangleIndex} tabulation complete, moving to next`);
-                                // Delay before next triangle starts
-                                setTimeout(() => requestAnimationFrame(animate), 600);
+                                // Delay before next triangle starts (shorter for 10 spokes)
+                                setTimeout(() => requestAnimationFrame(animate), 300);
                             }
                         }, 50); // Reduced from 25ms to 50ms for better performance (20fps instead of 40fps)
                     }
@@ -766,11 +755,11 @@ const completeView = (() => {
                 drawGridOnly(ctx);
 
                 // Draw everything in Phase 1
-                drawTriangles(ctx, centerX, centerY, hexRadius, scores, shapeColors, scoreAnimations);
+                drawTriangles(ctx, centerX, centerY, hexRadius, scores, scoreAnimations);
                 drawHexagon(ctx, centerX, centerY, hexRadius);
                 drawDashedVertices(ctx, centerX, centerY, hexRadius);
-                drawScoreLabels(ctx, centerX, centerY, hexRadius, scores, shapeColors, scoreAnimations, cellSize, baseFontSize);
-                drawBonusLabels(ctx, centerX, centerY, hexRadius, shapeColors, scoreAnimations, cellSize, baseFontSize);
+                drawScoreLabels(ctx, centerX, centerY, hexRadius, scores, scoreAnimations, cellSize, baseFontSize);
+                drawBonusLabels(ctx, centerX, centerY, hexRadius, scoreAnimations, cellSize, baseFontSize);
 
                 ctx.fillStyle = '#333';
                 ctx.textAlign = 'left';
@@ -872,8 +861,8 @@ const completeView = (() => {
         ctx.lineWidth = 1.5;
         ctx.beginPath();
 
-        for (let i = 0; i < 6; i++) {
-            const angle = (Math.PI / 3) * i - (Math.PI / 2);
+        for (let i = 0; i < NUM_SPOKES; i++) {
+            const angle = SPOKE_ANGLE * i - (Math.PI / 2);
             const x = centerX + hexRadius * Math.cos(angle);
             const y = centerY + hexRadius * Math.sin(angle);
 
@@ -890,11 +879,11 @@ const completeView = (() => {
 
     function drawDashedVertices(ctx, centerX, centerY, hexRadius) {
         ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 0.75; // Thinner line weight
+        ctx.lineWidth = 0.75;
         ctx.setLineDash([5, 5]);
 
-        for (let i = 0; i < 6; i++) {
-            const angle = (Math.PI / 3) * i - (Math.PI / 2);
+        for (let i = 0; i < NUM_SPOKES; i++) {
+            const angle = SPOKE_ANGLE * i - (Math.PI / 2);
             const x = centerX + hexRadius * Math.cos(angle);
             const y = centerY + hexRadius * Math.sin(angle);
 
@@ -907,13 +896,11 @@ const completeView = (() => {
         ctx.setLineDash([]);
     }
 
-    function drawTriangles(ctx, centerX, centerY, hexRadius, scores, shapeColors, scoreAnimations) {
+    function drawTriangles(ctx, centerX, centerY, hexRadius, scores, scoreAnimations) {
         const scorePoints = [];
-        for (let i = 0; i < 6; i++) {
-            const angle = (Math.PI / 3) * i - (Math.PI / 2);
+        for (let i = 0; i < NUM_SPOKES; i++) {
+            const angle = SPOKE_ANGLE * i - (Math.PI / 2);
             const score = scores[i];
-            // Perfect cuts (50) should reach the full radius (they get +25 bonus separately)
-            // Map 50 to 100% of radius, everything else scales 0-50 to 0-100%
             const normalizedScore = score === 50 ? 100 : (score / 50) * 100;
             const distance = (normalizedScore / 100) * hexRadius;
             const x = centerX + distance * Math.cos(angle);
@@ -921,19 +908,17 @@ const completeView = (() => {
             scorePoints.push({ x, y });
         }
 
-        for (let i = 0; i < 6; i++) {
-            // Only draw if triangle is visible
+        for (let i = 0; i < NUM_SPOKES; i++) {
             if (!scoreAnimations[i].triangleVisible) continue;
 
             const currentPoint = scorePoints[i];
-            const nextPoint = scorePoints[(i + 1) % 6];
+            const nextPoint = scorePoints[(i + 1) % NUM_SPOKES];
 
-            // Apply simple fade-in (no overshoot)
             const popScale = scoreAnimations[i].trianglePopScale || 0;
 
             ctx.save();
-            ctx.globalAlpha = popScale; // Simple fade in
-            ctx.fillStyle = shapeColors[i];
+            ctx.globalAlpha = popScale;
+            ctx.fillStyle = RADAR_COLOR;
 
             ctx.beginPath();
             ctx.moveTo(centerX, centerY);
@@ -946,82 +931,75 @@ const completeView = (() => {
         }
     }
 
-    function drawScoreLabels(ctx, centerX, centerY, hexRadius, scores, shapeColors, scoreAnimations, cellSize, baseFontSize) {
+    function drawScoreLabels(ctx, centerX, centerY, hexRadius, scores, scoreAnimations, cellSize, baseFontSize) {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         const textOffset = cellSize * 0.8;
 
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < NUM_SPOKES; i++) {
             if (!scoreAnimations[i].scoreVisible) continue;
 
-            const angle = (Math.PI / 3) * i - (Math.PI / 2);
+            const angle = SPOKE_ANGLE * i - (Math.PI / 2);
             const score = scores[i];
             const popScale = scoreAnimations[i].scorePopScale || 0;
 
-            // Apply snappy POP animation: instant large scale then quick settle
             const easeScale = popScale < 0.3
-                ? popScale * 5  // Grow VERY quickly to 1.5 (overshoot)
+                ? popScale * 5
                 : popScale < 0.7
-                ? 1.5 - (popScale - 0.3) * 1.25  // Settle back quickly
-                : 1.0; // Final settled state
+                ? 1.5 - (popScale - 0.3) * 1.25
+                : 1.0;
 
-            ctx.fillStyle = shapeColors[i];
+            ctx.fillStyle = RADAR_COLOR;
 
             const textDistance = hexRadius + textOffset;
             const x = centerX + textDistance * Math.cos(angle);
             const y = centerY + textDistance * Math.sin(angle);
 
-            // Save context for transformation
             ctx.save();
             ctx.translate(x, y);
             ctx.scale(easeScale, easeScale);
 
-            // Set font with proper size
-            ctx.font = `bold ${Math.round(baseFontSize * 1.1)}px Arial, sans-serif`;
+            ctx.font = `bold ${Math.round(baseFontSize * 0.85)}px Arial, sans-serif`;
             ctx.fillText(Math.round(score), 0, 0);
 
             ctx.restore();
         }
     }
 
-    function drawBonusLabels(ctx, centerX, centerY, hexRadius, shapeColors, scoreAnimations, cellSize, baseFontSize) {
+    function drawBonusLabels(ctx, centerX, centerY, hexRadius, scoreAnimations, cellSize, baseFontSize) {
         ctx.textBaseline = 'middle';
 
         const textOffset = cellSize * 0.8;
-        const bonusOffset = cellSize * 1.2; // Horizontal offset from score
+        const bonusOffset = cellSize * 1.2;
 
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < NUM_SPOKES; i++) {
             if (!scoreAnimations[i].bonusVisible) continue;
 
-            const angle = (Math.PI / 3) * i - (Math.PI / 2);
+            const angle = SPOKE_ANGLE * i - (Math.PI / 2);
             const bonusPopScale = scoreAnimations[i].bonusPopScale || 0;
 
-            // Apply MORE dramatic POP animation with bigger overshoot
             const easeScale = bonusPopScale < 0.25
-                ? bonusPopScale * 6.4  // Grow VERY quickly to 1.6 (bigger overshoot)
+                ? bonusPopScale * 6.4
                 : bonusPopScale < 0.65
-                ? 1.6 - (bonusPopScale - 0.25) * 1.5  // Settle back
-                : 1.0; // Final settled state
+                ? 1.6 - (bonusPopScale - 0.25) * 1.5
+                : 1.0;
 
-            // Always use black for bonus text
             ctx.fillStyle = '#000000';
 
             const textDistance = hexRadius + textOffset;
             const baseX = centerX + textDistance * Math.cos(angle);
             const baseY = centerY + textDistance * Math.sin(angle);
 
-            // Position bonus to right for vertices 0-3, left for vertices 4-5
-            const isRightSide = i <= 3;
+            // Position bonus to right for first half of spokes, left for second half
+            const isRightSide = i < NUM_SPOKES / 2;
             const bonusX = baseX + (isRightSide ? bonusOffset : -bonusOffset);
 
-            // Save context for transformation
             ctx.save();
             ctx.translate(bonusX, baseY);
             ctx.scale(easeScale, easeScale);
 
-            // Set font and alignment - bold black text
-            ctx.font = `bold ${Math.round(baseFontSize * 1.2)}px Arial, sans-serif`;
+            ctx.font = `bold ${Math.round(baseFontSize * 1.0)}px Arial, sans-serif`;
             ctx.textAlign = 'center';
             ctx.fillText('+50', 0, 0);
 
@@ -1136,189 +1114,127 @@ const completeView = (() => {
         const centerX = cssWidth / 2;
         const centerY = cssHeight / 2;
 
-        // Draw radar graph with attempt scores (FIRST - so it appears behind hexagon/vertices)
-        // Extract scores from model data (6 attempts total: 2 per shape × 3 shapes)
+        // Draw radar graph with attempt scores
         const scores = [];
         if (model.shapes && model.shapes.length > 0) {
             model.shapes.forEach(shape => {
                 if (shape.attempts && shape.attempts.length > 0) {
                     shape.attempts.forEach(attempt => {
-                        // Check for all possible field name formats
                         const leftPct = attempt.leftPct || attempt.leftPercentage || attempt.leftPercent || 0;
                         const rightPct = attempt.rightPct || attempt.rightPercentage || attempt.rightPercent || 0;
-
-                        // Use the smaller percentage from the cut (the actual accuracy)
                         const smallerPct = Math.min(leftPct, rightPct);
-                        const displayScore = Math.round(smallerPct);
-                        scores.push(displayScore);
+                        scores.push(Math.round(smallerPct));
                     });
                 }
             });
         }
-
-        // Ensure we have exactly 6 scores (pad with 0 if needed)
-        while (scores.length < 6) {
-            scores.push(0);
-        }
+        while (scores.length < NUM_SPOKES) scores.push(0);
 
         console.log('📊 Radar graph scores (static render):', scores);
 
-        // Define shape colors
-        const shapeColors = [
-            '#EDAE49', // Yellow - Shape 1
-            '#EDAE49', // Yellow - Shape 1
-            '#D1495B', // Red - Shape 2
-            '#D1495B', // Red - Shape 2
-            '#00798C', // Blue - Shape 3
-            '#00798C'  // Blue - Shape 3
-        ];
-
-        // Calculate score positions along each vertex
+        // Calculate score positions along each spoke
         const scorePoints = [];
-        for (let i = 0; i < 6; i++) {
-            const angle = (Math.PI / 3) * i - (Math.PI / 2);
+        for (let i = 0; i < NUM_SPOKES; i++) {
+            const angle = SPOKE_ANGLE * i - (Math.PI / 2);
             const score = scores[i];
-            // Perfect cuts (50) should reach the full radius
-            // Map 50 to 100% of radius, everything else scales 0-50 to 0-100%
             const normalizedScore = score === 50 ? 100 : (score / 50) * 100;
             const distance = (normalizedScore / 100) * hexRadius;
-            const x = centerX + distance * Math.cos(angle);
-            const y = centerY + distance * Math.sin(angle);
-            scorePoints.push({ x, y });
+            scorePoints.push({
+                x: centerX + distance * Math.cos(angle),
+                y: centerY + distance * Math.sin(angle)
+            });
         }
 
-        // Draw triangles connecting center -> current score -> next score
-        for (let i = 0; i < 6; i++) {
-            const currentPoint = scorePoints[i];
-            const nextPoint = scorePoints[(i + 1) % 6]; // Wrap around to first point
-
-            ctx.fillStyle = shapeColors[i];
+        // Draw filled triangles (center → score → next score)
+        for (let i = 0; i < NUM_SPOKES; i++) {
+            const cur = scorePoints[i];
+            const next = scorePoints[(i + 1) % NUM_SPOKES];
+            ctx.fillStyle = RADAR_COLOR;
             ctx.beginPath();
-            ctx.moveTo(centerX, centerY); // Center
-            ctx.lineTo(currentPoint.x, currentPoint.y); // Current score
-            ctx.lineTo(nextPoint.x, nextPoint.y); // Next score
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(cur.x, cur.y);
+            ctx.lineTo(next.x, next.y);
             ctx.closePath();
             ctx.fill();
         }
 
-        // Now draw hexagon with vertex pointing up (90 degrees) - ON TOP of radar graph
+        // Draw decagon outline
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-
-        // A regular hexagon has 6 vertices at 60-degree intervals
-        // Starting angle is -90 degrees (pointing up) = -Math.PI/2 radians
-        for (let i = 0; i < 6; i++) {
-            const angle = (Math.PI / 3) * i - (Math.PI / 2); // 60 degrees per vertex, starting at -90 degrees
+        for (let i = 0; i < NUM_SPOKES; i++) {
+            const angle = SPOKE_ANGLE * i - (Math.PI / 2);
             const x = centerX + hexRadius * Math.cos(angle);
             const y = centerY + hexRadius * Math.sin(angle);
-
-            if (i === 0) {
-                ctx.moveTo(x, y);
-            } else {
-                ctx.lineTo(x, y);
-            }
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         }
-
         ctx.closePath();
         ctx.stroke();
 
-        // Draw dashed lines from center to each vertex - ON TOP of radar graph
+        // Draw dashed spokes
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 0.75;
-        ctx.setLineDash([5, 5]); // Dashed line pattern: 5px dash, 5px gap
-
-        for (let i = 0; i < 6; i++) {
-            const angle = (Math.PI / 3) * i - (Math.PI / 2); // Same angles as hexagon vertices
+        ctx.setLineDash([5, 5]);
+        for (let i = 0; i < NUM_SPOKES; i++) {
+            const angle = SPOKE_ANGLE * i - (Math.PI / 2);
             const x = centerX + hexRadius * Math.cos(angle);
             const y = centerY + hexRadius * Math.sin(angle);
-
             ctx.beginPath();
             ctx.moveTo(centerX, centerY);
             ctx.lineTo(x, y);
             ctx.stroke();
         }
-
-        // Reset line dash for future drawing
         ctx.setLineDash([]);
 
-        // Draw score text at the end of each vertex
-        ctx.font = `bold ${Math.round(baseFontSize * 1.1)}px Arial, sans-serif`;
+        // Draw score labels at spoke tips
+        const textOffset = cellSize * 0.8;
+        const bonusOffset = cellSize * 1.2;
+        ctx.font = `bold ${Math.round(baseFontSize * 0.85)}px Arial, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        // Position text slightly beyond the hexagon vertex (add offset from vertex tip)
-        const textOffset = cellSize * 0.8; // Distance beyond vertex tip
-        const bonusOffset = cellSize * 1.2; // Horizontal offset for bonus
-
-        // Calculate total score with bonuses
         let totalScore = 0;
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < NUM_SPOKES; i++) {
             totalScore += scores[i];
-            if (scores[i] === 50) {
-                totalScore += 50; // Add bonus for perfect cuts
-            }
+            if (scores[i] === 50) totalScore += 50;
         }
 
-        for (let i = 0; i < 6; i++) {
-            const angle = (Math.PI / 3) * i - (Math.PI / 2); // Same angles as hexagon vertices
+        for (let i = 0; i < NUM_SPOKES; i++) {
+            const angle = SPOKE_ANGLE * i - (Math.PI / 2);
             const score = scores[i];
+            ctx.fillStyle = RADAR_COLOR;
 
-            // Set color to match the shape color
-            ctx.fillStyle = shapeColors[i];
-
-            // Calculate position beyond the vertex tip
-            const textDistance = hexRadius + textOffset;
-            const x = centerX + textDistance * Math.cos(angle);
-            const y = centerY + textDistance * Math.sin(angle);
-
-            // Draw the score
+            const textDist = hexRadius + textOffset;
+            const x = centerX + textDist * Math.cos(angle);
+            const y = centerY + textDist * Math.sin(angle);
             ctx.fillText(Math.round(score).toString(), x, y);
 
-            // Draw bonus +50 for perfect cuts
             if (score === 50) {
-                const isRightSide = i <= 3;
+                const isRightSide = i < NUM_SPOKES / 2;
                 const bonusX = x + (isRightSide ? bonusOffset : -bonusOffset);
-
-                ctx.fillStyle = '#000000'; // Black for bonus
-                ctx.font = `bold ${Math.round(baseFontSize * 1.2)}px Arial, sans-serif`;
+                ctx.fillStyle = '#000000';
+                ctx.font = `bold ${Math.round(baseFontSize)}px Arial, sans-serif`;
                 ctx.fillText('+50', bonusX, y);
-
-                // Reset font for next score
-                ctx.font = `bold ${Math.round(baseFontSize * 1.1)}px Arial, sans-serif`;
+                ctx.font = `bold ${Math.round(baseFontSize * 0.85)}px Arial, sans-serif`;
             }
         }
 
-        // Draw "Tomorrow's cutting tool will be..." at the bottom
-        // (functions defined outside for performance)
-
+        // Tomorrow's tool text
         const tomorrowMechanic = getTomorrowsMechanic();
         const tomorrowTool = getFriendlyMechanicName(tomorrowMechanic);
+        const bottomVertexY = centerY + hexRadius + textOffset;
+        const tomorrowTextY = bottomVertexY + cellSize * 1.2;
 
-        // Calculate position: below vertex 3 (bottom vertex)
-        // Vertex 3 is at angle (Math.PI / 3) * 3 - (Math.PI / 2) = Math.PI / 2 (bottom)
-        const vertex3Y = centerY + hexRadius + textOffset;
-        const tomorrowTextY = vertex3Y + cellSize * 1.2;
-
-        // Draw tomorrow's tool text with explicit settings
-        // Shortened text to fit on one line on all devices
         ctx.save();
-        ctx.globalAlpha = 1.0; // Ensure full opacity
+        ctx.globalAlpha = 1.0;
         ctx.fillStyle = '#6496FF';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
         ctx.font = `bold ${Math.round(baseFontSize * 1.1 * 0.75)}px Arial, sans-serif`;
         ctx.fillText(`Tomorrow: ${tomorrowTool}`, centerX, tomorrowTextY);
-        console.log(`📍 Tomorrow text position: x=${centerX}, y=${tomorrowTextY}, canvasHeight=${cssHeight}, text="${tomorrowTool}"`);
         ctx.restore();
 
-        console.log(`✅ Title text rendered: size=${titleSize}px`);
-        console.log(`✅ Hexagon drawn: radius=${hexRadius}px (8 cells high)`);
-        console.log(`✅ Hexagon vertices drawn: 6 dashed lines from center`);
-        console.log(`✅ Radar graph drawn: 6 triangular segments with scores`);
-        console.log(`✅ Score labels drawn at vertex tips`);
-        console.log(`✅ Tomorrow's tool text drawn: ${tomorrowTool}`);
-        console.log('✅ Completion canvas rendered with grid and title only');
+        console.log('✅ Completion canvas rendered: 10-spoke radar with scores');
     }
 
     function createPostCanvasActions() {

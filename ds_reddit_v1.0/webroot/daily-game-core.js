@@ -9,17 +9,15 @@ class DailyGameCore {
         this.midnightTimer = null;
         this.gameState = {
             currentShape: 1,
-            currentAttempt: 1,
+            currentAttempt: 1,  // Always 1 (single attempt per shape)
             shapeResults: {},
             hasStartedToday: false,
             completedShapes: [],
             isCompleted: false
         };
-        this.shapes = {
-            shape1: null,
-            shape2: null,
-            shape3: null
-        };
+        this.shapes = {};
+        // Initialize shape slots dynamically (10 per day)
+        for (let i = 1; i <= 10; i++) this.shapes[`shape${i}`] = null;
     }
     
     // Initialize the daily game system
@@ -110,22 +108,17 @@ class DailyGameCore {
                 }
 
                 // Load shapes from daily mode manager
-                if (window.dailyModeManager.shapes && window.dailyModeManager.shapes.length >= 3) {
-                    const shape1 = window.dailyModeManager.shapes[0];
-                    const shape2 = window.dailyModeManager.shapes[1];
-                    const shape3 = window.dailyModeManager.shapes[2];
+                if (window.dailyModeManager.shapes && window.dailyModeManager.shapes.length >= 1) {
+                    const managerShapes = window.dailyModeManager.shapes;
+                    const validShapes = managerShapes.filter(s => s !== null && s !== undefined);
 
-                    // Check if we actually have valid shapes (not null)
-                    const validShapes = [shape1, shape2, shape3].filter(s => s !== null && s !== undefined);
-
-                    if (validShapes.length >= 2) {
-                        // We have at least 2 valid shapes, use them
-                        this.shapes.shape1 = shape1 || validShapes[0];
-                        this.shapes.shape2 = shape2 || validShapes[0]; // Fallback to first valid shape
-                        this.shapes.shape3 = shape3 || validShapes[0]; // Fallback to first valid shape
-                        console.log(`✅ Shapes loaded from Supabase via DailyModeManager (${validShapes.length}/3 valid)`);
+                    if (validShapes.length >= 1) {
+                        for (let i = 0; i < 10; i++) {
+                            this.shapes[`shape${i + 1}`] = managerShapes[i] || validShapes[0];
+                        }
+                        console.log(`✅ Shapes loaded from Supabase via DailyModeManager (${validShapes.length}/10 valid)`);
                     } else {
-                        throw new Error(`DailyModeManager has insufficient valid shapes (${validShapes.length}/3)`);
+                        throw new Error(`DailyModeManager has insufficient valid shapes (${validShapes.length}/10)`);
                     }
                 } else {
                     throw new Error('DailyModeManager shapes not available');
@@ -158,13 +151,14 @@ class DailyGameCore {
         const dayOfWeek = new Date(this.currentDate).getDay();
         const demoDay = dayOfWeek === 0 ? 7 : dayOfWeek; // Sunday=7, Monday=1, etc.
         
-        const shapePaths = [
-            `v4-tests/day${demoDay}/shape1.geojson`,
-            `v4-tests/day${demoDay}/shape2.geojson`,
-            `v4-tests/day${demoDay}/shape3.geojson`
-        ];
-        
-        for (let i = 0; i < 3; i++) {
+        // Demo shapes: load up to 10 (reuse day shapes cyclically if fewer are available)
+        const shapePaths = [];
+        for (let i = 0; i < 10; i++) {
+            const fileIndex = (i % 3) + 1; // Cycle through shape1-3 demo files
+            shapePaths.push(`v4-tests/day${demoDay}/shape${fileIndex}.geojson`);
+        }
+
+        for (let i = 0; i < 10; i++) {
             const shapeKey = `shape${i + 1}`;
             try {
                 const response = await fetch(shapePaths[i]);
@@ -189,9 +183,7 @@ class DailyGameCore {
             const response = await fetch('geojson library/shape1.geojson');
             if (response.ok) {
                 const fallbackShape = await response.json();
-                this.shapes.shape1 = fallbackShape;
-                this.shapes.shape2 = fallbackShape;
-                this.shapes.shape3 = fallbackShape;
+                for (let i = 1; i <= 10; i++) this.shapes[`shape${i}`] = fallbackShape;
             }
         } catch (error) {
             console.error('Failed to load fallback shapes:', error);
@@ -302,43 +294,35 @@ class DailyGameCore {
         }
     }
     
-    // Update game state after a cut
+    // Update game state after a cut (1 attempt per shape)
     updateGameState(shapeNumber, attemptNumber, result) {
         const shapeKey = `shape${shapeNumber}`;
-        
+
         if (!this.gameState.shapeResults[shapeKey]) {
             this.gameState.shapeResults[shapeKey] = {};
         }
-        
+
         this.gameState.shapeResults[shapeKey][`attempt${attemptNumber}`] = result;
         this.gameState.hasStartedToday = true;
-        
-        // Check if this shape is completed (2 attempts done)
-        const shapeResults = this.gameState.shapeResults[shapeKey];
-        if (shapeResults.attempt1 !== undefined && shapeResults.attempt2 !== undefined) {
-            if (!this.gameState.completedShapes.includes(shapeNumber)) {
-                this.gameState.completedShapes.push(shapeNumber);
-            }
+
+        // Shape is completed after 1 attempt
+        if (!this.gameState.completedShapes.includes(shapeNumber)) {
+            this.gameState.completedShapes.push(shapeNumber);
         }
-        
-        // Check if all shapes are completed
-        if (this.gameState.completedShapes.length === 3) {
+
+        // Check if all 10 shapes are completed
+        if (this.gameState.completedShapes.length === 10) {
             this.gameState.isCompleted = true;
         }
-        
-        // Update current shape and attempt for next action
-        if (attemptNumber === 1) {
-            this.gameState.currentAttempt = 2;
-        } else {
-            // Move to next shape
-            if (shapeNumber < 3) {
-                this.gameState.currentShape = shapeNumber + 1;
-                this.gameState.currentAttempt = 1;
-            }
+
+        // Move to next shape
+        if (shapeNumber < 10) {
+            this.gameState.currentShape = shapeNumber + 1;
+            this.gameState.currentAttempt = 1;
         }
-        
+
         this.saveGameState();
-        
+
         // Save to database if user is authenticated
         if (window.AuthService && window.AuthService.isLoggedIn()) {
             this.saveToDatabaseDebounced();
@@ -375,8 +359,8 @@ class DailyGameCore {
             if (data) {
                 // Restore game state from server data
                 this.gameState = {
-                    currentShape: data.completed ? 4 : (data.attempts?.length || 0) % 6 === 0 ? Math.floor((data.attempts?.length || 0) / 2) + 1 : Math.floor((data.attempts?.length || 0) / 2) + 1,
-                    currentAttempt: data.completed ? 1 : ((data.attempts?.length || 0) % 2) + 1,
+                    currentShape: data.completed ? 11 : (data.attempts?.length || 0) + 1,
+                    currentAttempt: 1,  // Always 1 (single attempt per shape)
                     shapeResults: data.scores ? this.convertScoresToShapeResults(data.scores) : {},
                     hasStartedToday: data.attempts?.length > 0,
                     completedShapes: data.scores ? Object.keys(this.convertScoresToShapeResults(data.scores)) : [],
@@ -470,7 +454,7 @@ class DailyGameCore {
     // Helper function to get all attempts in chronological order
     getAllAttempts() {
         const attempts = [];
-        for (let shape = 1; shape <= 3; shape++) {
+        for (let shape = 1; shape <= 10; shape++) {
             const shapeAttempts = this.getShapeAttempts(shape);
             shapeAttempts.forEach(attempt => {
                 attempts.push({
@@ -486,7 +470,7 @@ class DailyGameCore {
     // Helper function to get all final scores
     getAllScores() {
         const scores = [];
-        for (let shape = 1; shape <= 3; shape++) {
+        for (let shape = 1; shape <= 10; shape++) {
             scores.push(this.gameState.shapeResults[`shape${shape}`] || null);
         }
         return scores;
@@ -532,14 +516,12 @@ class DailyGameCore {
             const shapeScores = {};
             
             // Convert game state to database format
-            for (let i = 1; i <= 3; i++) {
+            for (let i = 1; i <= 10; i++) {
                 const shapeKey = `shape${i}`;
                 const results = this.gameState.shapeResults[shapeKey];
                 if (results) {
-                    shapeScores[shapeKey] = {
-                        attempt1: results.attempt1?.score,
-                        attempt2: results.attempt2?.score
-                    };
+                    // Single attempt per shape
+                    shapeScores[shapeKey] = results.attempt1?.score || 0;
                 }
             }
             

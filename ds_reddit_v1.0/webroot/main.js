@@ -138,7 +138,7 @@ const practiceMode = {
 // v3.0 - Single shape with multiple attempts
 let currentAttempts = [];  // Array of attempt objects: {score, leftPercentage, rightPercentage, cutVector, splitAreas}
 let attemptCount = 0;
-let maxAttempts = 2;  // 2 attempts per shape in demo mode
+let maxAttempts = 1;  // 1 attempt per shape
 let finalLockedScore = null;
 let shapeScreenshot = null; // Single screenshot for pulsing animation
 
@@ -155,13 +155,11 @@ let dailyStats = {
     // Structure: { day1: { shape1: [score1, score2], shape2: [score1, score2], shape3: [score1, score2] }, day2: {...}, ... }
 };
 
-// Initialize stats for all days
+// Initialize stats for all days (10 shapes per day, 1 attempt each)
 for (let day = 1; day <= 7; day++) {
-    dailyStats[`day${day}`] = {
-        shape1: [],
-        shape2: [],
-        shape3: []
-    };
+    const dayObj = {};
+    for (let s = 1; s <= 10; s++) dayObj[`shape${s}`] = [];
+    dailyStats[`day${day}`] = dayObj;
 }
 
 // Load saved stats on initialization (after dailyStats is declared)
@@ -1477,7 +1475,7 @@ async function initializeSupabaseGameMode() {
         // Initialize game state
         gameState = 'initial';
         isInteractionEnabled = false;
-        maxAttempts = 2;
+        maxAttempts = 1;
 
         // Get current day for mechanic
         const today = new Date();
@@ -1750,7 +1748,7 @@ async function initializeDemoGame() {
         }
         gameState = 'initial';
         isInteractionEnabled = false;
-        maxAttempts = 2;  // 2 attempts per shape in demo
+        maxAttempts = 1;  // 1 attempt per shape
         
         // Load Monday by default
         currentDay = 1;
@@ -2499,14 +2497,14 @@ async function syncServerCompletionState() {
                 isGameStarted: true,
                 isGameComplete: true,
                 dayComplete: true,
-                currentShape: 4,
+                currentShape: 11,
                 currentAttempt: 1,
                 cuts: [],
                 mechanic: currentDay,
                 date: todayLocalDate,
                 timestamp: Date.now(),
                 syncedFromServer: true,
-                totalCutsMade: 6 // All 3 shapes with 2 cuts each
+                totalCutsMade: 10 // All 10 shapes with 1 cut each
             };
 
             localStorage.setItem(stateKey, JSON.stringify(completedState));
@@ -2782,9 +2780,11 @@ function recordAttemptScore(dayNumber, shapeNumber, leftPercentage, rightPercent
     const shapeKey = `shape${shapeNumber}`;
     
     if (!dailyStats[dayKey]) {
-        dailyStats[dayKey] = { shape1: [], shape2: [], shape3: [] };
+        const obj = {};
+        for (let s = 1; s <= 10; s++) obj[`shape${s}`] = [];
+        dailyStats[dayKey] = obj;
     }
-    
+
     if (!dailyStats[dayKey][shapeKey]) {
         dailyStats[dayKey][shapeKey] = [];
     }
@@ -2821,7 +2821,12 @@ function clearStatsForDay(dayNumber) {
 
 function getDayStats(dayNumber) {
     const dayKey = `day${dayNumber}`;
-    return dailyStats[dayKey] || { shape1: [], shape2: [], shape3: [] };
+    if (!dailyStats[dayKey]) {
+        const obj = {};
+        for (let s = 1; s <= 10; s++) obj[`shape${s}`] = [];
+        return obj;
+    }
+    return dailyStats[dayKey];
 }
 
 function calculateDayAverage(dayNumber) {
@@ -2829,7 +2834,7 @@ function calculateDayAverage(dayNumber) {
     const allCutScores = [];
 
     // STANDARD SCORING: Average of ALL cuts (up to 6 total: 2 per shape)
-    ['shape1', 'shape2', 'shape3'].forEach(shapeKey => {
+    Array.from({length: 10}, (_, i) => `shape${i + 1}`).forEach(shapeKey => {
         if (dayData[shapeKey] && dayData[shapeKey].length > 0) {
             // Add ALL attempt scores for this shape
             dayData[shapeKey].forEach(attemptData => {
@@ -2855,7 +2860,7 @@ function getAllScoresForDay(dayNumber) {
     const dayStats = getDayStats(dayNumber);
     const allScores = [];
     
-    ['shape1', 'shape2', 'shape3'].forEach(shapeKey => {
+    Array.from({length: 10}, (_, i) => `shape${i + 1}`).forEach(shapeKey => {
         const scores = dayStats[shapeKey] || [];
         scores.forEach(attemptData => {
             const score = typeof attemptData === 'number' ? attemptData : attemptData.score;
@@ -2870,7 +2875,7 @@ function getShapeAveragesForDay(dayNumber) {
     const dayStats = getDayStats(dayNumber);
     const shapeAverages = [];
     
-    ['shape1', 'shape2', 'shape3'].forEach(shapeKey => {
+    Array.from({length: 10}, (_, i) => `shape${i + 1}`).forEach(shapeKey => {
         const scores = dayStats[shapeKey] || [];
         if (scores.length > 0) {
             let total = 0;
@@ -2897,7 +2902,7 @@ async function showDayStatsPopup() {
     const currentDayStats = getDayStats(currentDay);
     let hasAnyStats = false;
     
-    for (const shapeKey of ['shape1', 'shape2', 'shape3']) {
+    for (const shapeKey of Array.from({length: 10}, (_, i) => `shape${i + 1}`)) {
         if (currentDayStats[shapeKey] && currentDayStats[shapeKey].length > 0) {
             hasAnyStats = true;
             break;
@@ -3163,7 +3168,7 @@ function buildCompletionModelFromFinalStats(finalStats) {
     let globalBestScore = 0;
 
     // Build from saved day stats but limit to 2 attempts per shape (max allowed)
-    for (let shapeIndex = 1; shapeIndex <= 3; shapeIndex++) {
+    for (let shapeIndex = 1; shapeIndex <= 10; shapeIndex++) {
         const shapeKey = `shape${shapeIndex}`;
         let shapeAttempts = [];
         let shapeBestScore = 0;
@@ -3241,7 +3246,7 @@ function buildCompletionModel(dayStats) {
     let globalBestCut = null;
     let globalBestScore = 0;
 
-    for (let shapeIndex = 1; shapeIndex <= 3; shapeIndex++) {
+    for (let shapeIndex = 1; shapeIndex <= 10; shapeIndex++) {
         const shapeKey = `shape${shapeIndex}`;
         let shapeAttempts = [];
         let shapeBestScore = 0;
@@ -3322,7 +3327,7 @@ function showDayStatsContent(day) {
             <div class="shapes-summary">
     `;
     
-    ['shape1', 'shape2', 'shape3'].forEach((shapeKey, index) => {
+    Array.from({length: 10}, (_, i) => `shape${i + 1}`).forEach((shapeKey, index) => {
         const shapeNumber = index + 1;
         const scores = dayStats[shapeKey] || [];
         
@@ -3376,7 +3381,7 @@ function showStatsWindow() {
     let hasAnyStats = false;
     for (let day = 1; day <= 7; day++) {
         const dayStats = getDayStats(day);
-        ['shape1', 'shape2', 'shape3'].forEach(shapeKey => {
+        Array.from({length: 10}, (_, i) => `shape${i + 1}`).forEach(shapeKey => {
             if (dayStats[shapeKey] && dayStats[shapeKey].length > 0) {
                 hasAnyStats = true;
             }
@@ -3403,7 +3408,7 @@ function showStatsWindow() {
         const dayAverage = calculateDayAverage(day);
         
         // Skip days with no data
-        const dayHasData = ['shape1', 'shape2', 'shape3'].some(shapeKey => 
+        const dayHasData = Array.from({length: 10}, (_, i) => `shape${i + 1}`).some(shapeKey => 
             dayStats[shapeKey] && dayStats[shapeKey].length > 0
         );
         
@@ -3416,7 +3421,7 @@ function showStatsWindow() {
                 <div class="shapes-summary">
         `;
         
-        ['shape1', 'shape2', 'shape3'].forEach((shapeKey, index) => {
+        Array.from({length: 10}, (_, i) => `shape${i + 1}`).forEach((shapeKey, index) => {
             const shapeNumber = index + 1;
             const scores = dayStats[shapeKey] || [];
             
@@ -4002,33 +4007,15 @@ function updateProgressUI() {
         progressDisplay.style.setProperty('visibility', 'hidden');
     }
     
-    // Show the current state - what shape and which cut they're on/just completed
-    // Color "Shape X" based on the shape number (daily mode only)
+    // Show the current state - "Shape X of 10"
+    const totalShapes = window.devvitTotalShapes || 10;
     if (!window.isPracticeMode && window.isDailyMode) {
-        // Get the color for the current shape
-        const shapeColors = {
-            1: '#EDAE49', // Orange/gold
-            2: '#D1495B', // Red
-            3: '#00798C'  // Teal
-        };
-        const shapeColor = shapeColors[currentShapeNumber] || '#EDAE49';
-
-        // Create colored HTML for "Shape X" portion
-        progressDisplay.innerHTML = `<span style="color: ${shapeColor};">Shape ${currentShapeNumber}</span> of 3 - Cut ${currentAttemptNumber} of 2`;
+        progressDisplay.innerHTML = `<span style="color: #00798C;">Shape ${currentShapeNumber}</span> of ${totalShapes}`;
     } else {
-        // Practice mode or non-daily mode - use plain text
-        const progressText = `Shape ${currentShapeNumber} of 3 - Cut ${currentAttemptNumber} of 2`;
-        progressDisplay.textContent = progressText;
+        progressDisplay.textContent = `Shape ${currentShapeNumber} of ${totalShapes}`;
     }
-    
-    // Log state after changes
-    console.log('📊 Progress display after changes:');
-    console.log('   - inline style:', progressDisplay.style.cssText);
-    console.log('   - computed display:', window.getComputedStyle(progressDisplay).display);
-    console.log('   - computed opacity:', window.getComputedStyle(progressDisplay).opacity);
-    console.log('   - element text:', progressDisplay.textContent);
 
-    console.log('📊 Progress UI updated: Shape', currentShapeNumber, 'of 3 - Cut', currentAttemptNumber, 'of 2');
+    console.log('📊 Progress UI updated: Shape', currentShapeNumber, 'of', totalShapes);
     console.log('🎮 Game state:', gameState, '| Interaction enabled:', isInteractionEnabled);
 }
 
@@ -6170,7 +6157,7 @@ function restoreCleanCanvasState(restoredState) {
     console.log('🎨 SCENARIO', restoredState.scenarioNumber, '- CLEAN CANVAS STATE (Button clicked, ready for cutting)');
     
     // EXACT IMPLEMENTATION OF SCENARIOS 2,4,6,8,10 PER USER REQUIREMENTS:
-    // Reload State: shape X (active canvas), progress tracker (Shape X of 3 – Cut X of 2), 
+    // Reload State: shape X (active canvas), progress tracker (Shape X of 10),
     // relevant pre-cut instruction (not commentary), NO BUTTONS
     
     // 1. Set correct game state variables  
@@ -6293,7 +6280,7 @@ function restoreCutCompleteState(restoredState) {
     
     // EXACT IMPLEMENTATION OF SCENARIOS 1,3,5,7,9 PER USER REQUIREMENTS:
     // Reload State: attempt X shaded shape X, attempt X percentage score, Next [Attempt/Shape] button, 
-    // progress tracker (Shape X of 3 – Cut X of 2), attempt X commentary
+    // progress tracker (Shape X of 10), attempt X commentary
     
     // 1. Set correct game state variables
     window.currentShapeNumber = restoredState.currentShape;
@@ -16026,7 +16013,7 @@ async function handleShape3TwoCuts() {
     gameState = 'results';
     
     // Check if all shapes are completed and trigger end game
-    if (gameResults.length === 3) {
+    if (gameResults.length === (window.devvitTotalShapes || 10)) {
         console.log('🔄 All shapes completed - triggering endGame');
         // Reduced delay before showing stats popup
         setTimeout(() => {
@@ -16965,7 +16952,7 @@ function setupSwipeGestures() {
     console.log('Setting up swipe gestures for replay mode');
     
     // Log current swipe capability status
-    const gameCompleted = gameState === 'finished' && gameResults.length === 3;
+    const gameCompleted = gameState === 'finished' && gameResults.length === (window.devvitTotalShapes || 10);
     console.log('🔧 Swipe capability status:');
     console.log('  - isReplayMode:', isReplayMode);
     console.log('  - gameState:', gameState);
@@ -17026,7 +17013,7 @@ function handleSwipeTouchStart(event) {
     console.log('🟢 TOUCH START EVENT DETECTED - isReplayMode:', isReplayMode);
     
     // Allow swipes when all 3 shapes are completed (either in 'results' or 'finished' state)
-    const gameCompleted = gameResults.length === 3 && (gameState === 'results' || gameState === 'finished');
+    const gameCompleted = gameResults.length === (window.devvitTotalShapes || 10) && (gameState === 'results' || gameState === 'finished');
     const canSwipe = gameCompleted;
     
     if (!canSwipe) {
@@ -17060,7 +17047,7 @@ function handleSwipeTouchEnd(event) {
     console.log('🟢 TOUCH END EVENT DETECTED - isReplayMode:', isReplayMode);
     
     // Allow swipes when all 3 shapes are completed (either in 'results' or 'finished' state)
-    const gameCompleted = gameResults.length === 3 && (gameState === 'results' || gameState === 'finished');
+    const gameCompleted = gameResults.length === (window.devvitTotalShapes || 10) && (gameState === 'results' || gameState === 'finished');
     const canSwipe = gameCompleted;
     
     if (!canSwipe) {
@@ -17143,7 +17130,7 @@ function handleSwipeMouseStart(event) {
     console.log('🔍 Current replayShapeIndex at mouse start:', replayShapeIndex);
     
     // Allow swipes when all 3 shapes are completed (either in 'results' or 'finished' state)
-    const gameCompleted = gameResults.length === 3 && (gameState === 'results' || gameState === 'finished');
+    const gameCompleted = gameResults.length === (window.devvitTotalShapes || 10) && (gameState === 'results' || gameState === 'finished');
     const canSwipe = gameCompleted;
     
     if (!canSwipe) {
@@ -17169,7 +17156,7 @@ function handleSwipeMouseEnd(event) {
     console.log('🔍 Current replayShapeIndex at mouse end:', replayShapeIndex);
     
     // Allow swipes when all 3 shapes are completed (either in 'results' or 'finished' state)
-    const gameCompleted = gameResults.length === 3 && (gameState === 'results' || gameState === 'finished');
+    const gameCompleted = gameResults.length === (window.devvitTotalShapes || 10) && (gameState === 'results' || gameState === 'finished');
     const canSwipe = gameCompleted;
     
     if (!canSwipe) {

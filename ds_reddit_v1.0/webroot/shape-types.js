@@ -153,7 +153,7 @@ class ShapeTypeHandler {
         return cutsPerformed >= config.cuts;
     }
     
-    static getProgressText(shapeIndex, totalShapes = 3) {
+    static getProgressText(shapeIndex, totalShapes = 10) {
         return `Shape ${shapeIndex} of ${totalShapes}`;
     }
     
