@@ -187,11 +187,11 @@
                 transform: none !important;
             }
             /* Leaderboard: hidden during gameplay, shown after completion.
-               Height set via JS to match canvas exactly. */
+               CSS stretch makes it match canvas height automatically. */
             .weekly-leaderboard {
                 grid-column: 2 !important;
                 grid-row: 1 / 6 !important;
-                align-self: start !important;
+                align-self: stretch !important;
                 display: none;
                 max-width: none !important;
                 border: 2px solid #000;

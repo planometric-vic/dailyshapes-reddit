@@ -259,42 +259,20 @@
                     document.body.appendChild(backdrop);
                 }
             } else {
-                // Desktop: match leaderboard height to canvas container
-                var canvasContainer = document.querySelector('.canvas-container');
-                if (canvasContainer) {
-                    var canvasHeight = canvasContainer.offsetHeight;
-                    container.style.height = canvasHeight + 'px';
-
-                    // Measure actual row height from first render
-                    measureRowHeight();
-
-                    // Calculate how many rows fit
-                    computedMaxRows = calculateMaxRows(canvasHeight);
-
-                    // Re-render with correct row count
-                    render();
-                }
-
-                // Align leaderboard top with canvas top after layout settles
+                // Desktop: CSS align-self:stretch fills the grid area to match canvas.
+                // After layout settles, measure the container and calculate row count.
                 requestAnimationFrame(function() {
-                    var cc = document.querySelector('.canvas-container');
-                    if (cc && container) {
-                        var canvasRect = cc.getBoundingClientRect();
-                        var lbRect = container.getBoundingClientRect();
-                        var topDiff = lbRect.top - canvasRect.top;
-                        if (Math.abs(topDiff) > 1) {
-                            container.style.marginTop = (-topDiff) + 'px';
-                        }
-                        // Also correct height after margin adjustment
-                        container.style.height = cc.offsetHeight + 'px';
+                    var actualHeight = container.offsetHeight;
+                    if (actualHeight > 0) {
+                        measureRowHeight();
+                        computedMaxRows = calculateMaxRows(actualHeight);
+                        render();
                     }
                 });
             }
         },
         hide: function() {
             container.style.display = 'none';
-            container.style.height = '';
-            container.style.marginTop = '';
             container.classList.remove('lb-modal-mode');
             var backdrop = document.querySelector('.lb-backdrop');
             if (backdrop) backdrop.remove();
