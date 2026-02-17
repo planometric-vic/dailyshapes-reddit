@@ -164,6 +164,24 @@
                     console.error('❌ Failed to save refresh state:', e);
                 }
             }
+
+            // Also persist to Redis via DevvitBridge (survives webview reloads)
+            if (window.DevvitBridge && window.DevvitBridge.initData) {
+                try {
+                    // Save a compact version without canvas data (Redis-friendly)
+                    var redisState = Object.assign({}, state);
+                    delete redisState.canvasData;     // Too large for Redis
+                    delete redisState.parsedShapes;   // Shapes come from server anyway
+                    delete redisState.currentGeoJSON; // Redundant with shapes
+                    window.DevvitBridge.saveProgress(
+                        window.DevvitBridge.initData.dayKey,
+                        redisState
+                    );
+                    console.log('☁️ Progress saved to Redis via DevvitBridge');
+                } catch (redisErr) {
+                    console.warn('⚠️ Failed to save progress to Redis:', redisErr);
+                }
+            }
         },
         
         restore: function() {

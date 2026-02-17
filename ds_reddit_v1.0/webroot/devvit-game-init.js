@@ -52,6 +52,140 @@
         return shapes;
     }
 
+    /**
+     * Restore mid-game progress from Redis-backed state.
+     * Called when existingProgress is found in INIT_RESPONSE (user refreshed mid-game).
+     * Sets all global variables so the game resumes at the exact point.
+     */
+    function restoreFromRedisProgress(progress, shapes, mechanicName) {
+        console.log('[Devvit Init] Restoring game from Redis progress:', {
+            shape: progress.currentShape,
+            attempt: progress.currentAttempt,
+            totalCuts: progress.totalCutsMade,
+            gameState: progress.gameState,
+            cutsCount: progress.cuts ? progress.cuts.length : 0
+        });
+
+        window.isRestoringGameState = true;
+
+        // Restore core game variables
+        window.currentShapeNumber = progress.currentShape || 1;
+        window.currentAttemptNumber = progress.currentAttempt || 1;
+        window.currentDay = progress.currentDay || 1;
+        window.totalCutsMade = progress.totalCutsMade || 0;
+        window.cutsMadeThisShape = progress.cutsMadeThisShape || 0;
+        window.attemptCount = progress.attemptCount || 0;
+        window.currentAttempts = progress.currentAttempts || [];
+        window.playButtonClicked = true;
+
+        // Restore dailyGameState
+        if (!window.dailyGameState) {
+            window.dailyGameState = {};
+        }
+        window.dailyGameState.isGameStarted = true;
+        window.dailyGameState.cuts = progress.cuts || [];
+        window.dailyGameState.dayComplete = progress.dayComplete || false;
+        window.dailyGameState.isGameComplete = progress.isGameComplete || false;
+        window.dailyGameState.completedAt = progress.completedAt || null;
+        window.dailyGameState.finalStats = progress.finalStats || null;
+
+        // Also write to localStorage so SimpleRefresh works for subsequent refreshes
+        // (localStorage is fresh on each Devvit webview load)
+        if (window.SimpleRefresh) {
+            try {
+                const today = new Date().toLocaleDateString('en-CA');
+                const localState = Object.assign({}, progress, {
+                    date: today,
+                    isGameStarted: true,
+                    timestamp: Date.now()
+                });
+                localStorage.setItem('simple_refresh_' + today, JSON.stringify(localState));
+                console.log('[Devvit Init] Wrote Redis progress to localStorage for SimpleRefresh');
+            } catch (e) {
+                console.warn('[Devvit Init] Could not write to localStorage:', e);
+            }
+        }
+
+        // Set game state — if the game was in the middle of awaiting_choice,
+        // we restore to that state so the "Next Shape" button appears
+        if (progress.dayComplete || progress.isGameComplete) {
+            window.gameState = 'finished';
+        } else {
+            window.gameState = progress.gameState || 'playing';
+        }
+
+        window.isInteractionEnabled = !(progress.dayComplete || progress.isGameComplete);
+
+        // Clear restoration flag after a delay
+        setTimeout(function() {
+            window.isRestoringGameState = false;
+            console.log('[Devvit Init] Cleared isRestoringGameState flag');
+        }, 500);
+    }
+
+    /**
+     * Show "already played" locked screen when existingScore is found.
+     * Draws on the canvas and shows the leaderboard.
+     */
+    function showAlreadyPlayedScreen(score) {
+        console.log('[Devvit Init] User already played today, score:', score);
+
+        // Stop loading animation
+        if (typeof window.stopImmediateLoadingAnimation === 'function') {
+            window.stopImmediateLoadingAnimation(function() {
+                drawLockedScreen(score);
+            });
+        } else {
+            drawLockedScreen(score);
+        }
+
+        function drawLockedScreen(score) {
+            // Hide welcome/play UI
+            var welcomeOverlay = document.getElementById('welcomeOverlay');
+            if (welcomeOverlay) welcomeOverlay.style.display = 'none';
+            var playBtn = document.getElementById('initialPlayButton');
+            if (playBtn) playBtn.style.display = 'none';
+            var progressDisplay = document.getElementById('demoProgressDisplay');
+            if (progressDisplay) progressDisplay.style.display = 'none';
+
+            var canvasEl = document.getElementById('geoCanvas');
+            if (canvasEl) {
+                canvasEl.style.display = 'block';
+                var ctx = canvasEl.getContext('2d');
+                ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+                // Draw completion message
+                ctx.fillStyle = '#333';
+                ctx.font = 'bold 22px Arial, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText("Today's game complete!", canvasEl.width / 2, canvasEl.height / 2 - 30);
+
+                ctx.fillStyle = '#666';
+                ctx.font = '16px Arial, sans-serif';
+                ctx.fillText('Your score: ' + score, canvasEl.width / 2, canvasEl.height / 2 + 10);
+
+                ctx.font = '13px Arial, sans-serif';
+                ctx.fillText('Come back tomorrow for a new game', canvasEl.width / 2, canvasEl.height / 2 + 45);
+            }
+
+            // Set game state to locked
+            window.gameState = 'locked';
+            window.isInteractionEnabled = false;
+            if (window.dailyGameState) {
+                window.dailyGameState.dayComplete = true;
+                window.dailyGameState.isGameComplete = true;
+            }
+
+            // Show weekly leaderboard
+            setTimeout(function() {
+                if (window.WeeklyLeaderboard) {
+                    window.WeeklyLeaderboard.show();
+                }
+            }, 300);
+        }
+    }
+
     // Wait for Devvit init data, then bootstrap the game
     window.addEventListener('devvit-init', async (event) => {
         const initData = event.detail;
@@ -61,7 +195,9 @@
             dayNumber: initData.dayNumber,
             dayOfWeek: initData.dayOfWeek,
             mechanic: initData.mechanic,
-            shapeCount: initData.shapes?.length || 0
+            shapeCount: initData.shapes?.length || 0,
+            hasExistingScore: initData.existingScore !== null && initData.existingScore !== undefined,
+            hasExistingProgress: !!initData.existingProgress
         });
 
         // Wait for DOM ready
@@ -96,6 +232,16 @@
         // Determine mechanic
         const mechanicName = initData.mechanic || dayMechanics[dow] || 'DefaultWithUndoMechanic';
         console.log('[Devvit Init] Mechanic:', mechanicName, 'Day:', window.currentDay);
+
+        // ============================================================
+        // GATE 1: If user already submitted a score today, lock the game
+        // ============================================================
+        if (initData.existingScore !== null && initData.existingScore !== undefined) {
+            console.log('[Devvit Init] GATE 1: User already scored today:', initData.existingScore);
+            applyOverrides();
+            showAlreadyPlayedScreen(initData.existingScore);
+            return;
+        }
 
         // Parse shapes from init data (Redis)
         let shapes = (initData.shapes || []).map(s => {
@@ -163,6 +309,26 @@
         // Override loadSupabaseShape to also use Devvit shapes
         window.loadSupabaseShape = window.loadDemoShape;
 
+        // ============================================================
+        // GATE 2: If user has mid-game progress, restore it
+        // ============================================================
+        let hasRedisProgress = false;
+        if (initData.existingProgress) {
+            try {
+                const progress = typeof initData.existingProgress === 'string'
+                    ? JSON.parse(initData.existingProgress)
+                    : initData.existingProgress;
+
+                if (progress && progress.isGameStarted && progress.totalCutsMade > 0) {
+                    console.log('[Devvit Init] GATE 2: Restoring mid-game progress from Redis');
+                    restoreFromRedisProgress(progress, shapes, mechanicName);
+                    hasRedisProgress = true;
+                }
+            } catch (e) {
+                console.error('[Devvit Init] Failed to parse existingProgress:', e);
+            }
+        }
+
         // NOTE: Do NOT call stopImmediateLoadingAnimation() here!
         // initializeDemoGame() calls it internally with showWelcomeScreen as the
         // callback. If we call it first, the callback slot gets taken and
@@ -183,6 +349,19 @@
             manualInit(mechanicName, shapes[0]);
         }
 
+        // If we restored from Redis, the SimpleRefresh.restore() call inside
+        // initializeDemoGame will pick up the localStorage state we wrote
+        // in restoreFromRedisProgress(), so the game state gets fully restored
+        // through the existing restoration pipeline.
+        if (hasRedisProgress) {
+            console.log('[Devvit Init] Redis progress was injected into localStorage — SimpleRefresh will handle visual restoration');
+        }
+
+        applyOverrides();
+    });
+
+    /** Apply all post-init overrides (no-ops, stubs, etc.) */
+    function applyOverrides() {
         // Prevent main.js DOMContentLoaded from running a second initialization.
         // main.js waits up to 5s for supabaseIntegrationActive, then calls either
         // initializeSupabaseGameMode() or initializeDemoGame(). Replace both with
@@ -240,7 +419,7 @@
                 }
             }
         }, 100);
-    });
+    }
 
     function manualInit(mechanicName, firstShape) {
         console.log('[Devvit Init] Manual initialization with', mechanicName);

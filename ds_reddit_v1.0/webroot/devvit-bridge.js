@@ -56,6 +56,11 @@ const DevvitBridge = {
             case 'WEEKLY_LEADERBOARD_RESPONSE':
                 window.dispatchEvent(new CustomEvent('devvit-weekly-leaderboard', { detail: msg.data }));
                 break;
+
+            case 'ALREADY_SCORED':
+                console.log('[DevvitBridge] Score already exists for today:', msg.data);
+                window.dispatchEvent(new CustomEvent('devvit-already-scored', { detail: msg.data }));
+                break;
         }
 
         // Resolve any pending callbacks
@@ -88,7 +93,11 @@ const DevvitBridge = {
 
     submitScore(dayKey, scores, total) {
         this.postMessage({ type: 'SUBMIT_SCORE', data: { dayKey, scores, total } });
-        return this.waitFor('SCORE_SAVED');
+        // Resolve on either SCORE_SAVED or ALREADY_SCORED
+        return Promise.race([
+            this.waitFor('SCORE_SAVED').then(data => ({ ...data, saved: true })),
+            this.waitFor('ALREADY_SCORED').then(data => ({ ...data, saved: false, alreadyScored: true }))
+        ]);
     },
 
     getLeaderboard(dayKey) {

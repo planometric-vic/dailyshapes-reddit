@@ -103,7 +103,11 @@ window.AuthService = {
         total = Math.round(total);
         console.log('[Devvit Shim] Submitting score:', { dayKey, total, shapeScores });
         try {
-            await window.DevvitBridge.submitScore(dayKey, shapeScores, total);
+            const result = await window.DevvitBridge.submitScore(dayKey, shapeScores, total);
+            if (result && result.alreadyScored) {
+                console.log('[Devvit Shim] Score already exists, first submission preserved');
+                return { success: true, alreadyExists: true };
+            }
             return { success: true };
         } catch (e) {
             console.error('[Devvit Shim] Score submission failed:', e);

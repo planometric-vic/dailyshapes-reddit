@@ -465,6 +465,17 @@ Devvit.addCustomPostType({
         case 'SUBMIT_SCORE': {
           const { dayKey, scores, total } = msg.data;
 
+          // Prevent duplicate daily scores — only the first submission counts
+          const alreadyScored = await context.redis.get(redisKeys.userScore(dayKey, username));
+          if (alreadyScored !== undefined && alreadyScored !== null) {
+            console.log(`User ${username} already scored ${alreadyScored} for ${dayKey}, ignoring new score ${total}`);
+            context.ui.webView.postMessage('game-webview', {
+              type: 'ALREADY_SCORED',
+              data: { existingScore: parseInt(alreadyScored, 10) },
+            } as any);
+            break;
+          }
+
           // Store daily score
           await context.redis.set(redisKeys.userScore(dayKey, username), String(total));
           await context.redis.zAdd(redisKeys.leaderboard(dayKey), { member: username, score: total });
