@@ -195,7 +195,6 @@
                 display: none;
                 max-width: none !important;
                 border: 3px solid #000;
-                box-shadow: 4px 4px 0px #000;
                 box-sizing: border-box;
             }
             /* Hide practice nav / results in grid */
@@ -305,8 +304,6 @@
         .lb-table {
             flex: 1;
             overflow-y: auto;
-            display: flex;
-            flex-direction: column;
         }
         .lb-row {
             display: flex;
@@ -314,18 +311,12 @@
             padding: 2px 8px;
             font-size: 12px;
             border-bottom: 1px solid #bbb;
-            flex: 1;
-            min-height: 0;
         }
         .lb-row-empty {
             color: transparent;
             user-select: none;
+            min-height: 19px;
             border-bottom: 1px solid #bbb;
-            flex: 1;
-            min-height: 0;
-        }
-        .lb-row:last-child {
-            border-bottom: none;
         }
         .lb-row-first {
             font-weight: 700;
@@ -366,7 +357,6 @@
             height: 2px;
             background: #000;
             margin: 2px 0;
-            flex-shrink: 0;
         }
         .lb-subtitle {
             font-size: 9px;

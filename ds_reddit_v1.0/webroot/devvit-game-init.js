@@ -127,19 +127,19 @@
      * Show "already played" locked screen when existingScore is found.
      * Renders the radar graph (if shape scores available) and shows the leaderboard.
      */
-    function showAlreadyPlayedScreen(score, shapeScores) {
+    function showAlreadyPlayedScreen(score, shapeScores, existingProgress) {
         console.log('[Devvit Init] User already played today, score:', score, 'shapeScores:', shapeScores);
 
         // Stop loading animation
         if (typeof window.stopImmediateLoadingAnimation === 'function') {
             window.stopImmediateLoadingAnimation(function() {
-                drawLockedScreen(score, shapeScores);
+                drawLockedScreen(score, shapeScores, existingProgress);
             });
         } else {
-            drawLockedScreen(score, shapeScores);
+            drawLockedScreen(score, shapeScores, existingProgress);
         }
 
-        function drawLockedScreen(score, shapeScores) {
+        function drawLockedScreen(score, shapeScores, existingProgress) {
             // Hide welcome/play UI
             var welcomeOverlay = document.getElementById('welcomeOverlay');
             if (welcomeOverlay) welcomeOverlay.style.display = 'none';
@@ -163,13 +163,26 @@
                 String(today.getDate()).padStart(2, '0');
             localStorage.setItem('dailyShapes_lastAnimationDate', dateStr);
 
-            // Try to render the radar graph via completeView
-            if (shapeScores && window.completeView) {
-                var model = buildModelFromShapeScores(shapeScores);
-                console.log('[Devvit Init] Rendering radar graph for already-played game, model:', model);
+            // Try to build a model from available sources
+            var model = null;
+            if (shapeScores) {
+                model = buildModelFromShapeScores(shapeScores);
+                console.log('[Devvit Init] Built model from Redis shapeScores');
+            }
+            if (!model && existingProgress) {
+                model = buildModelFromProgress(existingProgress);
+                console.log('[Devvit Init] Built model from existingProgress');
+            }
+            if (!model) {
+                model = buildModelFromLocalStorage();
+                console.log('[Devvit Init] Built model from localStorage');
+            }
+
+            if (model && model.shapes.length > 0 && window.completeView) {
+                console.log('[Devvit Init] Rendering radar graph, shapes:', model.shapes.length);
                 window.completeView.show(model);
             } else {
-                // Fallback: draw simple text if no shape scores available
+                // Fallback: draw simple text if no shape data from any source
                 var canvasEl = document.getElementById('geoCanvas');
                 if (canvasEl) {
                     canvasEl.style.display = 'block';
@@ -211,7 +224,6 @@
             var shape = shapeScores[key];
             if (shape) {
                 var scoreVal = typeof shape === 'number' ? shape : (shape.attempt1 || 0);
-                // Reconstruct leftPct/rightPct from score (score = smaller percentage)
                 shapes.push({
                     name: 'Shape ' + i,
                     shapeNumber: i,
@@ -224,14 +236,93 @@
                 });
             }
         }
-        return {
-            dayNumber: window.currentDay || 1,
-            avgScorePct: 0,
-            shapes: shapes,
-            bestCut: null,
-            avgScore: 0,
-            shapeSplits: shapes
-        };
+        if (shapes.length === 0) return null;
+        return { dayNumber: window.currentDay || 1, avgScorePct: 0, shapes: shapes, bestCut: null, avgScore: 0, shapeSplits: shapes };
+    }
+
+    /**
+     * Build model from existingProgress (Redis saved SimpleRefresh state).
+     * Progress format: JSON string with finalStats or shape data from dailyGameState.
+     */
+    function buildModelFromProgress(progress) {
+        try {
+            var state = typeof progress === 'string' ? JSON.parse(progress) : progress;
+            if (!state) return null;
+            // Try to build from the cuts array in progress
+            // Each cut has leftPercentage, rightPercentage
+            if (state.cuts && state.cuts.length > 0) {
+                return buildModelFromCuts(state.cuts);
+            }
+        } catch (e) {
+            console.warn('[Devvit Init] Failed to parse existingProgress:', e);
+        }
+        return null;
+    }
+
+    /**
+     * Build model from cuts array (from progress state).
+     */
+    function buildModelFromCuts(cuts) {
+        var shapes = [];
+        for (var i = 0; i < cuts.length && i < 10; i++) {
+            var cut = cuts[i];
+            if (cut && cut.leftPercentage !== undefined) {
+                var leftPct = cut.leftPercentage;
+                var rightPct = cut.rightPercentage || (100 - leftPct);
+                shapes.push({
+                    name: 'Shape ' + (i + 1),
+                    shapeNumber: i + 1,
+                    attempts: [{
+                        n: 1,
+                        leftPct: leftPct,
+                        rightPct: rightPct,
+                        scorePct: Math.min(leftPct, rightPct)
+                    }]
+                });
+            }
+        }
+        if (shapes.length === 0) return null;
+        return { dayNumber: window.currentDay || 1, avgScorePct: 0, shapes: shapes, bestCut: null, avgScore: 0, shapeSplits: shapes };
+    }
+
+    /**
+     * Build model from localStorage dailyStats (demoGameDailyStats).
+     */
+    function buildModelFromLocalStorage() {
+        try {
+            var savedStats = localStorage.getItem('demoGameDailyStats');
+            if (!savedStats) return null;
+            var dailyStats = JSON.parse(savedStats);
+            var dayKey = 'day' + (window.currentDay || 1);
+            var dayData = dailyStats[dayKey];
+            if (!dayData) return null;
+
+            var shapes = [];
+            for (var i = 1; i <= 10; i++) {
+                var shapeKey = 'shape' + i;
+                var shapeAttempts = dayData[shapeKey];
+                if (shapeAttempts && shapeAttempts.length > 0) {
+                    var attempt = shapeAttempts[0];
+                    if (attempt && attempt.leftPercentage !== undefined) {
+                        shapes.push({
+                            name: 'Shape ' + i,
+                            shapeNumber: i,
+                            attempts: [{
+                                n: 1,
+                                leftPct: attempt.leftPercentage,
+                                rightPct: attempt.rightPercentage || (100 - attempt.leftPercentage),
+                                scorePct: Math.min(attempt.leftPercentage, attempt.rightPercentage || (100 - attempt.leftPercentage))
+                            }]
+                        });
+                    }
+                }
+            }
+            if (shapes.length === 0) return null;
+            return { dayNumber: window.currentDay || 1, avgScorePct: 0, shapes: shapes, bestCut: null, avgScore: 0, shapeSplits: shapes };
+        } catch (e) {
+            console.warn('[Devvit Init] Failed to read localStorage stats:', e);
+            return null;
+        }
     }
 
     // Wait for Devvit init data, then bootstrap the game
@@ -287,7 +378,7 @@
         if (initData.existingScore !== null && initData.existingScore !== undefined) {
             console.log('[Devvit Init] GATE 1: User already scored today:', initData.existingScore);
             applyOverrides();
-            showAlreadyPlayedScreen(initData.existingScore, initData.existingShapeScores);
+            showAlreadyPlayedScreen(initData.existingScore, initData.existingShapeScores, initData.existingProgress);
             return;
         }
 

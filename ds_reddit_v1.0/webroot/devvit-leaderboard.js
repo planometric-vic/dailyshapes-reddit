@@ -105,19 +105,8 @@
             dataToShow = Math.min(t.data.length, maxRows);
         }
 
-        // For stat tabs, ensure both tabs render the same total row count
+        // Always fill all available rows (data + empty padding) for all tabs
         var targetRows = maxRows;
-        if (isStatTab) {
-            var winsRows = tabs.wins.data.length;
-            var cutsRows = tabs.cuts.data.length;
-            var maxDataRows = Math.max(winsRows, cutsRows);
-            // Both tabs use the same target: max data rows + user row if needed, capped at maxRows
-            if (needsUserRow) {
-                targetRows = Math.min(Math.max(maxDataRows + 1, 2), maxRows);
-            } else {
-                targetRows = Math.min(Math.max(maxDataRows, 1), maxRows);
-            }
-        }
 
         var rowCount = 0;
 
@@ -152,7 +141,7 @@
             html += '<span class="lb-score">' + Math.round(t.userScore) + '</span>';
             html += '</div>';
             rowCount++;
-        } else if (!userInTop && currentUsername && !isStatTab) {
+        } else if (!userInTop && currentUsername) {
             // User with no rank yet (only for weekly scores tab, not wins/cuts)
             for (var k2 = rowCount; k2 < targetRows - 1; k2++) {
                 html += '<div class="lb-row lb-row-empty">';
@@ -293,9 +282,14 @@
                     document.body.appendChild(backdrop);
                 }
             } else {
-                // Desktop: CSS align-self:stretch fills the grid area to match canvas.
-                // After layout settles, measure the container and calculate row count.
+                // Desktop: explicitly match leaderboard height to canvas element height
+                // so their tops and bottoms align perfectly.
                 requestAnimationFrame(function() {
+                    var canvasEl = document.getElementById('geoCanvas');
+                    if (canvasEl) {
+                        var canvasRect = canvasEl.getBoundingClientRect();
+                        container.style.height = canvasRect.height + 'px';
+                    }
                     var actualHeight = container.offsetHeight;
                     if (actualHeight > 0) {
                         measureRowHeight();
