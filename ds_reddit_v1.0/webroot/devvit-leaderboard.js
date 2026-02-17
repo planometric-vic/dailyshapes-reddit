@@ -45,13 +45,15 @@
         cuts:   { title: 'PERFECT CUTS', subtitle: weekDateRange, label: 'Perfect Cuts' }
     };
 
-    /** Calculate how many rows fit in the available table space */
+    /** Calculate how many rows fit by measuring actual rendered elements */
     function calculateMaxRows(containerHeight) {
-        // Header: ~40px (padding 6+6 + title font 13 + subtitle 9 + border 3 + margins)
-        // Tabs: ~30px (padding 4+3 + button height ~20 + border 2)
-        var headerHeight = 40;
-        var tabsHeight = 30;
-        var availableHeight = containerHeight - headerHeight - tabsHeight;
+        // Measure actual header and tabs heights from the rendered DOM
+        var header = container.querySelector('.lb-header');
+        var tabsEl = container.querySelector('.lb-tabs');
+        var headerHeight = header ? header.getBoundingClientRect().height + 3 : 46; // +3 for border-bottom
+        var tabsHeight = tabsEl ? tabsEl.getBoundingClientRect().height : 30;
+        // Subtract 4px for container border (2px top + 2px bottom, box-sizing: border-box)
+        var availableHeight = containerHeight - headerHeight - tabsHeight - 4;
         if (availableHeight < ROW_HEIGHT) return 3; // minimum
         return Math.floor(availableHeight / ROW_HEIGHT);
     }

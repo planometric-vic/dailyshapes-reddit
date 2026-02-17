@@ -630,7 +630,7 @@ const completeView = (() => {
                 if (tomorrowTextOpacity > 0) {
                     ctx.save();
                     ctx.globalAlpha = tomorrowTextOpacity;
-                    ctx.fillStyle = '#FFC8E2';
+                    ctx.fillStyle = '#FF77B7';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'top';
                     ctx.font = `bold ${Math.round(baseFontSize * 1.1 * 0.75)}px Arial, sans-serif`;
@@ -780,7 +780,7 @@ const completeView = (() => {
                 if (tomorrowTextOpacity > 0) {
                     ctx.save();
                     ctx.globalAlpha = tomorrowTextOpacity;
-                    ctx.fillStyle = '#FFC8E2';
+                    ctx.fillStyle = '#FF77B7';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'top';
                     ctx.font = `bold ${Math.round(baseFontSize * 1.1 * 0.75)}px Arial, sans-serif`;
@@ -1227,7 +1227,7 @@ const completeView = (() => {
 
         ctx.save();
         ctx.globalAlpha = 1.0;
-        ctx.fillStyle = '#FFC8E2';
+        ctx.fillStyle = '#FF77B7';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
         ctx.font = `bold ${Math.round(baseFontSize * 1.1 * 0.75)}px Arial, sans-serif`;

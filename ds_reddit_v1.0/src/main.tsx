@@ -93,6 +93,28 @@ function getWeekKey(): string {
   return `${yy}${mm}${dd}`;
 }
 
+/** Convert mechanic class name to user-friendly cutter name */
+function getFriendlyMechanicName(mechanic: string): string {
+  const nameMap: Record<string, string> = {
+    'DefaultWithUndoMechanic': 'Straight Line Cutter',
+    'HorizontalOnlyMechanic': 'Horizontal Cutter',
+    'CircleCutMechanic': 'Circular Cutter',
+    'DiagonalAscendingMechanic': 'Diagonal Cutter',
+    'ThreePointTriangleMechanic': 'Triangular Cutter',
+    'RotatingSquareMechanic': 'Square Cutter',
+    'RotatingShapeVectorMechanic': 'Rotating Shape Cutter',
+  };
+  return nameMap[mechanic] || mechanic.replace('Mechanic', '');
+}
+
+/** Format today's date as "Feb 17" in Melbourne timezone */
+function getFormattedDate(): string {
+  const now = new Date();
+  const melb = new Date(now.toLocaleString('en-US', { timeZone: 'Australia/Melbourne' }));
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[melb.getMonth()]} ${melb.getDate()}`;
+}
+
 // ============================================================
 // REDIS KEY HELPERS
 // ============================================================
@@ -178,19 +200,19 @@ Devvit.addMenuItem({
     const mechanic = MECHANIC_SCHEDULE[dow] || 'DefaultWithUndoMechanic';
 
     const subreddit = await context.reddit.getCurrentSubreddit();
+    const dateStr = getFormattedDate();
+    const cutterName = getFriendlyMechanicName(mechanic);
     const post = await context.reddit.submitPost({
-      title: `Daily Shapes #${dayNum} - ${mechanic.replace('Mechanic', '')}`,
+      title: `Daily Shapes - ${dateStr} - ${cutterName}`,
       subredditName: subreddit.name,
       preview: (
-        <vstack alignment="center middle" padding="large" backgroundColor="#1a1a2e">
-          <text size="xxlarge" weight="bold" color="white">Daily Shapes #{dayNum}</text>
-          <spacer size="medium" />
-          <text size="large" color="#e0e0e0">Loading puzzle...</text>
+        <vstack alignment="center middle" padding="large" backgroundColor="#ffffff">
+          <text size="xlarge" weight="bold" color="#000000">Daily Shapes</text>
         </vstack>
       ),
     });
 
-    context.ui.showToast({ text: `Daily Shapes #${dayNum} created!` });
+    context.ui.showToast({ text: `Daily Shapes - ${dateStr} created!` });
     context.ui.navigateTo(post);
   },
 });
@@ -325,19 +347,19 @@ Devvit.addSchedulerJob({
     }
 
     const subreddit = await context.reddit.getCurrentSubreddit();
+    const dateStr = getFormattedDate();
+    const cutterName = getFriendlyMechanicName(mechanic);
     await context.reddit.submitPost({
-      title: `Daily Shapes #${dayNum} - ${mechanic.replace('Mechanic', '')}`,
+      title: `Daily Shapes - ${dateStr} - ${cutterName}`,
       subredditName: subreddit.name,
       preview: (
-        <vstack alignment="center middle" padding="large" backgroundColor="#1a1a2e">
-          <text size="xxlarge" weight="bold" color="white">Daily Shapes #{dayNum}</text>
-          <spacer size="medium" />
-          <text size="large" color="#e0e0e0">Loading puzzle...</text>
+        <vstack alignment="center middle" padding="large" backgroundColor="#ffffff">
+          <text size="xlarge" weight="bold" color="#000000">Daily Shapes</text>
         </vstack>
       ),
     });
 
-    console.log(`Daily Shapes #${dayNum} post created for ${dayKey}`);
+    console.log(`Daily Shapes - ${dateStr} post created for ${dayKey}`);
 
     // On Monday, determine previous week's competition winner
     if (dow === 1) {
@@ -434,7 +456,7 @@ Devvit.addCustomPostType({
               perfectCuts: cuts.entries,
               userPerfectCuts: cuts.userScore,
               userPerfectCutsRank: cuts.userRank,
-              postTitle: `Daily Shapes #${dayNum}`,
+              postTitle: `Daily Shapes - ${getFormattedDate()} - ${getFriendlyMechanicName(mechanic)}`,
             } as InitData,
           } as any);
           break;
