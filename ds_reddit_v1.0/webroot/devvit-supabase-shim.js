@@ -97,7 +97,12 @@ window.AuthService = {
         for (let i = 1; i <= 10; i++) {
             const shape = shapeScores && shapeScores['shape' + i];
             if (shape) {
-                total += (shape.attempt1 || 0) + (shape.attempt2 || 0);
+                const score1 = shape.attempt1 || 0;
+                const score2 = shape.attempt2 || 0;
+                total += score1 + score2;
+                // Perfect cut bonus: +50 when rounded score is exactly 50
+                if (Math.round(score1) === 50) total += 50;
+                if (score2 && Math.round(score2) === 50) total += 50;
             }
         }
         total = Math.round(total);
