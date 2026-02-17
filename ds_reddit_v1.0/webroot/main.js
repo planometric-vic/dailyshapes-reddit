@@ -152,7 +152,7 @@ let isShapeAnimationComplete = false;
 
 // Stats tracking system
 let dailyStats = {
-    // Structure: { day1: { shape1: [score1, score2], shape2: [score1, score2], shape3: [score1, score2] }, day2: {...}, ... }
+    // Structure: { day1: { shape1: [score], shape2: [score], ..., shape10: [score] }, day2: {...}, ... }
 };
 
 // Initialize stats for all days (10 shapes per day, 1 attempt each)
@@ -658,12 +658,9 @@ async function restoreInProgressGame(savedState) {
             
             // Show appropriate button using normal game flow (no restoration tricks)
             setTimeout(() => {
-                if (savedState.currentAttempt === 1 && currentShapeCuts.length === 1) {
-                    // Just finished first attempt
-                    createProgressionButton();
-                } else if (savedState.currentAttempt === 2 && currentShapeCuts.length === 2) {
-                    // Just finished second attempt
-                    if (savedState.currentShape < 3) {
+                if (currentShapeCuts.length >= 1) {
+                    // Cut completed on this shape
+                    if (savedState.currentShape < 10) {
                         createProgressionButton();
                     } else {
                         // Day complete
@@ -1033,9 +1030,9 @@ window.setCurrentMechanic = function(mechanic) {
     window.currentMechanic = mechanic;
     console.log(`🔧 GLOBAL: Updated both local and window.currentMechanic to:`, mechanic?.name);
 };
-let currentShapeNumber = 1;  // Track current shape (1-3)
+let currentShapeNumber = 1;  // Track current shape (1-10)
 let currentDemoAttempt = 0;  // Track attempt within shape (will be incremented after each cut)
-let currentAttemptNumber = 1;  // Track current attempt number (1 or 2)
+let currentAttemptNumber = 1;  // Track current attempt number (always 1 in 10x1 mode)
 let isDemoMode = true;  // True when in demo mode (not practice mode)
 window.isDemoMode = isDemoMode;  // Make it globally accessible for mechanics
 
@@ -1984,24 +1981,12 @@ async function initializeDemoGame() {
                 currentAttemptNumber = savedState.currentAttemptNumber;
                 window.currentAttemptNumber = currentAttemptNumber;
                 
-                // Set game state to the saved state  
-                // CRITICAL: If we're on attempt 2 but only have 1 cut, user clicked "Next Attempt" 
-                // and needs a fresh uncut shape for the second attempt
-                if (window.cutsMadeThisShape > 0 && window.cutsMadeThisShape < 2 && currentAttemptNumber === 1) {
-                    // First attempt completed, waiting for "Next Attempt" button
+                // Set game state based on whether this shape's single cut has been made
+                if (window.cutsMadeThisShape >= 1) {
+                    // Cut completed on this shape - awaiting shape progression
                     setGameState('awaiting_choice');
                     setInteractionEnabled(false);
-                    console.log('🔄 First attempt done, awaiting "Next Attempt" button');
-                } else if (window.cutsMadeThisShape > 0 && window.cutsMadeThisShape < 2 && currentAttemptNumber === 2) {
-                    // User clicked "Next Attempt" and is ready for second cut on fresh shape
-                    setGameState('cutting');
-                    setInteractionEnabled(true);
-                    console.log('🔄 Ready for second attempt - fresh uncut shape');
-                } else if (window.cutsMadeThisShape >= 2) {
-                    // Both attempts completed - awaiting shape progression
-                    setGameState('awaiting_choice');
-                    setInteractionEnabled(false);
-                    console.log('🔄 Both attempts done, awaiting shape progression');
+                    console.log('🔄 Cut done on this shape, awaiting shape progression');
                 } else {
                     // No cuts made yet - ready for cutting
                     setGameState('cutting');
@@ -2014,9 +1999,7 @@ async function initializeDemoGame() {
                 console.log('🔄 Restored cut counters - total:', window.totalCutsMade, 'thisShape:', window.cutsMadeThisShape);
                 
                 // Restore canvas state if available (with longer delay to ensure it's not overwritten)
-                // BUT: Don't restore if user is on attempt 2 - they need a fresh uncut shape
-                const shouldRestoreCanvas = savedState && savedState.canvasDataURL && 
-                    !(window.cutsMadeThisShape > 0 && currentAttemptNumber === 2);
+                const shouldRestoreCanvas = savedState && savedState.canvasDataURL;
                 
                 if (shouldRestoreCanvas) {
                     console.log('🔄 Preparing to restore canvas state...');
@@ -2093,15 +2076,10 @@ async function initializeDemoGame() {
                     // Start restoration with a small initial delay
                     setTimeout(restoreCanvas, 200);
                 } else {
-                    if (savedState && savedState.canvasDataURL && currentAttemptNumber === 2) {
-                        console.log('🔄 Canvas restoration SKIPPED - user is on attempt 2 and needs fresh uncut shape');
-                    } else {
-                        console.log('🔄 No canvas data to restore');
-                    }
-                    
-                    // For fresh shapes (like after Next Shape + refresh OR attempt 2), ensure canvas is active
-                    if ((window.cutsMadeThisShape === 0 && gameState === 'cutting') || 
-                        (currentAttemptNumber === 2 && gameState === 'cutting')) {
+                    console.log('🔄 No canvas data to restore');
+
+                    // For fresh shapes (like after Next Shape + refresh), ensure canvas is active
+                    if (window.cutsMadeThisShape === 0 && gameState === 'cutting') {
                         setTimeout(() => {
                             const canvasElement = document.getElementById('geoCanvas');
                             if (canvasElement) {
@@ -2942,20 +2920,19 @@ async function showDayStatsPopup() {
         console.log('💾 Saved completion state to SimpleRefresh');
     }
     
-    // Save final daily scores to Supabase (all 3 shapes at once)
+    // Save final daily scores to Supabase (all 10 shapes at once)
     if (!isPracticeMode && window.AuthService && window.AuthService.isLoggedIn()) {
         try {
-            // Build complete shape scores for all 3 shapes
+            // Build complete shape scores for all 10 shapes
             const dayStats = getDayStats(currentDay);
             const shapeScores = {};
-            
-            for (let i = 1; i <= 3; i++) {
+
+            for (let i = 1; i <= 10; i++) {
                 const shapeKey = `shape${i}`;
                 const shapeAttempts = dayStats[shapeKey] || [];
-                
+
                 shapeScores[shapeKey] = {
-                    attempt1: shapeAttempts[0] ? (typeof shapeAttempts[0] === 'number' ? shapeAttempts[0] : shapeAttempts[0].score) : null,
-                    attempt2: shapeAttempts[1] ? (typeof shapeAttempts[1] === 'number' ? shapeAttempts[1] : shapeAttempts[1].score) : null
+                    attempt1: shapeAttempts[0] ? (typeof shapeAttempts[0] === 'number' ? shapeAttempts[0] : shapeAttempts[0].score) : null
                 };
             }
             
@@ -3167,15 +3144,15 @@ function buildCompletionModelFromFinalStats(finalStats) {
     let globalBestCut = null;
     let globalBestScore = 0;
 
-    // Build from saved day stats but limit to 2 attempts per shape (max allowed)
+    // Build from saved day stats - 1 attempt per shape
     for (let shapeIndex = 1; shapeIndex <= 10; shapeIndex++) {
         const shapeKey = `shape${shapeIndex}`;
         let shapeAttempts = [];
         let shapeBestScore = 0;
 
         if (dayStats[shapeKey] && dayStats[shapeKey].length > 0) {
-            // CRITICAL: Only take first 2 attempts per shape
-            const validAttempts = dayStats[shapeKey].slice(0, 2);
+            // Only take the single attempt per shape
+            const validAttempts = dayStats[shapeKey].slice(0, 1);
 
             validAttempts.forEach((attempt, index) => {
                 if (attempt.leftPercentage !== undefined && attempt.rightPercentage !== undefined) {
@@ -4105,41 +4082,27 @@ function createProgressionButton() {
     
     console.log('🔘 Button decision - Attempt:', currentAttemptNumber, 'Shape:', currentShapeNumber);
     
-    if (currentAttemptNumber === 1) {
-        // Just finished 1st attempt - need to do 2nd attempt
-        buttonText = 'Next Attempt';
-        clickHandler = handleNextAttempt;
-        console.log('🔘 Showing: Next Attempt (for attempt 2)');
-        console.log('🔘 Click handler assigned:', typeof clickHandler, clickHandler?.name);
-        
-    } else if (currentAttemptNumber === 2) {
-        if (currentShapeNumber <= 2) {
-            // Just finished 2nd attempt on shape 1 or 2 - move to next shape
-            buttonText = 'Next Shape';
-            clickHandler = handleNextShape;
-            console.log('🔘 Showing: Next Shape (load shape', currentShapeNumber + 1, ')');
-            
-        } else if (currentShapeNumber === 3) {
-            // Just finished 2nd attempt on shape 3 - show day stats
-            console.log('🔘 Day complete - showing stats popup');
+    if (currentShapeNumber < 10) {
+        // Just finished cut on shapes 1-9 - move to next shape
+        buttonText = 'Next Shape';
+        clickHandler = handleNextShape;
+        console.log('🔘 Showing: Next Shape (load shape', currentShapeNumber + 1, ')');
 
-            // CRITICAL: Save state BEFORE delay to prevent loss on refresh
-            if (window.SimpleRefresh && window.SimpleRefresh.save) {
-                window.SimpleRefresh.save();
-                console.log('💾 State saved before completion delay');
-            }
+    } else if (currentShapeNumber >= 10) {
+        // Just finished cut on shape 10 - show day stats
+        console.log('🔘 Day complete - showing stats popup');
 
-            // Reduced delay from 1500ms to 500ms to minimize race condition window
-            setTimeout(() => {
-                showDayStatsPopup();
-            }, 500); // 0.5 second delay to let user see final results
-            return; // Exit early, no button needed
-            
-        } else {
-            // This should not happen
-            buttonText = 'Error';
-            clickHandler = () => console.error('Unexpected state');
+        // CRITICAL: Save state BEFORE delay to prevent loss on refresh
+        if (window.SimpleRefresh && window.SimpleRefresh.save) {
+            window.SimpleRefresh.save();
+            console.log('💾 State saved before completion delay');
         }
+
+        // Reduced delay from 1500ms to 500ms to minimize race condition window
+        setTimeout(() => {
+            showDayStatsPopup();
+        }, 500); // 0.5 second delay to let user see final results
+        return; // Exit early, no button needed
     }
 
     console.log('🔘 Button text determined:', buttonText);
@@ -4302,7 +4265,7 @@ function handleNextShape() {
     }
     
     // Move to next shape and reset attempt counter
-    if (currentShapeNumber < 3) {
+    if (currentShapeNumber < 10) {
         currentShapeNumber++;
         currentAttemptNumber = 1; // Reset to attempt 1 for new shape
         cutsMadeThisShape = 0; // CRITICAL: Reset shape cut counter
@@ -4686,8 +4649,8 @@ function restoreAuthoritativeGameState(restoredState) {
     } else if (restoredState.gameState === 'awaiting_choice') {
         // Scenarios 1, 3, 5, 7, 9 - Cut made, show button + visualization
         restoreCutCompleteState(restoredState);
-    } else if (restoredState.currentShape === 3 && restoredState.cutsMadeThisShape === 2) {
-        // Scenario 11 - Final cut made, show completion
+    } else if (restoredState.currentShape >= 10 && restoredState.cutsMadeThisShape >= 1) {
+        // Final cut on shape 10 made, show completion
         restoreCompletionState(restoredState);
     } else {
         // Default fallback
@@ -4778,13 +4741,9 @@ function getCurrentCutNumber(restoredState) {
 }
 
 function createAppropriateButton(restoredState) {
-    if (restoredState.currentAttempt === 1 && restoredState.cutsMadeThisShape === 1) {
-        // Just completed first attempt - show Next Attempt
-        console.log('🔘 Creating Next Attempt button');
-        createProgressionButton();
-    } else if (restoredState.currentAttempt === 2 && restoredState.cutsMadeThisShape === 1) {
-        // Just completed second attempt - show Next Shape (unless final shape)
-        if (restoredState.currentShape < 3) {
+    if (restoredState.cutsMadeThisShape >= 1) {
+        // Cut completed on this shape - show Next Shape (unless final shape)
+        if (restoredState.currentShape < 10) {
             console.log('🔘 Creating Next Shape button');
             createProgressionButton();
         }
@@ -5150,12 +5109,12 @@ function handleMechanicStart(event) {
         return;
     }
     
-    // DAILY MODE: Block mechanic start if cut limit reached
-    if (isDailyMode && window.cutsMadeThisShape >= 2) {
+    // DAILY MODE: Block mechanic start if cut limit reached (1 cut per shape)
+    if (isDailyMode && window.cutsMadeThisShape >= 1) {
         console.log('🚫 MECHANIC START BLOCKED: Daily mode cut limit reached', {
             cutsMadeThisShape: window.cutsMadeThisShape,
             isDailyMode,
-            maxCuts: 2
+            maxCuts: 1
         });
         return;
     }
@@ -5180,8 +5139,8 @@ function handleMechanicMove(event) {
     
     if (!currentMechanic || !isInteractionEnabled) return;
     
-    // DAILY MODE: Block mechanic moves if cut limit reached
-    if (isDailyMode && window.cutsMadeThisShape >= 2) {
+    // DAILY MODE: Block mechanic moves if cut limit reached (1 cut per shape)
+    if (isDailyMode && window.cutsMadeThisShape >= 1) {
         console.log('🚫 MECHANIC MOVE BLOCKED: Daily mode cut limit reached');
         return;
     }
@@ -5205,8 +5164,8 @@ async function handleMechanicEnd(event) {
         return;
     }
     
-    // DAILY MODE: Block mechanic end if cut limit reached
-    if (isDailyMode && window.cutsMadeThisShape >= 2) {
+    // DAILY MODE: Block mechanic end if cut limit reached (1 cut per shape)
+    if (isDailyMode && window.cutsMadeThisShape >= 1) {
         console.log('🚫 MECHANIC END BLOCKED: Daily mode cut limit reached');
         return;
     }
@@ -6049,54 +6008,36 @@ function updateProgressCircles(attemptNumber) {
 // ====================================================================
 
 // Calculate correct game state based on total cuts made - AUTHORITATIVE SOURCE
+// 10 shapes × 1 cut each. totalCutsMade increments on each cut and each "Next Shape" click.
+// Odd totalCuts = cut just made on current shape (awaiting button)
+// Even totalCuts = "Next Shape" clicked, ready for next cut
 function calculateCorrectGameState(restoredState) {
-    // First, determine total cuts made across all shapes
     const totalCuts = restoredState.totalCutsMade || 0;
-    
-    // Determine correct shape and cut position based on total cuts
+
     let correctShape, correctAttempt, correctCutsThisShape, scenarioNumber;
-    
+
     if (totalCuts === 0) {
-        // Fresh game - Shape 1, ready for first cut
+        // Fresh game - Shape 1, ready for cut
         correctShape = 1; correctAttempt = 1; correctCutsThisShape = 0; scenarioNumber = "Initial";
-    } else if (totalCuts === 1) {
-        // SCENARIO 1: Attempt 1 of Shape 1 made
-        correctShape = 1; correctAttempt = 1; correctCutsThisShape = 1; scenarioNumber = 1;
-    } else if (totalCuts === 2) {
-        // SCENARIO 2: Next Attempt clicked - ready for Attempt 2 of Shape 1
-        correctShape = 1; correctAttempt = 2; correctCutsThisShape = 1; scenarioNumber = 2;
-    } else if (totalCuts === 3) {
-        // SCENARIO 3: Attempt 2 of Shape 1 made  
-        correctShape = 1; correctAttempt = 2; correctCutsThisShape = 2; scenarioNumber = 3;
-    } else if (totalCuts === 4) {
-        // SCENARIO 4: Next Shape clicked - ready for Shape 2, Attempt 1
-        correctShape = 2; correctAttempt = 1; correctCutsThisShape = 0; scenarioNumber = 4;
-    } else if (totalCuts === 5) {
-        // SCENARIO 5: Attempt 1 of Shape 2 made
-        correctShape = 2; correctAttempt = 1; correctCutsThisShape = 1; scenarioNumber = 5;
-    } else if (totalCuts === 6) {
-        // SCENARIO 6: Next Attempt clicked - ready for Attempt 2 of Shape 2
-        correctShape = 2; correctAttempt = 2; correctCutsThisShape = 1; scenarioNumber = 6;
-    } else if (totalCuts === 7) {
-        // SCENARIO 7: Attempt 2 of Shape 2 made
-        correctShape = 2; correctAttempt = 2; correctCutsThisShape = 2; scenarioNumber = 7;
-    } else if (totalCuts === 8) {
-        // SCENARIO 8: Next Shape clicked - ready for Shape 3, Attempt 1  
-        correctShape = 3; correctAttempt = 1; correctCutsThisShape = 0; scenarioNumber = 8;
-    } else if (totalCuts === 9) {
-        // SCENARIO 9: Attempt 1 of Shape 3 made
-        correctShape = 3; correctAttempt = 1; correctCutsThisShape = 1; scenarioNumber = 9;
-    } else if (totalCuts === 10) {
-        // SCENARIO 10: Next Attempt clicked - ready for Attempt 2 of Shape 3
-        correctShape = 3; correctAttempt = 2; correctCutsThisShape = 1; scenarioNumber = 10;
-    } else if (totalCuts === 11) {
-        // SCENARIO 11: Final cut made - game complete
-        correctShape = 3; correctAttempt = 2; correctCutsThisShape = 2; scenarioNumber = 11;
+    } else if (totalCuts >= 19) {
+        // Final cut on shape 10 - game complete
+        correctShape = 10; correctAttempt = 1; correctCutsThisShape = 1; scenarioNumber = "Complete";
+    } else if (totalCuts % 2 === 1) {
+        // Odd: cut just made on shape, awaiting "Next Shape" button
+        correctShape = Math.ceil(totalCuts / 2);
+        correctAttempt = 1;
+        correctCutsThisShape = 1;
+        scenarioNumber = totalCuts;
+    } else {
+        // Even: "Next Shape" clicked, ready for cut on next shape
+        correctShape = (totalCuts / 2) + 1;
+        correctAttempt = 1;
+        correctCutsThisShape = 0;
+        scenarioNumber = totalCuts;
     }
-    
+
     console.log('📋 CALCULATE SCENARIO', scenarioNumber + ':', 'Total cuts:', totalCuts, '→ Shape:', correctShape, 'Attempt:', correctAttempt, 'CutsThisShape:', correctCutsThisShape);
-    
-    // Override any incorrect saved state with calculated correct state
+
     return {
         ...restoredState,
         currentShape: correctShape,
@@ -6258,12 +6199,8 @@ function restoreCleanCanvasState(restoredState) {
 }
 
 function getScenarioNumberForButton(totalCuts) {
-    // These are the "button clicked" scenarios where canvas should be active
-    if (totalCuts === 1) return 2; // After Next Attempt for Shape 1
-    if (totalCuts === 2) return 4; // After Next Shape to Shape 2  
-    if (totalCuts === 3) return 6; // After Next Attempt for Shape 2
-    if (totalCuts === 4) return 8; // After Next Shape to Shape 3
-    if (totalCuts === 5) return 10; // After Next Attempt for Shape 3
+    // Even totalCuts = "Next Shape" clicked, canvas should be active for next shape
+    if (totalCuts > 0 && totalCuts % 2 === 0) return totalCuts;
     return "Initial";
 }
 
@@ -6327,9 +6264,7 @@ function restoreCutCompleteState(restoredState) {
     
     // 5. Determine and show correct button
     let buttonType;
-    if (restoredState.cutsMadeThisShape === 1) {
-        buttonType = 'Next Attempt';
-    } else if (restoredState.cutsMadeThisShape === 2 && restoredState.currentShape < 3) {
+    if (restoredState.cutsMadeThisShape >= 1 && restoredState.currentShape < 10) {
         buttonType = 'Next Shape';
     }
     
@@ -6363,12 +6298,8 @@ function restoreCutCompleteState(restoredState) {
 }
 
 function getScenarioNumber(totalCuts) {
-    if (totalCuts === 1) return 1;
-    if (totalCuts === 2) return 3;
-    if (totalCuts === 3) return 5;
-    if (totalCuts === 4) return 7;
-    if (totalCuts === 5) return 9;
-    if (totalCuts === 6) return 11;
+    // In 10×1 mode: odd totalCuts = cut just made, even = button clicked
+    if (totalCuts > 0) return totalCuts;
     return "Unknown";
 }
 
@@ -13362,18 +13293,19 @@ function endGame() {
     
     hidePlayButton();
     
-    // Initialize replay mode immediately with shape 3
-    console.log('🎯 Setting replayShapeIndex to 3 in endGame()');
-    replayShapeIndex = 3;
+    // Initialize replay mode immediately with shape 10
+    const totalShapesForEnd = window.devvitTotalShapes || 10;
+    console.log('🎯 Setting replayShapeIndex to', totalShapesForEnd, 'in endGame()');
+    replayShapeIndex = totalShapesForEnd;
     console.log('🎯 replayShapeIndex is now:', replayShapeIndex);
     gameState = 'finished';
     console.log('🎯 gameState set to:', gameState);
-    
+
     // Don't show swipe indicators until after stats popup is closed
-    
+
     // Show stats immediately after endGame
     showStats();
-    console.log('🔄 Replay mode fully activated - starting with shape 3');
+    console.log('🔄 Replay mode fully activated - starting with shape', totalShapesForEnd);
 }
 
 function resetGame() {
@@ -14177,17 +14109,17 @@ async function handleCutAttempt() {
         // Continue with existing cut calculation below, but we'll handle the results differently
     }
     
-    // CRITICAL FIX: Enforce 2-cut limit per shape in daily mode
-    
+    // CRITICAL FIX: Enforce 1-cut limit per shape in daily mode
+
     // SAFETY: If not in practice mode and not explicitly daily mode, assume daily mode
     if (!window.isPracticeMode && !isDailyMode) {
         console.log('🚨 SAFETY: Not in practice mode but isDailyMode=false, forcing daily mode');
         isDailyMode = true;
     }
-    
-    // DAILY MODE: Block if we've already made 2 cuts on current shape
-    if (isDailyMode && cutsMadeThisShape >= 2) {
-        console.log('🚫 CUT BLOCKED: Daily mode - Shape cuts', cutsMadeThisShape, 'exceeds maximum of 2 per shape');
+
+    // DAILY MODE: Block if we've already made 1 cut on current shape
+    if (isDailyMode && cutsMadeThisShape >= 1) {
+        console.log('🚫 CUT BLOCKED: Daily mode - Shape cuts', cutsMadeThisShape, 'exceeds maximum of 1 per shape');
         // Re-enable canvas if we blocked due to cut limit (shouldn't happen but safety check)
         if (!window.isPracticeMode) {
             console.log('🔓 Re-enabling canvas after cut limit block (safety)');
@@ -14197,10 +14129,10 @@ async function handleCutAttempt() {
         }
         return;
     }
-    
-    // DAILY MODE: Block if attempt number exceeds 2 (backup check)
-    if (isDailyMode && currentAttemptNumber > 2) {
-        console.log('🚫 CUT BLOCKED: Daily mode - Attempt number', currentAttemptNumber, 'exceeds maximum of 2 per shape');
+
+    // DAILY MODE: Block if attempt number exceeds 1 (backup check)
+    if (isDailyMode && currentAttemptNumber > 1) {
+        console.log('🚫 CUT BLOCKED: Daily mode - Attempt number', currentAttemptNumber, 'exceeds maximum of 1 per shape');
         // Re-enable canvas if we blocked due to attempt limit (shouldn't happen but safety check)
         if (!window.isPracticeMode) {
             console.log('🔓 Re-enabling canvas after attempt limit block (safety)');
@@ -14477,29 +14409,16 @@ async function handleCutAttempt() {
             const shapeNum = currentShapeNumber;
             const shapeKey = `shape${shapeNum}`;
             
-            // Update current shape's scores with all attempts made so far
+            // Update current shape's score (1 attempt per shape)
             if (!shapeScores[shapeKey]) {
                 shapeScores[shapeKey] = {
-                    attempt1: null,
-                    attempt2: null
+                    attempt1: null
                 };
             }
-            
-            // Add all attempts made for the current shape
-            if (currentAttempts[0]) {
-                shapeScores[shapeKey].attempt1 = calculateScore(currentAttempts[0].leftPercentage, currentAttempts[0].rightPercentage);
-            }
-            if (currentAttempts[1]) {
-                shapeScores[shapeKey].attempt2 = calculateScore(currentAttempts[1].leftPercentage, currentAttempts[1].rightPercentage);
-            }
-            
+
             // Add the current attempt (just made)
             const currentScore = calculateScore(areaResults.leftPercentage, areaResults.rightPercentage);
-            if (attemptCount === 1) {
-                shapeScores[shapeKey].attempt1 = currentScore;
-            } else if (attemptCount === 2) {
-                shapeScores[shapeKey].attempt2 = currentScore;
-            }
+            shapeScores[shapeKey].attempt1 = currentScore;
             
             console.log('📊 DEBUG: Shape scores prepared for saving:', JSON.stringify(shapeScores, null, 2));
             console.log('ℹ️ Daily score will be saved during final completion, not after each attempt');
@@ -14752,29 +14671,14 @@ async function handleCutAttempt() {
         console.log('🎮 Cuts made this shape:', cutsMadeThisShape, 'Total cuts:', totalCutsMade);
         console.log('🎮 isDemoMode:', isDemoMode, 'isPracticeMode:', isPracticeMode);
         
-        // Determine what happens next based on cuts made this shape (more reliable than currentAttemptNumber)
-        if (cutsMadeThisShape === 1) {
-            // Just completed 1st cut - need to do 2nd cut on same shape
-            console.log('🔄 1st cut completed - need 2nd cut on shape', currentShapeNumber);
-            console.log('🔄 Setting currentAttemptNumber to 1 for button logic');
-            currentAttemptNumber = 1; // Ensure button logic sees this as first attempt completed
+        // Determine what happens next based on cuts made this shape
+        if (cutsMadeThisShape >= 1) {
+            // Cut completed on this shape - show Next Shape or completion
+            console.log('✅ Cut completed on shape', currentShapeNumber);
+            currentAttemptNumber = 1;
             window.currentAttemptNumber = currentAttemptNumber;
 
-            // Update UI and show "Next Attempt" button
-            updateProgressUI();
-            createProgressionButton();
-
-            // Disable further interaction until button is clicked
-            gameState = 'awaiting_choice';
-            isInteractionEnabled = false;
-        } else if (cutsMadeThisShape === 2) {
-            // Just completed 2nd cut - need to move to next shape or reset
-            console.log('✅ 2nd cut completed on shape', currentShapeNumber);
-            console.log('✅ Setting currentAttemptNumber to 2 for button logic');
-            currentAttemptNumber = 2; // Ensure button logic sees this as second attempt completed
-            window.currentAttemptNumber = currentAttemptNumber;
-
-            // Update UI and show appropriate button (Next Shape or Reset Day)
+            // Update UI and show appropriate button (Next Shape or completion)
             updateProgressUI();
             createProgressionButton();
 
@@ -16921,16 +16825,17 @@ function updateSwipeArrows() {
         console.log('👈 Left arrow hidden - at first shape');
     }
     
-    // Right arrow shows when we can swipe left to go forward (when not at shape 3)  
-    if (replayShapeIndex < 3) {
+    // Right arrow shows when we can swipe left to go forward (when not at last shape)
+    const totalShapesForReplay = window.devvitTotalShapes || 10;
+    if (replayShapeIndex < totalShapesForReplay) {
         rightArrow.style.display = 'block';
         console.log('👉 Right arrow shown - can swipe to shape', replayShapeIndex + 1);
     } else {
         rightArrow.style.display = 'none';
         console.log('👉 Right arrow hidden - at last shape');
     }
-    
-    console.log('🔄 Arrow state for shape ' + replayShapeIndex + ': left=' + (replayShapeIndex > 1 ? 'visible' : 'hidden') + ' (can go to ' + (replayShapeIndex - 1) + '), right=' + (replayShapeIndex < 3 ? 'visible' : 'hidden') + ' (can go to ' + (replayShapeIndex + 1) + ')');
+
+    console.log('🔄 Arrow state for shape ' + replayShapeIndex + ': left=' + (replayShapeIndex > 1 ? 'visible' : 'hidden') + ' (can go to ' + (replayShapeIndex - 1) + '), right=' + (replayShapeIndex < totalShapesForReplay ? 'visible' : 'hidden') + ' (can go to ' + (replayShapeIndex + 1) + ')');
 }
 
 // Replay functionality (variables declared above)
@@ -16959,7 +16864,7 @@ function setupSwipeGestures() {
     console.log('  - gameResults.length:', gameResults.length);
     console.log('  - gameCompleted:', gameCompleted);
     console.log('  - replayShapeIndex:', replayShapeIndex);
-    console.log('  - Swipes will work when: all 3 shapes completed (gameState: results or finished)');
+    console.log('  - Swipes will work when: all 10 shapes completed (gameState: results or finished)');
     
     // Use canvas container primarily to avoid conflicts with canvas game events
     const canvasContainer = document.querySelector('.canvas-container');
@@ -17012,7 +16917,7 @@ function setupSwipeGestures() {
 function handleSwipeTouchStart(event) {
     console.log('🟢 TOUCH START EVENT DETECTED - isReplayMode:', isReplayMode);
     
-    // Allow swipes when all 3 shapes are completed (either in 'results' or 'finished' state)
+    // Allow swipes when all 10 shapes are completed (either in 'results' or 'finished' state)
     const gameCompleted = gameResults.length === (window.devvitTotalShapes || 10) && (gameState === 'results' || gameState === 'finished');
     const canSwipe = gameCompleted;
     
@@ -17046,7 +16951,7 @@ function handleSwipeTouchStart(event) {
 function handleSwipeTouchEnd(event) {
     console.log('🟢 TOUCH END EVENT DETECTED - isReplayMode:', isReplayMode);
     
-    // Allow swipes when all 3 shapes are completed (either in 'results' or 'finished' state)
+    // Allow swipes when all 10 shapes are completed (either in 'results' or 'finished' state)
     const gameCompleted = gameResults.length === (window.devvitTotalShapes || 10) && (gameState === 'results' || gameState === 'finished');
     const canSwipe = gameCompleted;
     
@@ -17107,16 +17012,17 @@ function handleSwipeTouchEnd(event) {
                 console.log('🚫 Already at first shape (1)');
             }
         } else {
-            // Swipe left - see image "to the right" (next/higher numbered shape)  
+            // Swipe left - see image "to the right" (next/higher numbered shape)
             console.log('⬅️ Swiping left to see next shape');
-            if (replayShapeIndex < 3) {
+            const totalShapesSwipe = window.devvitTotalShapes || 10;
+            if (replayShapeIndex < totalShapesSwipe) {
                 replayShapeIndex++;
                 console.log('📍 Moving to shape:', replayShapeIndex);
                 // Show replay shape (we know all results exist since game is completed)
                 showReplayShape(replayShapeIndex);
                 updateSwipeArrows();
             } else {
-                console.log('🚫 Already at last shape (3)');
+                console.log('🚫 Already at last shape (' + totalShapesSwipe + ')');
             }
         }
     } else {
@@ -17129,7 +17035,7 @@ function handleSwipeMouseStart(event) {
     console.log('🟢 MOUSE DOWN EVENT DETECTED - isReplayMode:', isReplayMode);
     console.log('🔍 Current replayShapeIndex at mouse start:', replayShapeIndex);
     
-    // Allow swipes when all 3 shapes are completed (either in 'results' or 'finished' state)
+    // Allow swipes when all 10 shapes are completed (either in 'results' or 'finished' state)
     const gameCompleted = gameResults.length === (window.devvitTotalShapes || 10) && (gameState === 'results' || gameState === 'finished');
     const canSwipe = gameCompleted;
     
@@ -17155,7 +17061,7 @@ function handleSwipeMouseEnd(event) {
     console.log('🟢 MOUSE UP EVENT DETECTED - isReplayMode:', isReplayMode);
     console.log('🔍 Current replayShapeIndex at mouse end:', replayShapeIndex);
     
-    // Allow swipes when all 3 shapes are completed (either in 'results' or 'finished' state)
+    // Allow swipes when all 10 shapes are completed (either in 'results' or 'finished' state)
     const gameCompleted = gameResults.length === (window.devvitTotalShapes || 10) && (gameState === 'results' || gameState === 'finished');
     const canSwipe = gameCompleted;
     
@@ -17203,16 +17109,17 @@ function handleSwipeMouseEnd(event) {
                 console.log('🚫 Already at first shape (1)');
             }
         } else {
-            // Swipe left - see image "to the right" (next/higher numbered shape)  
+            // Swipe left - see image "to the right" (next/higher numbered shape)
             console.log('⬅️ Mouse swiping left to see next shape');
-            if (replayShapeIndex < 3) {
+            const totalShapesMouseSwipe = window.devvitTotalShapes || 10;
+            if (replayShapeIndex < totalShapesMouseSwipe) {
                 replayShapeIndex++;
                 console.log('📍 Moving to shape:', replayShapeIndex);
                 // Show replay shape (we know all results exist since game is completed)
                 showReplayShape(replayShapeIndex);
                 updateSwipeArrows();
             } else {
-                console.log('🚫 Already at last shape (3)');
+                console.log('🚫 Already at last shape (' + totalShapesMouseSwipe + ')');
             }
         }
     } else {
@@ -18163,8 +18070,8 @@ function hideGoalCommentary() {
     const goalTextEl = document.getElementById('goalText');
     const attemptDisplay = document.getElementById('attemptDisplay');
     
-    // Check if this is the final completion (shape 3, attempt 2)
-    const isFinalCompletion = (currentShapeNumber === 3 && currentAttemptNumber === 2);
+    // Check if this is the final completion (shape 10, attempt 1)
+    const isFinalCompletion = (currentShapeNumber >= 10 && currentAttemptNumber >= 1);
     
     // Start fading all three elements simultaneously with identical timing
     const fadeOutTransition = 'opacity 0.3s ease-out';
@@ -18293,18 +18200,10 @@ function updateResultsTable() {
     
     // Show appropriate button after result is added (with 1.5s delay)
     setTimeout(() => {
-        if (currentShapeIndex < 3) {
+        if (currentShapeIndex < 10) {
             const playBtn = document.getElementById('playBtn');
             if (playBtn) {
                 playBtn.textContent = 'Next';
-                playBtn.disabled = false;
-                playBtn.classList.remove('again', 'disabled');
-                showPlayButton();
-            }
-        } else if (currentShapeIndex === 3 && cutsPerformed < maxCutsForShape3) {
-            const playBtn = document.getElementById('playBtn');
-            if (playBtn) {
-                playBtn.textContent = 'Cut 2';
                 playBtn.disabled = false;
                 playBtn.classList.remove('again', 'disabled');
                 showPlayButton();
@@ -20907,11 +20806,11 @@ function exitPracticeMode() {
             drawGrid();
         }
         
-        // Restore interaction state - but check daily mode cut limits first
-        const shouldEnableInteraction = practiceMode.savedDailyGameState.gameState === 'cutting' && 
-                                       (!isDailyMode || window.cutsMadeThisShape < 2);
-        
-        if (isDailyMode && window.cutsMadeThisShape >= 2) {
+        // Restore interaction state - but check daily mode cut limits first (1 cut per shape)
+        const shouldEnableInteraction = practiceMode.savedDailyGameState.gameState === 'cutting' &&
+                                       (!isDailyMode || window.cutsMadeThisShape < 1);
+
+        if (isDailyMode && window.cutsMadeThisShape >= 1) {
             console.log('🚫 EXIT PRACTICE: Daily mode shape has reached cut limit, keeping canvas disabled');
             setInteractionEnabled(false);
             canvas.style.pointerEvents = 'none';
