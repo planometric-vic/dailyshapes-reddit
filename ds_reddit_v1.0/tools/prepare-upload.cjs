@@ -10,7 +10,7 @@
  *   node tools/prepare-upload.cjs <folder-path>
  *   node tools/prepare-upload.cjs <folder-path> --max-days 3
  *
- * File naming: YYMMDD-01.geojson, YYMMDD-02.geojson, YYMMDD-03.geojson
+ * File naming: YYMMDD-01.geojson through YYMMDD-10.geojson
  *
  * The script:
  *   1. Scans the folder for matching .geojson files
@@ -38,12 +38,12 @@ if (args.length === 0) {
     console.log('  node tools/prepare-upload.cjs "G:\\My Drive\\Shapes\\geojson"');
     console.log('  node tools/prepare-upload.cjs ./shapes --max-days 2');
     console.log('');
-    console.log('Reads YYMMDD-01.geojson files, minifies, and prepares for Reddit upload.');
+    console.log('Reads YYMMDD-01.geojson through YYMMDD-10.geojson, minifies, and prepares for Reddit upload.');
     process.exit(1);
 }
 
 const folderPath = args[0];
-let maxDays = 3; // Default: 3 days per batch (~150-250 KB after minification)
+let maxDays = 1; // Default: 1 day per batch (10 shapes per day = ~150-250 KB)
 
 const maxDaysIdx = args.indexOf('--max-days');
 if (maxDaysIdx !== -1 && args[maxDaysIdx + 1]) {
@@ -89,10 +89,10 @@ function minifyGeoJSON(geojson) {
 // Scan for .geojson files
 // ============================================================
 
-const filePattern = /^(\d{6})-0?(\d)\.(geojson|json)$/i;
+const filePattern = /^(\d{6})-0?(\d{1,2})\.(geojson|json)$/i;
 const entries = fs.readdirSync(folderPath);
 
-const shapes = {}; // dayKey -> [geojsonObj0, geojsonObj1, geojsonObj2]
+const shapes = {}; // dayKey -> [geojsonObj0, ..., geojsonObj9]
 let fileCount = 0;
 let errorCount = 0;
 let originalSize = 0;
@@ -104,8 +104,8 @@ for (const filename of entries) {
     const dayKey = match[1];
     const shapeIndex = parseInt(match[2], 10) - 1; // 0-based
 
-    if (shapeIndex < 0 || shapeIndex > 2) {
-        console.warn(`  Skipped ${filename} - shape index out of range (1-3)`);
+    if (shapeIndex < 0 || shapeIndex > 9) {
+        console.warn(`  Skipped ${filename} - shape index out of range (1-10)`);
         continue;
     }
 
@@ -124,7 +124,7 @@ for (const filename of entries) {
         // Minify: round coordinates, will be serialized without whitespace
         const minified = minifyGeoJSON(parsed);
 
-        if (!shapes[dayKey]) shapes[dayKey] = [null, null, null];
+        if (!shapes[dayKey]) shapes[dayKey] = Array(10).fill(null);
         shapes[dayKey][shapeIndex] = minified;
         fileCount++;
     } catch (e) {
@@ -142,7 +142,7 @@ const dayKeys = Object.keys(shapes).sort();
 if (dayKeys.length === 0) {
     console.log('No valid shape files found.');
     console.log(`Looked in: ${folderPath}`);
-    console.log('Expected format: YYMMDD-01.geojson, YYMMDD-02.geojson, YYMMDD-03.geojson');
+    console.log('Expected format: YYMMDD-01.geojson through YYMMDD-10.geojson');
     process.exit(1);
 }
 
@@ -151,7 +151,7 @@ if (errorCount > 0) console.log(`  ${errorCount} file(s) skipped due to errors.`
 
 // ============================================================
 // Build batches - store GeoJSON objects directly (no double-encoding)
-// Batch format: { "YYMMDD": [geojson0, geojson1, geojson2], ... }
+// Batch format: { "YYMMDD": [geojson0, ..., geojson9], ... }
 // ============================================================
 
 const batches = [];
