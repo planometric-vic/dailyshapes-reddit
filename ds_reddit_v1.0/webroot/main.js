@@ -2658,7 +2658,7 @@ async function handlePlayButtonClick() {
         gameState: gameState
     });
 
-    if (!isLoggedIn && gameState === 'initial') {
+    if (!isLoggedIn && gameState === 'initial' && !isDemoMode) {
         console.log('👤 User not logged in - showing sign-in reminder modal');
         showSignInReminderModal();
         window.playButtonClicked = false; // Reset so play can be pressed again after modal
