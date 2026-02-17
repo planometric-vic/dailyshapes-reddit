@@ -104,7 +104,7 @@
                 grid-column: 1 !important;
                 grid-row: 1 / 6 !important;
                 align-self: start !important;
-                transform: translateY(calc(-100% - 6px)) !important;
+                transform: translateY(calc(-100% - 10px)) !important;
                 z-index: 20 !important;
                 height: auto !important;
                 min-height: auto !important;
@@ -187,14 +187,15 @@
                 transform: none !important;
             }
             /* Leaderboard: hidden during gameplay, shown after completion.
-               Fills the right column, stretching to match canvas height. */
+               Height set via JS to match canvas exactly. */
             .weekly-leaderboard {
                 grid-column: 2 !important;
                 grid-row: 1 / 6 !important;
-                align-self: stretch !important;
+                align-self: start !important;
                 display: none;
                 max-width: none !important;
                 border: 2px solid #000;
+                box-sizing: border-box;
             }
             /* Hide practice nav / results in grid */
             .buttons-below-canvas, .results-container {
@@ -207,7 +208,7 @@
         /* Commentary overlay: above the canvas, centered horizontally */
         .commentary-overlay {
             position: absolute !important;
-            bottom: calc(100% + 6px) !important;
+            bottom: calc(100% + 10px) !important;
             top: auto !important;
             left: 50% !important;
             transform: translateX(-50%) !important;
@@ -298,6 +299,7 @@
             padding: 6px 8px;
             border-bottom: 3px solid #000;
             margin-bottom: 0;
+            position: relative;
         }
         .lb-table {
             flex: 1;
@@ -402,6 +404,48 @@
         .lb-table::-webkit-scrollbar-thumb {
             background: #ccc;
             border-radius: 2px;
+        }
+        /* Close button: only visible in mobile modal mode */
+        .lb-close-btn {
+            display: none;
+            position: absolute;
+            top: 4px;
+            right: 6px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+            color: #000;
+        }
+        .lb-modal-mode .lb-close-btn {
+            display: block;
+        }
+        /* Mobile modal backdrop */
+        .lb-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        /* Mobile modal positioning */
+        .lb-modal-mode {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            width: 85% !important;
+            max-width: 320px !important;
+            max-height: 75vh !important;
+            z-index: 1000 !important;
+            background: #fff !important;
+            border: 2px solid #000 !important;
+            box-shadow: 4px 4px 0px #000 !important;
         }
     </style>
 </head>

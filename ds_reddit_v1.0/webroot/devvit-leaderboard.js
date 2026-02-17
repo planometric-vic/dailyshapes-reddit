@@ -18,10 +18,29 @@
         cuts:   { data: [], userScore: 0, userRank: -1 }
     };
 
+    /** Compute "FEB 16 \u2013 FEB 22, 2026" for the current Mon\u2013Sun week */
+    function getWeekDateRange() {
+        var now = new Date();
+        var day = now.getDay(); // 0=Sun, 1=Mon ... 6=Sat
+        var diffToMon = day === 0 ? -6 : 1 - day;
+        var monday = new Date(now);
+        monday.setDate(now.getDate() + diffToMon);
+        var sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+
+        var months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+        var monStr = months[monday.getMonth()] + ' ' + monday.getDate();
+        var sunStr = months[sunday.getMonth()] + ' ' + sunday.getDate();
+        var year = sunday.getFullYear();
+        return monStr + ' \u2013 ' + sunStr + ', ' + year;
+    }
+
+    var weekDateRange = getWeekDateRange();
+
     var tabConfig = {
-        weekly: { title: 'WEEKLY COMP', subtitle: 'MONDAY \u2013 SUNDAY', label: 'Scores' },
-        wins:   { title: 'GAMES WON', subtitle: '', label: 'Wins' },
-        cuts:   { title: 'PERFECT CUTS', subtitle: '', label: 'Perfect' }
+        weekly: { title: 'WEEKLY COMP (MONDAY \u2013 SUNDAY)', subtitle: weekDateRange, label: 'Scores' },
+        wins:   { title: 'GAMES WON', subtitle: weekDateRange, label: 'Wins' },
+        cuts:   { title: 'PERFECT CUTS', subtitle: weekDateRange, label: 'Perfect Cuts' }
     };
 
     var MIN_ROWS = 10; // fixed row count so all tabs look identical
@@ -54,7 +73,8 @@
         }
 
         if (!userInTop && currentUsername && t.userRank > 0) {
-            html += '<div class="lb-separator"></div>';
+            // Only show separator when there are data rows above
+            if (t.data.length > 0) html += '<div class="lb-separator"></div>';
             html += '<div class="lb-row lb-row-user">';
             html += '<span class="lb-rank">' + t.userRank + '</span>';
             html += '<span class="lb-name">' + escapeHtml(truncName(currentUsername)) + '</span>';
@@ -62,7 +82,8 @@
             html += '</div>';
             rowCount++;
         } else if (!userInTop && currentUsername) {
-            html += '<div class="lb-separator"></div>';
+            // Only show separator when there are data rows above
+            if (t.data.length > 0) html += '<div class="lb-separator"></div>';
             html += '<div class="lb-row lb-row-user lb-row-norank">';
             html += '<span class="lb-rank">-</span>';
             html += '<span class="lb-name">' + escapeHtml(truncName(currentUsername)) + '</span>';
@@ -85,9 +106,10 @@
 
     function render() {
         var cfg = tabConfig[activeTab];
-        // Header — always include subtitle div (even if empty) for consistent height
+        // Header with close button (close only visible in mobile modal mode via CSS)
         var html = '<div class="lb-header">' + cfg.title;
-        html += '<div class="lb-subtitle">' + (cfg.subtitle || '&nbsp;') + '</div>';
+        html += '<button class="lb-close-btn">&times;</button>';
+        html += '<div class="lb-subtitle">' + cfg.subtitle + '</div>';
         html += '</div>';
 
         // Table body (padded to MIN_ROWS)
@@ -113,6 +135,14 @@
         var tabBtns = container.querySelectorAll('.lb-tab');
         for (var j = 0; j < tabBtns.length; j++) {
             tabBtns[j].addEventListener('click', handleTabClick);
+        }
+
+        // Bind close button
+        var closeBtn = container.querySelector('.lb-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                window.WeeklyLeaderboard.hide();
+            });
         }
     }
 
@@ -154,6 +184,26 @@
         show: function() {
             render();
             container.style.display = 'flex';
+
+            if (window.innerWidth < 600) {
+                // Mobile: show as modal popup
+                container.classList.add('lb-modal-mode');
+                if (!document.querySelector('.lb-backdrop')) {
+                    var backdrop = document.createElement('div');
+                    backdrop.className = 'lb-backdrop';
+                    backdrop.addEventListener('click', function() {
+                        window.WeeklyLeaderboard.hide();
+                    });
+                    document.body.appendChild(backdrop);
+                }
+            } else {
+                // Desktop: match leaderboard height to canvas
+                var canvas = document.getElementById('geoCanvas');
+                if (canvas) {
+                    container.style.height = canvas.offsetHeight + 'px';
+                }
+            }
+
             // Hide game controls since we're in the completion view
             var els = ['demoProgressDisplay', 'fixedPercentageArea', 'fixedButtonArea'];
             for (var i = 0; i < els.length; i++) {
@@ -163,6 +213,10 @@
         },
         hide: function() {
             container.style.display = 'none';
+            container.style.height = '';
+            container.classList.remove('lb-modal-mode');
+            var backdrop = document.querySelector('.lb-backdrop');
+            if (backdrop) backdrop.remove();
         },
         refresh: function() {
             if (window.DevvitBridge) {
