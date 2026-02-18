@@ -462,11 +462,11 @@ async function scheduleDailyAutopost(context: any) {
 
   await context.scheduler.runJob({
     name: 'create-daily-post',
-    cron: '0 11 * * *', // 11:00 AM UTC daily
+    cron: '0 9 * * *', // 9:00 AM UTC daily
     data: { subredditName: subreddit.name },
   });
 
-  console.log(`Scheduled daily autopost for r/${subreddit.name} at 11:00 AM UTC`);
+  console.log(`Scheduled daily autopost for r/${subreddit.name} at 9:00 AM UTC`);
 }
 
 Devvit.addTrigger({
