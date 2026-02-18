@@ -499,6 +499,19 @@ Devvit.addMenuItem({
   },
 });
 
+// Clear the "already posted" flag so the job can re-post today
+Devvit.addMenuItem({
+  label: 'Clear Posted Flag (Daily Shapes)',
+  location: 'subreddit',
+  forUserType: 'moderator',
+  onPress: async (_event, context) => {
+    const dayKey = getTodayKey();
+    const postedKey = `posted:${dayKey}`;
+    await context.redis.del(postedKey);
+    context.ui.showToast({ text: `Cleared posted flag for ${dayKey}. You can now use "Post Daily Shapes Now".` });
+  },
+});
+
 // ============================================================
 // CUSTOM POST TYPE (game only - no admin mode)
 // ============================================================
