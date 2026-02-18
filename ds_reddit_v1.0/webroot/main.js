@@ -862,6 +862,8 @@ function showCountdownToMidnight() {
         const diff = tomorrow - now;
         
         if (diff <= 0) {
+            // In Reddit WebView, don't reset or reload — post is day-locked
+            if (window.DevvitBridge) return;
             // Midnight reached - trigger reset
             checkDailyReset();
             location.reload();
@@ -908,10 +910,16 @@ function resetDailyStats() {
 }
 
 function initializeDailyReset() {
+    // In Reddit WebView context, each post is a frozen day — no resets
+    if (window.DevvitBridge) {
+        console.log('📌 Skipping daily reset in Reddit WebView (post is day-locked)');
+        return;
+    }
+
     // Check for stored reset date
     const storedResetDate = localStorage.getItem('lastResetDate');
     const today = new Date().toDateString();
-    
+
     if (storedResetDate !== today) {
         console.log('🌅 Initializing daily reset - new day detected');
         resetDailyStats();
@@ -921,7 +929,7 @@ function initializeDailyReset() {
         lastResetDate = storedResetDate;
         console.log('📊 Using existing daily stats (same day)');
     }
-    
+
     // Set up interval to check for daily reset every minute
     setInterval(checkDailyReset, 60000); // Check every minute
 }

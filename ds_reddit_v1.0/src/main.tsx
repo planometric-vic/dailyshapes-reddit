@@ -94,6 +94,32 @@ function getWeekKey(): string {
   return `${yy}${mm}${dd}`;
 }
 
+/** Derive day-of-week from a YYMMDD key (0=Sun, 6=Sat) */
+function getDayOfWeekForKey(dayKey: string): number {
+  const yy = parseInt(dayKey.substring(0, 2), 10);
+  const mm = parseInt(dayKey.substring(2, 4), 10);
+  const dd = parseInt(dayKey.substring(4, 6), 10);
+  return new Date(2000 + yy, mm - 1, dd).getDay();
+}
+
+/** Derive day number from a YYMMDD key */
+function getDayNumberForKey(dayKey: string): number {
+  const yy = parseInt(dayKey.substring(0, 2), 10);
+  const mm = parseInt(dayKey.substring(2, 4), 10);
+  const dd = parseInt(dayKey.substring(4, 6), 10);
+  const date = new Date(2000 + yy, mm - 1, dd);
+  const epoch = new Date(2025, 0, 1);
+  return Math.floor((date.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+}
+
+/** Format a YYMMDD key as "Feb 17" */
+function getFormattedDateForKey(dayKey: string): string {
+  const mm = parseInt(dayKey.substring(2, 4), 10);
+  const dd = parseInt(dayKey.substring(4, 6), 10);
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[mm - 1]} ${dd}`;
+}
+
 /** Convert mechanic class name to user-friendly cutter name */
 function getFriendlyMechanicName(mechanic: string): string {
   const nameMap: Record<string, string> = {
@@ -131,6 +157,7 @@ const redisKeys = {
   userShapeScores: (dayKey: string, username: string) => `shapescores:${dayKey}:${username}`,
   progress: (dayKey: string, username: string) => `progress:${dayKey}:${username}`,
   userStats: (username: string) => `stats:${username}`,
+  postDay: (postId: string) => `post_day:${postId}`,
 };
 
 /** Get the previous week's key (Monday before current Monday, UTC) */
@@ -406,7 +433,7 @@ Devvit.addSchedulerJob({
     const subreddit = await context.reddit.getCurrentSubreddit();
     const dateStr = getFormattedDate();
     const cutterName = getFriendlyMechanicName(mechanic);
-    await context.reddit.submitPost({
+    const post = await context.reddit.submitPost({
       title: `Daily Shapes - ${dateStr} - ${cutterName}`,
       subredditName: subredditName ?? subreddit.name,
       preview: (
@@ -415,6 +442,11 @@ Devvit.addSchedulerJob({
         </vstack>
       ),
     });
+
+    // Store this post's dayKey so INIT_REQUEST serves the correct day's data
+    if (post?.id) {
+      await context.redis.set(redisKeys.postDay(post.id), dayKey);
+    }
 
     // Mark this day as posted (expire after 48h to avoid unbounded growth)
     await context.redis.set(postedKey, '1');
@@ -526,9 +558,35 @@ Devvit.addCustomPostType({
 
       switch (msg.type) {
         case 'INIT_REQUEST': {
-          const dayKey = getTodayKey();
-          const dayNum = getDayNumber();
-          const dow = getDayOfWeek();
+          // Use the post's original dayKey so old posts serve their own day's data
+          let dayKey: string;
+          const postId = context.postId;
+          if (postId) {
+            let storedDayKey = await context.redis.get(redisKeys.postDay(postId));
+            if (!storedDayKey) {
+              // Legacy post: derive dayKey from post creation date (Melbourne TZ)
+              try {
+                const post = await context.reddit.getPostById(postId);
+                if (post?.createdAt) {
+                  const created = new Date(post.createdAt);
+                  const melb = new Date(created.toLocaleString('en-US', { timeZone: 'Australia/Melbourne' }));
+                  const yy = String(melb.getFullYear()).slice(2);
+                  const mm = String(melb.getMonth() + 1).padStart(2, '0');
+                  const dd = String(melb.getDate()).padStart(2, '0');
+                  storedDayKey = `${yy}${mm}${dd}`;
+                  // Cache for future requests
+                  await context.redis.set(redisKeys.postDay(postId), storedDayKey);
+                }
+              } catch (e) {
+                console.log('Failed to derive dayKey from post creation date:', e);
+              }
+            }
+            dayKey = storedDayKey || getTodayKey();
+          } else {
+            dayKey = getTodayKey();
+          }
+          const dayNum = getDayNumberForKey(dayKey);
+          const dow = getDayOfWeekForKey(dayKey);
           const mechanic = MECHANIC_SCHEDULE[dow] || 'DefaultWithUndoMechanic';
 
           const shapes: string[] = [];
@@ -592,14 +650,18 @@ Devvit.addCustomPostType({
               perfectCuts: cuts.entries,
               userPerfectCuts: cuts.userScore,
               userPerfectCutsRank: cuts.userRank,
-              postTitle: `Daily Shapes - ${getFormattedDate()} - ${getFriendlyMechanicName(mechanic)}`,
+              postTitle: `Daily Shapes - ${getFormattedDateForKey(dayKey)} - ${getFriendlyMechanicName(mechanic)}`,
             } as InitData,
           } as any);
           break;
         }
 
         case 'SUBMIT_SCORE': {
-          const { dayKey, scores, total } = msg.data;
+          const { scores, total } = msg.data;
+          // Use post's dayKey instead of client-sent dayKey for score integrity
+          const dayKey = context.postId
+            ? (await context.redis.get(redisKeys.postDay(context.postId)) || msg.data.dayKey)
+            : msg.data.dayKey;
 
           // Prevent duplicate daily scores — only the first submission counts
           const alreadyScored = await context.redis.get(redisKeys.userScore(dayKey, username));

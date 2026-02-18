@@ -539,10 +539,16 @@ class DailyGameCore {
     
     // Setup midnight reset timer
     setupMidnightReset() {
+        // In Reddit WebView, each post is a frozen day — no midnight resets
+        if (window.DevvitBridge) {
+            console.log('📌 Skipping midnight reset in Reddit WebView (post is day-locked)');
+            return;
+        }
+
         const timeUntilMidnight = this.getTimeUntilMidnight();
-        
+
         console.log(`⏰ Setting midnight reset timer: ${Math.round(timeUntilMidnight / 1000 / 60)} minutes`);
-        
+
         this.midnightTimer = setTimeout(() => {
             this.handleMidnightReset();
         }, timeUntilMidnight);

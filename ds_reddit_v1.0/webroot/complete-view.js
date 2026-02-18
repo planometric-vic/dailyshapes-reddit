@@ -156,6 +156,8 @@ const completeView = (() => {
                 // Canvas doesn't need to be re-rendered for countdown updates
             },
             onZero: () => {
+                // In Reddit WebView, don't reload — post is day-locked
+                if (window.DevvitBridge) return;
                 // Soft refresh to new day
                 console.log('🌅 New day starting - refreshing game state');
                 location.hash = '#/home';
