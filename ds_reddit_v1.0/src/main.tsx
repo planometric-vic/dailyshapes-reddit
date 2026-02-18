@@ -411,12 +411,21 @@ Devvit.addMenuItem({
 
 Devvit.addSchedulerJob({
   name: 'create-daily-post',
-  onRun: async (_event, context) => {
+  onRun: async (event, context) => {
+    const subredditName = event.data?.subredditName as string | undefined;
     const dayKey = getTodayKey();
-    const dayNum = getDayNumber();
     const dow = getDayOfWeek();
     const mechanic = MECHANIC_SCHEDULE[dow] || 'DefaultWithUndoMechanic';
 
+    // Duplicate prevention — skip if we already posted for this dayKey
+    const postedKey = `posted:${dayKey}`;
+    const alreadyPosted = await context.redis.get(postedKey);
+    if (alreadyPosted) {
+      console.log(`Already posted for ${dayKey}, skipping`);
+      return;
+    }
+
+    // Require shapes in Redis before posting
     const shape0 = await context.redis.get(redisKeys.shape(dayKey, 0));
     if (!shape0) {
       console.log(`No shapes uploaded for ${dayKey}, skipping daily post`);
@@ -428,13 +437,17 @@ Devvit.addSchedulerJob({
     const cutterName = getFriendlyMechanicName(mechanic);
     await context.reddit.submitPost({
       title: `Daily Shapes - ${dateStr} - ${cutterName}`,
-      subredditName: subreddit.name,
+      subredditName: subredditName ?? subreddit.name,
       preview: (
         <vstack alignment="center middle" padding="large" backgroundColor="#ffffff">
           <text size="xlarge" weight="bold" color="#000000">Daily Shapes</text>
         </vstack>
       ),
     });
+
+    // Mark this day as posted (expire after 48h to avoid unbounded growth)
+    await context.redis.set(postedKey, '1');
+    await context.redis.expire(postedKey, 172800);
 
     console.log(`Daily Shapes - ${dateStr} post created for ${dayKey}`);
 
@@ -459,6 +472,59 @@ Devvit.addSchedulerJob({
         }
       }
     }
+  },
+});
+
+// ============================================================
+// AUTOPOSTING — Schedule on install & upgrade
+// ============================================================
+
+/** Cancel all existing scheduled jobs then schedule the daily autopost at 11:00 AM UTC */
+async function scheduleDailyAutopost(context: any) {
+  // Cancel existing jobs to prevent duplicates
+  const jobs = await context.scheduler.listJobs();
+  for (const job of jobs) {
+    await context.scheduler.cancelJob(job.id);
+  }
+
+  const subreddit = await context.reddit.getCurrentSubreddit();
+
+  await context.scheduler.runJob({
+    name: 'create-daily-post',
+    cron: '0 11 * * *', // 11:00 AM UTC daily
+    data: { subredditName: subreddit.name },
+  });
+
+  console.log(`Scheduled daily autopost for r/${subreddit.name} at 11:00 AM UTC`);
+}
+
+Devvit.addTrigger({
+  event: 'AppInstall',
+  onEvent: async (_, context) => {
+    await scheduleDailyAutopost(context);
+  },
+});
+
+Devvit.addTrigger({
+  event: 'AppUpgrade',
+  onEvent: async (_, context) => {
+    await scheduleDailyAutopost(context);
+  },
+});
+
+// Manual trigger for moderators — fires the job immediately
+Devvit.addMenuItem({
+  label: 'Post Daily Shapes Now',
+  location: 'subreddit',
+  forUserType: 'moderator',
+  onPress: async (_event, context) => {
+    const subreddit = await context.reddit.getCurrentSubreddit();
+    await context.scheduler.runJob({
+      name: 'create-daily-post',
+      runAt: new Date(),
+      data: { subredditName: subreddit.name },
+    });
+    context.ui.showToast({ text: 'Daily Shapes post triggered!' });
   },
 });
 
