@@ -5255,13 +5255,21 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         // Then check for game flow state after initialization
         setTimeout(async function() {
+            // Don't restore if the game is already locked (user already scored today).
+            // devvit-game-init GATE 1 sets gameState='locked' and renders the radar/
+            // completion view. SimpleRefresh must not overwrite that canvas.
+            if (window.gameState === 'locked') {
+                console.log('🔒 Game is locked (already scored) - skipping SimpleRefresh restoration');
+                return;
+            }
+
             // Don't restore if we have a fresh start flag
             if (window.location.hash === '#fresh' || localStorage.getItem('freshStart') === 'true') {
                 console.log('🆕 Fresh start requested - skipping restoration');
                 localStorage.removeItem('freshStart');
                 return;
             }
-            
+
             // Check for SimpleRefresh saved state first
             const restoredState = window.SimpleRefresh && window.SimpleRefresh.restore && window.SimpleRefresh.restore();
             
