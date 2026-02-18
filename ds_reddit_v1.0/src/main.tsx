@@ -190,35 +190,6 @@ async function fetchLeaderboard(
 // MENU ACTIONS & FORMS
 // ============================================================
 
-/** Admin action to create today's daily puzzle post */
-Devvit.addMenuItem({
-  label: 'Create Daily Shapes Puzzle',
-  location: 'subreddit',
-  forUserType: 'moderator',
-  onPress: async (_event, context) => {
-    const dayKey = getTodayKey();
-    const dayNum = getDayNumber();
-    const dow = getDayOfWeek();
-    const mechanic = MECHANIC_SCHEDULE[dow] || 'DefaultWithUndoMechanic';
-
-    const subreddit = await context.reddit.getCurrentSubreddit();
-    const dateStr = getFormattedDate();
-    const cutterName = getFriendlyMechanicName(mechanic);
-    const post = await context.reddit.submitPost({
-      title: `Daily Shapes - ${dateStr} - ${cutterName}`,
-      subredditName: subreddit.name,
-      preview: (
-        <vstack alignment="center middle" padding="large" backgroundColor="#ffffff">
-          <text size="xlarge" weight="bold" color="#000000">Daily Shapes</text>
-        </vstack>
-      ),
-    });
-
-    context.ui.showToast({ text: `Daily Shapes - ${dateStr} created!` });
-    context.ui.navigateTo(post);
-  },
-});
-
 /**
  * Batch shape upload form.
  *
